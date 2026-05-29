@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Ticket Scanner</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background: #1a1a1a;
+      padding: 16px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      border-bottom: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #scanner-name-tag {
+      font-size: 13px;
+      background: #333;
+      padding: 4px 10px;
+      border-radius: 20px;
+      color: #aaa;
+      cursor: pointer;
+      display: none;
+    }
+
+    /* Shared card style for key + name screens */
+    .gate-screen {
+      width: 100%;
+      max-width: 420px;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .gate-screen h2 { font-size: 22px; text-align: center; }
+    .gate-screen p  { color: #888; font-size: 14px; text-align: center; }
+
+    .gate-input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 2px solid #333;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 2px;
+      transition: border-color 0.2s;
+    }
+
+    .gate-input:focus { outline: none; border-color: #3b82f6; }
+    .gate-input.error { border-color: #ef4444; animation: shake 0.3s ease; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%       { transform: translateX(-8px); }
+      75%       { transform: translateX(8px); }
+    }
+
+    .gate-btn {
+      width: 100%;
+      padding: 14px;
+      background: #3b82f6;
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+
+    .gate-btn:active { background: #2563eb; }
+
+    .error-msg {
+      color: #ef4444;
+      font-size: 13px;
+      display: none;
+    }
+
+    /* Scanner screen */
+    #scanner-screen { display: none; width: 100%; max-width: 420px; padding: 20px; }
+
+    #reader { border-radius: 16px; overflow: hidden; border: 3px solid #444; }
+
+    #result-box {
+      margin-top: 24px;
+      padding: 28px 20px;
+      border-radius: 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.5;
+      white-space: pre-line;
+      display: none;
+      animation: popIn 0.2s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .valid     { background: #14532d; border: 3px solid #22c55e; color: #bbf7d0; }
+    .duplicate { background: #431407; border: 3px solid #f97316; color: #fed7aa; }
+    .invalid   { background: #450a0a; border: 3px solid #ef4444; color: #fecaca; }
+    .notfound  { background: #1e1b4b; border: 3px solid #818cf8; color: #c7d2fe; }
+
+    #scanning-status { text-align: center; color: #888; margin-top: 16px; font-size: 14px; }
+
+    #manual-section { margin-top: 30px; width: 100%; }
+    #manual-section summary { color: #888; font-size: 13px; cursor: pointer; text-align: center; padding: 8px; }
+    #manual-form { display: flex; gap: 8px; margin-top: 10px; }
+
+    #manual-input {
+      flex: 1; padding: 12px; border-radius: 10px;
+      border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 15px;
+    }
+
+    #manual-btn {
+      padding: 12px 18px; background: #3b82f6; border: none;
+      border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  🎟️ TICKET SCANNER
+  <span id="scanner-name-tag" onclick="changeName()"></span>
+</header>
+
+<!-- Step 1: Access Key -->
+<div id="key-screen" class="gate-screen">
+  <h2>🔐 Enter Access Key</h2>
+  <p>This scanner is restricted to authorised staff only.</p>
+  <input id="key-input" class="gate-input" type="password" placeholder="••••••••••" maxlength="20" autocomplete="off"
+    onkeydown="if(event.key==='Enter') verifyKey()" />
+  <p id="key-error" class="error-msg">Incorrect key. Try again.</p>
+  <button class="gate-btn" onclick="verifyKey()">Unlock</button>
+</div>
+
+<!-- Step 2: Enter Name -->
+<div id="name-screen" class="gate-screen" style="display:none;">
+  <h2>Who is scanning?</h2>
+  <p>Enter your name or gate number so we know who scanned each ticket.</p>
+  <input id="name-input" class="gate-input" type="text" placeholder="e.g. Gate 1 / Ravi" maxlength="30"
+    autocomplete="off" style="letter-spacing:normal;"
+    onkeydown="if(event.key==='Enter') startScanning()" />
+  <button class="gate-btn" onclick="startScanning()">Start Scanning</button>
+</div>
+
+<!-- Step 3: Scanner -->
+<div id="scanner-screen">
+  <div id="reader"></div>
+  <p id="scanning-status">Initializing camera...</p>
+  <div id="result-box"></div>
+
+  <details id="manual-section">
+    <summary>Enter ticket ID manually</summary>
+    <div id="manual-form">
+      <input id="manual-input" type="text" placeholder="Ticket ID (e.g. 3f8a12bc)" maxlength="36" autocomplete="off" />
+      <button id="manual-btn" onclick="manualCheck()">Check</button>
+    </div>
+  </details>
+</div>
+
+<script>
+  // ⚠️ Fill these in from your Firebase project settings
+  const FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app";
+  const FIREBASE_SECRET = "I1TjmOF25HJqMtcwtoVGGWvivr5MS3toT2yibcQV";
+
+  // 🔑 Scanner access key
+  const ACCESS_KEY = "0tHtN3qaUp";
+
+  let scannerName = "";
+  let isProcessing = false;
+  let lastScanned = "";
+  let resultTimeout = null;
+  let qrStarted = false;
+
+  const resultBox = document.getElementById("result-box");
+  const statusEl  = document.getElementById("scanning-status");
+
+  function verifyKey() {
+    const input = document.getElementById("key-input");
+    const errorMsg = document.getElementById("key-error");
+
+    if (input.value === ACCESS_KEY) {
+      document.getElementById("key-screen").style.display = "none";
+      document.getElementById("name-screen").style.display = "flex";
+      setTimeout(() => document.getElementById("name-input").focus(), 100);
+    } else {
+      input.value = "";
+      input.classList.add("error");
+      errorMsg.style.display = "block";
+      setTimeout(() => input.classList.remove("error"), 400);
+    }
+  }
+
+  function startScanning() {
+    const nameVal = document.getElementById("name-input").value.trim();
+    if (!nameVal) {
+      alert("Please enter your name first.");
+      return;
+    }
+    scannerName = nameVal;
+
+    const tag = document.getElementById("scanner-name-tag");
+    tag.textContent = "👤 " + scannerName + " ✎";
+    tag.style.display = "inline-block";
+
+    document.getElementById("name-screen").style.display = "none";
+    document.getElementById("scanner-screen").style.display = "block";
+
+    if (!qrStarted) {
+      qrStarted = true;
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 15, qrbox: { width: 250, height: 250 } },
+        (decodedText) => { checkTicket(decodedText.trim()); },
+        () => {}
+      ).then(() => {
+        statusEl.textContent = "Point camera at a QR code...";
+      }).catch((err) => {
+        statusEl.textContent = "Camera error: " + err;
+      });
+    }
+  }
+
+  function changeName() {
+    document.getElementById("scanner-screen").style.display = "none";
+    document.getElementById("name-screen").style.display = "flex";
+    document.getElementById("name-input").value = scannerName;
+  }
+
+  function showResult(data) {
+    resultBox.className = "";
+    resultBox.classList.add(data.result);
+    resultBox.textContent = data.message;
+    resultBox.style.display = "block";
+
+    if (navigator.vibrate) {
+      if (data.result === "valid") navigator.vibrate([100, 50, 100]);
+      else navigator.vibrate(500);
+    }
+
+    clearTimeout(resultTimeout);
+    resultTimeout = setTimeout(() => {
+      resultBox.style.display = "none";
+      isProcessing = false;
+      lastScanned = "";
+      statusEl.textContent = "Point camera at a QR code...";
+    }, 3000);
+  }
+
+  async function checkTicket(ticketId) {
+    if (isProcessing || ticketId === lastScanned) return;
+    isProcessing = true;
+    lastScanned = ticketId;
+    statusEl.textContent = "Checking...";
+
+    try {
+      const res = await fetch(`${FIREBASE_URL}/tickets/${ticketId}.json?auth=${FIREBASE_SECRET}`);
+      const ticket = await res.json();
+
+      if (!ticket) {
+        showResult({ result: "notfound", message: "TICKET NOT FOUND\nNot in system." });
+        return;
+      }
+
+      if (ticket.status === "Valid") {
+        const scanTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+        await fetch(
+          `${FIREBASE_URL}/tickets/${ticketId}.json?auth=${FIREBASE_SECRET}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: "Scanned",
+              scanned_by: scannerName,
+              scan_time: scanTime
+            })
+          }
+        );
+        showResult({ result: "valid", message: "VALID TICKET\nEntry Approved!" });
+
+      } else if (ticket.status === "Scanned") {
+        showResult({
+          result: "duplicate",
+          message: "ALREADY SCANNED\nBy: " + (ticket.scanned_by || "unknown") + "\nAt: " + (ticket.scan_time || "unknown time")
+        });
+
+      } else {
+        showResult({ result: "invalid", message: "INVALID TICKET\nDo not allow entry." });
+      }
+
+    } catch (err) {
+      showResult({ result: "invalid", message: "Network error.\nCheck your internet." });
+      isProcessing = false;
+    }
+  }
+
+  function manualCheck() {
+    const val = document.getElementById("manual-input").value.trim();
+    if (!val) return;
+    isProcessing = false;
+    lastScanned = "";
+    checkTicket(val);
+    document.getElementById("manual-input").value = "";
+  }
+</script>
+
+</body>
+</html>

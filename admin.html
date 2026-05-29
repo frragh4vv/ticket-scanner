@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ticket Admin</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1a1a;
+      padding: 16px 24px;
+      border-bottom: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-size: 18px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .stat span {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    /* Key screen */
+    #key-screen {
+      max-width: 400px;
+      margin: 80px auto;
+      padding: 40px 24px;
+      background: #1a1a1a;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+
+    #key-screen h2 {
+      font-size: 22px;
+    }
+
+    #key-screen p {
+      color: #888;
+      font-size: 14px;
+    }
+
+    .key-input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 2px solid #333;
+      background: #111;
+      color: #fff;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 3px;
+    }
+
+    .key-input.error {
+      border-color: #ef4444;
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-8px);
+      }
+
+      75% {
+        transform: translateX(8px);
+      }
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+
+    .btn:active {
+      opacity: 0.8;
+    }
+
+    .btn-blue {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .btn-green {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .btn-red {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .btn-gray {
+      background: #333;
+      color: #aaa;
+    }
+
+    #key-error {
+      color: #ef4444;
+      font-size: 13px;
+      display: none;
+    }
+
+    /* Main content */
+    #main {
+      display: none;
+      padding: 20px 24px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    #search {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    select {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    /* Table */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th {
+      background: #1a1a1a;
+      padding: 12px 10px;
+      text-align: left;
+      color: #888;
+      font-weight: 600;
+      border-bottom: 2px solid #333;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #222;
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: #161616;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-valid {
+      background: #14532d;
+      color: #86efac;
+    }
+
+    .badge-scanned {
+      background: #431407;
+      color: #fdba74;
+    }
+
+    .badge-sent {
+      background: #1e3a5f;
+      color: #93c5fd;
+    }
+
+    .badge-unsent {
+      background: #222;
+      color: #666;
+    }
+
+    .email-input {
+      padding: 7px 10px;
+      border-radius: 7px;
+      border: 1px solid #333;
+      background: #111;
+      color: #fff;
+      font-size: 13px;
+      width: 220px;
+    }
+
+    .email-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .save-btn {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 7px;
+      background: #3b82f6;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .save-btn:disabled {
+      background: #333;
+      color: #555;
+      cursor: default;
+    }
+
+    .save-btn.saved {
+      background: #16a34a;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Key gate -->
+  <div id="key-screen">
+    <h2>🔐 Admin Access</h2>
+    <p>Enter the access key to manage tickets.</p>
+    <input id="key-input" class="key-input" type="password" placeholder="••••••••••"
+      onkeydown="if(event.key==='Enter') verifyKey()" />
+    <p id="key-error">Incorrect key. Try again.</p>
+    <button class="btn btn-blue" onclick="verifyKey()">Enter</button>
+  </div>
+
+  <!-- Main admin panel -->
+  <div id="main">
+    <header>
+      <h1>🎟️ Ticket Admin</h1>
+      <div class="stats">
+        <div>Total: <span id="stat-total">—</span></div>
+        <div>Scanned: <span id="stat-scanned">—</span></div>
+        <div>Emails assigned: <span id="stat-emails">—</span></div>
+        <div>Emails sent: <span id="stat-sent">—</span></div>
+      </div>
+    </header>
+
+    <div id="main-content" style="padding: 20px 24px;">
+      <div class="toolbar">
+        <input id="search" type="text" placeholder="Search ticket ID or email..." oninput="renderTable()" />
+        <select id="filter" onchange="renderTable()">
+          <option value="all">All tickets</option>
+          <option value="valid">Valid only</option>
+          <option value="scanned">Scanned only</option>
+          <option value="no-email">No email assigned</option>
+          <option value="email-sent">Email sent</option>
+          <option value="email-unsent">Email assigned, not sent</option>
+        </select>
+        <button class="btn btn-blue" onclick="loadTickets()">↻ Refresh</button>
+      </div>
+
+      <div class="table-wrap">
+        <div id="loading">Loading tickets from Firebase...</div>
+        <table id="ticket-table" style="display:none">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ticket ID</th>
+              <th>Status</th>
+              <th>Scanned By</th>
+              <th>Scan Time</th>
+              <th>Email</th>
+              <th>Email Sent</th>
+              <th>Save</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <button class="btn btn-gray" onclick="prevPage()">← Prev</button>
+        <span id="page-info">Page 1</span>
+        <button class="btn btn-gray" onclick="nextPage()">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ Fill in your Firebase details
+    const FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app";
+    const FIREBASE_SECRET = "I1TjmOF25HJqMtcwtoVGGWvivr5MS3toT2yibcQV";
+    const ACCESS_KEY = "0tHtN3qaUp";
+
+    const PAGE_SIZE = 50;
+    let allTickets = []; // [{id, status, email, scanned_by, scan_time, email_sent}, ...]
+    let filtered = [];
+    let currentPage = 1;
+
+    function verifyKey() {
+      const input = document.getElementById("key-input");
+      if (input.value === ACCESS_KEY) {
+        document.getElementById("key-screen").style.display = "none";
+        document.getElementById("main").style.display = "block";
+        loadTickets();
+      } else {
+        input.value = "";
+        input.classList.add("error");
+        document.getElementById("key-error").style.display = "block";
+        setTimeout(() => input.classList.remove("error"), 400);
+      }
+    }
+
+    async function loadTickets() {
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("ticket-table").style.display = "none";
+
+      const res = await fetch(`${FIREBASE_URL}/tickets.json?auth=${FIREBASE_SECRET}`);
+      const data = await res.json();
+
+      allTickets = Object.entries(data).map(([id, val]) => ({
+        id,
+        status: val.status || "Valid",
+        email: val.email || "",
+        scanned_by: val.scanned_by || "",
+        scan_time: val.scan_time || "",
+        email_sent: val.email_sent || false,
+      }));
+
+      updateStats();
+      renderTable();
+
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("ticket-table").style.display = "table";
+    }
+
+    function updateStats() {
+      document.getElementById("stat-total").textContent = allTickets.length;
+      document.getElementById("stat-scanned").textContent = allTickets.filter(t => t.status === "Scanned").length;
+      document.getElementById("stat-emails").textContent = allTickets.filter(t => t.email).length;
+      document.getElementById("stat-sent").textContent = allTickets.filter(t => t.email_sent).length;
+    }
+
+    function renderTable() {
+      const query = document.getElementById("search").value.toLowerCase();
+      const filter = document.getElementById("filter").value;
+
+      filtered = allTickets.filter(t => {
+        const matchSearch = !query || t.id.includes(query) || t.email.toLowerCase().includes(query);
+        let matchFilter = true;
+        if (filter === "valid") matchFilter = t.status === "Valid";
+        if (filter === "scanned") matchFilter = t.status === "Scanned";
+        if (filter === "no-email") matchFilter = !t.email;
+        if (filter === "email-sent") matchFilter = t.email_sent;
+        if (filter === "email-unsent") matchFilter = t.email && !t.email_sent;
+        return matchSearch && matchFilter;
+      });
+
+      currentPage = 1;
+      renderPage();
+    }
+
+    function renderPage() {
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page = filtered.slice(start, start + PAGE_SIZE);
+      const tbody = document.getElementById("table-body");
+      tbody.innerHTML = "";
+
+      page.forEach((t, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+        <td style="color:#555">${start + i + 1}</td>
+        <td style="font-family:monospace;color:#a5f3fc">${t.id}</td>
+        <td><span class="badge badge-${t.status.toLowerCase()}">${t.status}</span></td>
+        <td style="color:#888">${t.scanned_by || "—"}</td>
+        <td style="color:#888;font-size:12px">${t.scan_time || "—"}</td>
+        <td>
+          <input class="email-input" type="email" placeholder="email@example.com"
+            value="${t.email}" id="email-${t.id}"
+            onchange="markDirty('${t.id}')" oninput="markDirty('${t.id}')" />
+        </td>
+        <td>
+          <span class="badge ${t.email_sent ? 'badge-sent' : 'badge-unsent'}">
+            ${t.email_sent ? "Sent ✓" : "Not sent"}
+          </span>
+        </td>
+        <td>
+          <button class="save-btn" id="save-${t.id}" onclick="saveEmail('${t.id}')" disabled>Save</button>
+        </td>
+      `;
+        tbody.appendChild(row);
+      });
+
+      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+      document.getElementById("page-info").textContent =
+        `Page ${currentPage} of ${totalPages} (${filtered.length} tickets)`;
+    }
+
+    function markDirty(id) {
+      const btn = document.getElementById(`save-${id}`);
+      btn.disabled = false;
+      btn.classList.remove("saved");
+      btn.textContent = "Save";
+    }
+
+    async function saveEmail(id) {
+      const emailVal = document.getElementById(`email-${id}`).value.trim();
+      const btn = document.getElementById(`save-${id}`);
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+
+      await fetch(`${FIREBASE_URL}/tickets/${id}.json?auth=${FIREBASE_SECRET}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailVal })
+      });
+
+      // Update local data
+      const ticket = allTickets.find(t => t.id === id);
+      if (ticket) ticket.email = emailVal;
+
+      btn.textContent = "Saved ✓";
+      btn.classList.add("saved");
+      updateStats();
+    }
+
+    function prevPage() {
+      if (currentPage > 1) { currentPage--; renderPage(); }
+    }
+
+    function nextPage() {
+      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+      if (currentPage < totalPages) { currentPage++; renderPage(); }
+    }
+
+    // Allow Enter key on key screen
+    document.getElementById("key-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") verifyKey();
+    });
+  </script>
+</body>
+
+</html>
