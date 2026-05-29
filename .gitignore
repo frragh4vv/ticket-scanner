@@ -1,0 +1,17 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Ignore generated images and QR code outputs
+*.png
+*.jpg
+*.jpeg
+*.gif
+tickets_for_appsheet/
