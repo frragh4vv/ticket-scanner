@@ -1,0 +1,9 @@
+name = "ticket-scanner-api"
+main = "src/index.js"
+compatibility_date = "2026-05-29"
+
+[vars]
+FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app"
+# Note: Upload FIREBASE_SECRET and RESEND_API_KEY as Cloudflare Secrets:
+# npx wrangler secret put FIREBASE_SECRET
+# npx wrangler secret put RESEND_API_KEY

@@ -5,6 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ticket Admin</title>
+  
+  <!-- Client-side QR generation, ZIP creation, and Download libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -326,6 +331,17 @@
           <option value="email-unsent">Email assigned, not sent</option>
         </select>
         <button class="btn btn-blue" onclick="loadTickets()">↻ Refresh</button>
+        <button class="btn btn-blue" id="bulk-email-btn" onclick="bulkSendEmails()">✉ Send Unsent Emails</button>
+      </div>
+
+      <!-- Ticket Generator & ZIP/Excel Download Card -->
+      <div class="toolbar" style="margin-top: -8px; margin-bottom: 20px; background: #1a1a1a; padding: 16px; border-radius: 12px; border: 1px solid #333; display: block;">
+        <div style="font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #3b82f6;">🎫 Generate Fresh Tickets & QR Codes</div>
+        <div style="display: flex; gap: 12px; align-items: center; width: 100%; flex-wrap: wrap;">
+          <input id="gen-count" type="number" placeholder="Count (e.g. 150)" min="1" max="1500" class="email-input" style="width: 140px; background: #111;" />
+          <button class="btn btn-green" id="gen-btn" onclick="generateTickets()">Generate & Download ZIP</button>
+          <div id="gen-progress" style="font-size: 13px; color: #aaa; font-weight: bold; margin-left: 8px;"></div>
+        </div>
       </div>
 
       <div class="table-wrap">
@@ -340,7 +356,7 @@
               <th>Scan Time</th>
               <th>Email</th>
               <th>Email Sent</th>
-              <th>Save</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="table-body"></tbody>
@@ -356,10 +372,13 @@
   </div>
 
   <script>
-    // ⚠️ Fill in your Firebase details
-    const FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app";
-    const FIREBASE_SECRET = "I1TjmOF25HJqMtcwtoVGGWvivr5MS3toT2yibcQV";
-    const ACCESS_KEY = "0tHtN3qaUp";
+    // 🌐 Cloudflare Worker API Settings
+    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://localhost:8787" 
+      : window.location.origin;
+
+    // 🔑 Admin access key
+    const ACCESS_KEY = "Raghav@ticket";
 
     const PAGE_SIZE = 50;
     let allTickets = []; // [{id, status, email, scanned_by, scan_time, email_sent}, ...]
@@ -384,23 +403,32 @@
       document.getElementById("loading").style.display = "block";
       document.getElementById("ticket-table").style.display = "none";
 
-      const res = await fetch(`${FIREBASE_URL}/tickets.json?auth=${FIREBASE_SECRET}`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`${API_URL}/api/tickets`, {
+          headers: {
+            "Authorization": `Bearer ${ACCESS_KEY}`
+          }
+        });
+        const data = await res.json();
 
-      allTickets = Object.entries(data).map(([id, val]) => ({
-        id,
-        status: val.status || "Valid",
-        email: val.email || "",
-        scanned_by: val.scanned_by || "",
-        scan_time: val.scan_time || "",
-        email_sent: val.email_sent || false,
-      }));
+        allTickets = Object.entries(data).map(([id, val]) => ({
+          id,
+          status: val.status || "Valid",
+          email: val.email || "",
+          scanned_by: val.scanned_by || "",
+          scan_time: val.scan_time || "",
+          email_sent: val.email_sent || false,
+        }));
 
-      updateStats();
-      renderTable();
+        updateStats();
+        renderTable();
 
-      document.getElementById("loading").style.display = "none";
-      document.getElementById("ticket-table").style.display = "table";
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("ticket-table").style.display = "table";
+      } catch (err) {
+        document.getElementById("loading").textContent = "Error loading tickets. Check backend API.";
+        console.error(err);
+      }
     }
 
     function updateStats() {
@@ -449,18 +477,21 @@
             onchange="markDirty('${t.id}')" oninput="markDirty('${t.id}')" />
         </td>
         <td>
-          <span class="badge ${t.email_sent ? 'badge-sent' : 'badge-unsent'}">
+          <span class="badge ${t.email_sent ? 'badge-sent' : 'badge-unsent'}" id="status-badge-${t.id}">
             ${t.email_sent ? "Sent ✓" : "Not sent"}
           </span>
         </td>
         <td>
-          <button class="save-btn" id="save-${t.id}" onclick="saveEmail('${t.id}')" disabled>Save</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="save-btn" id="save-${t.id}" onclick="saveEmail('${t.id}')" disabled>Save</button>
+            <button class="btn btn-blue" style="padding: 7px 12px; font-size: 13px;" id="send-${t.id}" onclick="sendTicketEmail('${t.id}')" ${t.email ? '' : 'disabled'}>Email ✉</button>
+          </div>
         </td>
       `;
         tbody.appendChild(row);
       });
 
-      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+      const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
       document.getElementById("page-info").textContent =
         `Page ${currentPage} of ${totalPages} (${filtered.length} tickets)`;
     }
@@ -475,22 +506,247 @@
     async function saveEmail(id) {
       const emailVal = document.getElementById(`email-${id}`).value.trim();
       const btn = document.getElementById(`save-${id}`);
+      const sendBtn = document.getElementById(`send-${id}`);
       btn.disabled = true;
       btn.textContent = "Saving...";
 
-      await fetch(`${FIREBASE_URL}/tickets/${id}.json?auth=${FIREBASE_SECRET}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailVal })
+      try {
+        const res = await fetch(`${API_URL}/api/save-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${ACCESS_KEY}`
+          },
+          body: JSON.stringify({ ticketId: id, email: emailVal })
+        });
+
+        if (res.ok) {
+          // Update local data
+          const ticket = allTickets.find(t => t.id === id);
+          if (ticket) ticket.email = emailVal;
+
+          btn.textContent = "Saved ✓";
+          btn.classList.add("saved");
+          if (emailVal) {
+            sendBtn.removeAttribute("disabled");
+          } else {
+            sendBtn.setAttribute("disabled", "true");
+          }
+          updateStats();
+        } else {
+          btn.textContent = "Error";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        btn.textContent = "Error";
+        btn.disabled = false;
+      }
+    }
+
+    async function sendTicketEmail(id) {
+      const sendBtn = document.getElementById(`send-${id}`);
+      const emailVal = document.getElementById(`email-${id}`).value.trim();
+      const originalText = sendBtn.textContent;
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Sending...";
+
+      try {
+        const res = await fetch(`${API_URL}/api/send-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${ACCESS_KEY}`
+          },
+          body: JSON.stringify({ ticketId: id, email: emailVal })
+        });
+
+        if (res.ok) {
+          sendBtn.textContent = "Sent ✓";
+          sendBtn.classList.remove("btn-blue");
+          sendBtn.classList.add("btn-green");
+          
+          // Update local state
+          const ticket = allTickets.find(t => t.id === id);
+          if (ticket) ticket.email_sent = true;
+          
+          const statusBadge = document.getElementById(`status-badge-${id}`);
+          if (statusBadge) {
+            statusBadge.className = "badge badge-sent";
+            statusBadge.textContent = "Sent ✓";
+          }
+          
+          updateStats();
+        } else {
+          const data = await res.json();
+          alert("Error sending email: " + (data.details || data.error));
+          sendBtn.disabled = false;
+          sendBtn.textContent = originalText;
+        }
+      } catch (err) {
+        alert("Network error sending email.");
+        sendBtn.disabled = false;
+        sendBtn.textContent = originalText;
+      }
+    }
+
+    // ✉ Bulk Send Unsent Emails
+    async function bulkSendEmails() {
+      const unsent = allTickets.filter(t => t.email && !t.email_sent);
+      if (unsent.length === 0) {
+        alert("No unsent tickets with assigned email addresses found.");
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to send emails to all ${unsent.length} pending tickets?`)) {
+        return;
+      }
+
+      const bulkBtn = document.getElementById("bulk-email-btn");
+      const originalText = bulkBtn.textContent;
+      bulkBtn.disabled = true;
+
+      for (let i = 0; i < unsent.length; i++) {
+        const t = unsent[i];
+        bulkBtn.textContent = `Sending (${i + 1}/${unsent.length})...`;
+        
+        try {
+          const res = await fetch(`${API_URL}/api/send-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${ACCESS_KEY}`
+            },
+            body: JSON.stringify({ ticketId: t.id, email: t.email })
+          });
+
+          if (res.ok) {
+            t.email_sent = true;
+          }
+        } catch (err) {
+          console.error(`Failed to send bulk email for ${t.id}:`, err);
+        }
+      }
+
+      bulkBtn.disabled = false;
+      bulkBtn.textContent = originalText;
+      alert("Bulk emailing completed!");
+      loadTickets();
+    }
+
+    // 🎫 Dynamic Browser-side QR code generator
+    function generateQRCodeBase64(text) {
+      return new Promise((resolve) => {
+        const div = document.createElement("div");
+        const qrcode = new QRCode(div, {
+          text: text,
+          width: 256,
+          height: 256,
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        // Wait a small timeout for QRCode rendering to complete
+        setTimeout(() => {
+          const canvas = div.querySelector("canvas");
+          if (canvas) {
+            resolve(canvas.toDataURL("image/png").split(",")[1]);
+          } else {
+            const img = div.querySelector("img");
+            if (img && img.src) {
+              resolve(img.src.split(",")[1]);
+            } else {
+              resolve("");
+            }
+          }
+        }, 60);
       });
+    }
 
-      // Update local data
-      const ticket = allTickets.find(t => t.id === id);
-      if (ticket) ticket.email = emailVal;
+    // 🎫 Ticket Generation and ZIP & Excel CSV mapping download
+    async function generateTickets() {
+      const countInput = document.getElementById("gen-count");
+      const genBtn = document.getElementById("gen-btn");
+      const progressEl = document.getElementById("gen-progress");
+      
+      const count = parseInt(countInput.value, 10);
+      if (isNaN(count) || count <= 0 || count > 1500) {
+        alert("Please enter a valid ticket count between 1 and 1,500.");
+        return;
+      }
 
-      btn.textContent = "Saved ✓";
-      btn.classList.add("saved");
-      updateStats();
+      genBtn.disabled = true;
+      countInput.disabled = true;
+      progressEl.style.display = "inline-block";
+      progressEl.textContent = "Creating ticket database in Firebase...";
+
+      try {
+        // 1. Call Backend Worker to generate ticket database records
+        const res = await fetch(`${API_URL}/api/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${ACCESS_KEY}`
+          },
+          body: JSON.stringify({ count: count })
+        });
+        
+        if (!res.ok) {
+          const errData = await res.json();
+          alert("Error generating tickets in database: " + errData.error);
+          resetGenUI();
+          return;
+        }
+
+        const data = await res.json();
+        const ticketIds = data.tickets; // Array of generated unique 8-character codes
+
+        // 2. Generate QRs & ZIP package sequentially in the browser
+        progressEl.textContent = "Initializing ZIP compiler...";
+        const zip = new JSZip();
+        
+        // CSV Metadata Sheet (Excel readable)
+        let csvContent = "Ticket Name,Ticket Code\r\n";
+
+        for (let i = 0; i < ticketIds.length; i++) {
+          const ticketId = ticketIds[i];
+          const ticketName = `ticket_${i + 1}`;
+          
+          progressEl.textContent = `Rendering QRs: ${Math.round(((i + 1) / ticketIds.length) * 100)}%`;
+          
+          // Generate QR code base64 image data
+          const base64Data = await generateQRCodeBase64(ticketId);
+          if (base64Data) {
+            zip.file(`${ticketName}.png`, base64Data, { base64: true });
+          }
+          
+          // Append row mapping sequential name to Firebase unique code
+          csvContent += `${ticketName},${ticketId}\r\n`;
+        }
+
+        // Add Excel CSV mapping database to the ZIP file
+        zip.file("ticket_list.csv", csvContent);
+
+        // 3. Output ZIP folder for download
+        progressEl.textContent = "Compressing ZIP file...";
+        const contentBlob = await zip.generateAsync({ type: "blob" });
+        saveAs(contentBlob, `tickets_package_${count}.zip`);
+
+        progressEl.textContent = "Success! Package downloaded.";
+        setTimeout(resetGenUI, 3000);
+        loadTickets(); // Refresh lists
+
+      } catch (err) {
+        alert("Network error generating tickets.");
+        console.error(err);
+        resetGenUI();
+      }
+
+      function resetGenUI() {
+        genBtn.disabled = false;
+        countInput.disabled = false;
+        countInput.value = "";
+        progressEl.textContent = "";
+        progressEl.style.display = "none";
+      }
     }
 
     function prevPage() {

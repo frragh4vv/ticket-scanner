@@ -188,12 +188,13 @@
 </div>
 
 <script>
-  // ⚠️ Fill these in from your Firebase project settings
-  const FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app";
-  const FIREBASE_SECRET = "I1TjmOF25HJqMtcwtoVGGWvivr5MS3toT2yibcQV";
+  // 🌐 Cloudflare Worker API Settings
+  const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:8787" 
+    : window.location.origin;
 
   // 🔑 Scanner access key
-  const ACCESS_KEY = "0tHtN3qaUp";
+  const ACCESS_KEY = "Raghav@ticket";
 
   let scannerName = "";
   let isProcessing = false;
@@ -284,38 +285,23 @@
     statusEl.textContent = "Checking...";
 
     try {
-      const res = await fetch(`${FIREBASE_URL}/tickets/${ticketId}.json?auth=${FIREBASE_SECRET}`);
-      const ticket = await res.json();
+      const res = await fetch(`${API_URL}/api/check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${ACCESS_KEY}`
+        },
+        body: JSON.stringify({
+          ticketId: ticketId,
+          scannerName: scannerName
+        })
+      });
+      const data = await res.json();
 
-      if (!ticket) {
-        showResult({ result: "notfound", message: "TICKET NOT FOUND\nNot in system." });
-        return;
-      }
-
-      if (ticket.status === "Valid") {
-        const scanTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-        await fetch(
-          `${FIREBASE_URL}/tickets/${ticketId}.json?auth=${FIREBASE_SECRET}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              status: "Scanned",
-              scanned_by: scannerName,
-              scan_time: scanTime
-            })
-          }
-        );
-        showResult({ result: "valid", message: "VALID TICKET\nEntry Approved!" });
-
-      } else if (ticket.status === "Scanned") {
-        showResult({
-          result: "duplicate",
-          message: "ALREADY SCANNED\nBy: " + (ticket.scanned_by || "unknown") + "\nAt: " + (ticket.scan_time || "unknown time")
-        });
-
+      if (res.ok) {
+        showResult(data);
       } else {
-        showResult({ result: "invalid", message: "INVALID TICKET\nDo not allow entry." });
+        showResult({ result: "invalid", message: data.error || "Verification failed." });
       }
 
     } catch (err) {
