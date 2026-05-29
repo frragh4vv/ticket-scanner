@@ -15,3 +15,8 @@ wheels/
 *.jpeg
 *.gif
 tickets_for_appsheet/
+.wrangler/
+.dev.vars
+worker/.dev.vars
+
+

@@ -1,6 +1,20 @@
-# 🎟️ Ticket Scanner & QR Code Generator
+# 🎟️ Secure Ticket Scanner & Serverless QR Generator (v2)
 
-A robust Python utility designed to generate, manage, and structure ticket databases and QR codes, specifically optimized for seamless integration with no-code custom frontend solutions like **AppSheet**.
+An ultra-scalable, secure, full-stack ticket management web service. This project evolved from a local Python generation script into a modern serverless backend API hosted on **Cloudflare Workers** with an integrated, high-performance web interface.
+
+---
+
+## ⚡ v1 (Original Script) vs v2 (Serverless Web App)
+
+Here is a comparison of how this project evolved to achieve professional industry standards:
+
+| Feature | 🐍 v1 (Original Local State) | ⛅ v2 (Modern Serverless Web App) |
+| :--- | :--- | :--- |
+| **Database Security** | ❌ **Insecure**: Firebase URL and Secret key were hardcoded in static HTML, exposing full database write access to any visitor. | ✅ **Secure**: Keys and secrets are hidden inside Cloudflare's serverless environment, protected by a `Bearer Raghav@ticket` auth token. |
+| **Ticket Generation** | 🐍 **Manual Python Script**: Developer had to run `qrmaker.py` locally on their machine, consuming disk storage for 1,500 PNG images, and upload them manually. | 🌐 **Browser-based**: Generated with a single click inside the web panel. The browser renders and compresses the QRs into a `.zip` on-the-fly. |
+| **Excel DB Metadata** | ❌ **Absent**: Local CSV database had to be manually synced with AppSheet. | ✅ **Automated**: Compiles an Excel-ready CSV mapping file (`ticket_list.csv` showing `ticket_X` -> `code`) directly inside the downloaded `.zip`! |
+| **Mailing Capabilities** | ❌ **None**: No simple way to email tickets to buyers from the application. | ✅ **Integrated**: Send beautiful QR code emails directly from the web panel (manually or in bulk) using the **Brevo (Sendinblue) API** from your Gmail. |
+| **Operational Overhead** | 🐍 **High**: Required Python installation, virtual environment setup, local execution, and manual cloud storage synchronization. | ⛅ **Zero**: Light static HTML pages hosted globally alongside the fast serverless Worker backend. Zero server costs when idle ($0). |
 
 ---
 

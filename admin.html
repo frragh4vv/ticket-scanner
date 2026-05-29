@@ -373,7 +373,7 @@
 
   <script>
     // 🌐 Cloudflare Worker API Settings
-    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    const API_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
       ? "http://localhost:8787" 
       : window.location.origin;
 
@@ -411,14 +411,14 @@
         });
         const data = await res.json();
 
-        allTickets = Object.entries(data).map(([id, val]) => ({
+        allTickets = data ? Object.entries(data).map(([id, val]) => ({
           id,
           status: val.status || "Valid",
           email: val.email || "",
           scanned_by: val.scanned_by || "",
           scan_time: val.scan_time || "",
           email_sent: val.email_sent || false,
-        }));
+        })) : [];
 
         updateStats();
         renderTable();
