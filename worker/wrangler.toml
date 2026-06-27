@@ -2,6 +2,13 @@ name = "ticket-scanner-api"
 main = "src/index.js"
 compatibility_date = "2026-05-29"
 
+# Serve the frontend (index.html / admin.html) as static assets straight from
+# Cloudflare's global edge. Requests that match a file in ./public are served
+# as static assets (free, unmetered, highly available); anything else (e.g.
+# /api/*) falls through to the Worker script in src/index.js.
+[assets]
+directory = "./public"
+
 [vars]
 FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app"
 # Note: Upload FIREBASE_SECRET and RESEND_API_KEY as Cloudflare Secrets:

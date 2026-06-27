@@ -42,7 +42,13 @@ This repository contains the developer utility scripts to configure, generate, a
 ├── README.md                # Project documentation
 ├── qrmaker.py               # Core script for generating unique tickets and QR codes
 ├── main.py                  # Boilerplate entry point
-└── appsheet_database.csv    # The local ticket database (Single Source of Truth)
+├── appsheet_database.csv    # The local ticket database (legacy / Python flow)
+└── worker/                  # The deployed serverless app (frontend + API in one)
+    ├── wrangler.toml        # Cloudflare Worker config + [assets] static-site binding
+    ├── src/index.js         # The serverless API (/api/*) — talks to Firebase + Resend
+    └── public/              # Static frontend served from Cloudflare's edge
+        ├── index.html       # Scanner UI (camera QR scanning)
+        └── admin.html       # Admin panel (generate tickets, email, export)
 ```
 
 > [!NOTE]
@@ -82,7 +88,44 @@ This will:
 
 ---
 
-## 📱 AppSheet Integration Guide
+## ⛅ Deployment & CI/CD (Cloudflare Workers)
+
+The frontend and API are deployed together as a **single Cloudflare Worker**. The
+HTML in `worker/public/` is served as static assets from Cloudflare's global edge
+(fast, unmetered, and highly available), while requests to `/api/*` fall through
+to the Worker script in `worker/src/index.js`. Because the frontend calls the API
+at `window.location.origin`, no environment URLs need to change between local and
+production.
+
+### One-time setup
+
+1. **Secrets** (never commit these) — set them once per environment:
+   ```bash
+   cd worker
+   npx wrangler secret put FIREBASE_SECRET
+   npx wrangler secret put RESEND_API_KEY
+   ```
+   `FIREBASE_URL` is a non-secret var and already lives in `wrangler.toml`.
+
+2. **Connect Git for automatic deploys (CI/CD)** — in the Cloudflare dashboard:
+   * **Workers & Pages → `ticket-scanner-api` → Settings → Build → Connect to Git**
+   * Select the repo `frragh4vv/ticket-scanner`
+   * **Root directory:** `worker`
+   * **Deploy command:** `npx wrangler deploy`
+   * Save. Every push to `main` now builds and deploys automatically.
+
+### Manual deploy / local dev
+
+```bash
+cd worker
+npx wrangler deploy            # one-off production deploy
+npx wrangler dev               # local dev at http://localhost:8787 (serves UI + API)
+npx wrangler deploy --dry-run  # validate config without deploying
+```
+
+---
+
+## 📱 AppSheet Integration Guide (legacy v1 flow)
 
 To deploy and use these assets in your AppSheet application:
 
