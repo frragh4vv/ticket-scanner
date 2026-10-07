@@ -1,768 +1,2922 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ticket Admin</title>
+  <title>TicketScanner Pro • Event Admin & Ticket Studio</title>
   
-  <!-- Client-side QR generation, ZIP creation, and Download libraries -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Client-side ZIP & QR Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    :root {
+      --bg-dark: #09090b;
+      --card-bg: rgba(24, 24, 27, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover: rgba(39, 39, 42, 0.8);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      
+      --vip-gold: #f59e0b;
+      --vip-bg: rgba(245, 158, 11, 0.15);
+      --gen-green: #10b981;
+      --gen-bg: rgba(16, 185, 129, 0.15);
+      --gst-purple: #a855f7;
+      --gst-bg: rgba(168, 85, 247, 0.15);
+      --scanned-orange: #f97316;
+      --err-red: #ef4444;
     }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f0f0f;
-      color: #fff;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.07) 0%, transparent 50%),
+        radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+      color: var(--text-main);
       min-height: 100vh;
-    }
-
-    header {
-      background: #1a1a1a;
-      padding: 16px 24px;
-      border-bottom: 2px solid #333;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
+      flex-direction: column;
     }
 
-    header h1 {
-      font-size: 18px;
-    }
-
-    .stats {
-      display: flex;
-      gap: 16px;
-      font-size: 13px;
-      color: #aaa;
-    }
-
-    .stat span {
-      color: #fff;
-      font-weight: 700;
-    }
-
-    /* Key screen */
+    /* Auth Screen */
     #key-screen {
-      max-width: 400px;
-      margin: 80px auto;
-      padding: 40px 24px;
-      background: #1a1a1a;
-      border-radius: 16px;
+      max-width: 420px;
+      margin: 100px auto 40px auto;
+      padding: 36px 28px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 24px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
       text-align: center;
+      animation: fadeIn 0.3s ease;
     }
 
-    #key-screen h2 {
-      font-size: 22px;
-    }
-
-    #key-screen p {
-      color: #888;
-      font-size: 14px;
+    .key-icon {
+      width: 54px;
+      height: 54px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
     }
 
     .key-input {
       width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      border: 2px solid #333;
-      background: #111;
+      padding: 14px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: rgba(10, 10, 12, 0.8);
       color: #fff;
-      font-size: 18px;
+      font-size: 17px;
       text-align: center;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
+      outline: none;
+      transition: all 0.2s;
     }
 
-    .key-input.error {
-      border-color: #ef4444;
-      animation: shake 0.3s ease;
+    .key-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
     }
 
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      25% {
-        transform: translateX(-8px);
-      }
-
-      75% {
-        transform: translateX(8px);
-      }
+    /* Navigation Header */
+    header {
+      background: rgba(18, 18, 20, 0.8);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
     }
 
-    .btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 10px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
       font-weight: 700;
-      cursor: pointer;
-      font-size: 14px;
-      transition: opacity 0.2s;
+      letter-spacing: -0.4px;
     }
 
-    .btn:active {
-      opacity: 0.8;
+    .brand-tag {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      letter-spacing: 1px;
     }
+
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Main Container */
+    #main-app {
+      display: none;
+      padding: 24px 32px 60px 32px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    /* KPI Summary Metric Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .kpi-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .progress-bar {
+      height: 6px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      border-radius: 10px;
+      width: 0%;
+      transition: width 0.6s ease;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn:active { transform: scale(0.98); }
 
     .btn-blue {
-      background: #3b82f6;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
       color: #fff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
+    .btn-blue:hover { opacity: 0.92; }
 
     .btn-green {
-      background: #16a34a;
+      background: linear-gradient(135deg, #10b981, #059669);
       color: #fff;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
 
     .btn-red {
-      background: #dc2626;
-      color: #fff;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
     }
+    .btn-red:hover { background: rgba(239, 68, 68, 0.25); }
 
-    .btn-gray {
-      background: #333;
-      color: #aaa;
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
     }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.1); }
 
-    #key-error {
-      color: #ef4444;
-      font-size: 13px;
-      display: none;
-    }
+    /* Tab Sections */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.2s ease; }
 
-    /* Main content */
-    #main {
-      display: none;
-      padding: 20px 24px;
-    }
-
+    /* Directory Toolbar */
     .toolbar {
       display: flex;
       gap: 12px;
       margin-bottom: 20px;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: space-between;
     }
 
-    #search {
+    .toolbar-left {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
       flex: 1;
-      min-width: 200px;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: #1a1a1a;
-      color: #fff;
-      font-size: 14px;
     }
 
-    select {
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: #1a1a1a;
+    .search-input {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: rgba(24, 24, 27, 0.8);
       color: #fff;
-      font-size: 14px;
+      font-size: 13px;
+      min-width: 260px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus { border-color: var(--primary); }
+
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pill.active {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
     }
 
     /* Table */
-    .table-wrap {
-      overflow-x: auto;
+    .table-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
+
+    .table-wrap { overflow-x: auto; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      font-size: 13px;
+      text-align: left;
     }
 
     th {
-      background: #1a1a1a;
-      padding: 12px 10px;
-      text-align: left;
-      color: #888;
+      background: rgba(18, 18, 20, 0.6);
+      padding: 14px 16px;
+      color: var(--text-muted);
       font-weight: 600;
-      border-bottom: 2px solid #333;
+      border-bottom: 1px solid var(--card-border);
       white-space: nowrap;
     }
 
     td {
-      padding: 10px;
-      border-bottom: 1px solid #222;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       vertical-align: middle;
     }
 
-    tr:hover td {
-      background: #161616;
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* Tier Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
-    .badge {
+    .badge-vip {
+      background: var(--vip-bg);
+      color: var(--vip-gold);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-general {
+      background: var(--gen-bg);
+      color: var(--gen-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-guestlist {
+      background: var(--gst-bg);
+      color: var(--gst-purple);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
       display: inline-block;
-      padding: 3px 10px;
+    }
+
+    .status-valid { background: #10b981; box-shadow: 0 0 6px #10b981; }
+    .status-scanned { background: #f97316; }
+
+    .cell-input {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #fff;
+      font-size: 13px;
+      width: 100%;
+      max-width: 180px;
+      transition: all 0.2s;
+    }
+
+    .cell-input:focus, .cell-input:hover {
+      background: rgba(0, 0, 0, 0.4);
+      border-color: var(--card-border);
+    }
+
+    /* Ticket Studio Visual Canvas Builder */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .studio-grid { grid-template-columns: 1fr; }
+    }
+
+    .studio-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .studio-preview-box {
+      background: #000;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: sticky;
+      top: 90px;
+    }
+
+    #pass-canvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-group label {
       font-size: 12px;
       font-weight: 600;
-    }
-
-    .badge-valid {
-      background: #14532d;
-      color: #86efac;
-    }
-
-    .badge-scanned {
-      background: #431407;
-      color: #fdba74;
-    }
-
-    .badge-sent {
-      background: #1e3a5f;
-      color: #93c5fd;
-    }
-
-    .badge-unsent {
-      background: #222;
-      color: #666;
-    }
-
-    .email-input {
-      padding: 7px 10px;
-      border-radius: 7px;
-      border: 1px solid #333;
-      background: #111;
-      color: #fff;
-      font-size: 13px;
-      width: 220px;
-    }
-
-    .email-input:focus {
-      outline: none;
-      border-color: #3b82f6;
-    }
-
-    .save-btn {
-      padding: 7px 14px;
-      border: none;
-      border-radius: 7px;
-      background: #3b82f6;
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 13px;
-      white-space: nowrap;
-    }
-
-    .save-btn:disabled {
-      background: #333;
-      color: #555;
-      cursor: default;
-    }
-
-    .save-btn.saved {
-      background: #16a34a;
-    }
-
-    #loading {
-      text-align: center;
-      padding: 60px;
-      color: #666;
-    }
-
-    .pagination {
+      color: var(--text-muted);
       display: flex;
+      justify-content: space-between;
+    }
+
+    .control-input {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: rgba(10, 10, 12, 0.8);
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .control-input:focus { border-color: var(--primary); }
+
+    /* Multi-Day Table Badges */
+    .mini-day-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 6px;
+      font-family: monospace;
+      display: inline-block;
+    }
+    .mini-day-pill.scanned {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .mini-day-pill.valid {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+    .mini-day-pill.disabled {
+      background: rgba(255, 255, 255, 0.04);
+      color: #666;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      opacity: 0.5;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
       justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-card {
+      max-width: 440px;
+      width: 100%;
+      background: #141416;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    /* Multi-Element Studio Selector Tabs */
+    .elem-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .elem-tab {
+      padding: 9px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .elem-tab:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+
+    .elem-tab.active {
+      background: rgba(59, 130, 246, 0.16);
+      border-color: #3b82f6;
+      color: #60a5fa;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+    }
+
+    .color-picker-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(10, 10, 12, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 6px 12px;
+    }
+
+    .color-picker-wrap input[type="color"] {
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .color-picker-wrap span {
+      font-family: monospace;
+      font-size: 13px;
+      color: #a1a1aa;
+    }
+
+    /* Batch Compiler Modal */
+    .batch-modal-card {
+      max-width: 580px;
+      width: 100%;
+      background: #141416;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      animation: popIn 0.2s ease;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+    }
+
+    .scope-radio-card {
+      display: flex;
       align-items: center;
       gap: 12px;
-      margin-top: 20px;
-      font-size: 14px;
-      color: #888;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      transition: all 0.2s;
     }
+
+    .scope-radio-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .batch-limit-btn.active {
+      background: rgba(59, 130, 246, 0.2) !important;
+      border-color: #3b82f6 !important;
+      color: #60a5fa !important;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
   </style>
 </head>
-
 <body>
 
-  <!-- Key gate -->
+  <!-- STEP 1: AUTHENTICATION GATE -->
   <div id="key-screen">
-    <h2>🔐 Admin Access</h2>
-    <p>Enter the access key to manage tickets.</p>
-    <input id="key-input" class="key-input" type="password" placeholder="••••••••••"
-      onkeydown="if(event.key==='Enter') verifyKey()" />
-    <p id="key-error">Incorrect key. Try again.</p>
-    <button class="btn btn-blue" onclick="verifyKey()">Enter</button>
+    <div class="key-icon">🔐</div>
+    <h2>Admin Authentication</h2>
+    <p style="color: var(--text-muted); font-size: 14px;">Enter the master access key to manage tickets, studio passes, and live event check-in metrics.</p>
+    <input id="key-input" class="key-input" type="password" placeholder="••••••••••" autocomplete="off"
+      onkeydown="if(event.key==='Enter') verifyAdminKey()" />
+    <p id="key-error" style="color: #ef4444; font-size: 13px; display: none;">Incorrect key. Access denied.</p>
+    <button class="btn btn-blue" style="width: 100%; padding: 14px; font-size: 15px;" onclick="verifyAdminKey()">
+      <span>Access Admin Panel</span> ➔
+    </button>
   </div>
 
-  <!-- Main admin panel -->
-  <div id="main">
+  <!-- STEP 2: MAIN DASHBOARD -->
+  <div id="main-app">
+    
     <header>
-      <h1>🎟️ Ticket Admin</h1>
-      <div class="stats">
-        <div>Total: <span id="stat-total">—</span></div>
-        <div>Scanned: <span id="stat-scanned">—</span></div>
-        <div>Emails assigned: <span id="stat-emails">—</span></div>
-        <div>Emails sent: <span id="stat-sent">—</span></div>
-      </div>
-    </header>
-
-    <div id="main-content" style="padding: 20px 24px;">
-      <div class="toolbar">
-        <input id="search" type="text" placeholder="Search ticket ID or email..." oninput="renderTable()" />
-        <select id="filter" onchange="renderTable()">
-          <option value="all">All tickets</option>
-          <option value="valid">Valid only</option>
-          <option value="scanned">Scanned only</option>
-          <option value="no-email">No email assigned</option>
-          <option value="email-sent">Email sent</option>
-          <option value="email-unsent">Email assigned, not sent</option>
-        </select>
-        <button class="btn btn-blue" onclick="loadTickets()">↻ Refresh</button>
-        <button class="btn btn-blue" id="bulk-email-btn" onclick="bulkSendEmails()">✉ Send Unsent Emails</button>
-      </div>
-
-      <!-- Ticket Generator & ZIP/Excel Download Card -->
-      <div class="toolbar" style="margin-top: -8px; margin-bottom: 20px; background: #1a1a1a; padding: 16px; border-radius: 12px; border: 1px solid #333; display: block;">
-        <div style="font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #3b82f6;">🎫 Generate Fresh Tickets & QR Codes</div>
-        <div style="display: flex; gap: 12px; align-items: center; width: 100%; flex-wrap: wrap;">
-          <input id="gen-count" type="number" placeholder="Count (e.g. 150)" min="1" max="1500" class="email-input" style="width: 140px; background: #111;" />
-          <button class="btn btn-green" id="gen-btn" onclick="generateTickets()">Generate & Download ZIP</button>
-          <div id="gen-progress" style="font-size: 13px; color: #aaa; font-weight: bold; margin-left: 8px;"></div>
+      <div class="brand">
+        <span style="font-size: 22px;">🎟️</span>
+        <div>
+          <span>TicketScanner <span class="brand-tag">PRO</span></span>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 400;">Event Command & Ticketing Studio</div>
         </div>
       </div>
 
-      <div class="table-wrap">
-        <div id="loading">Loading tickets from Firebase...</div>
-        <table id="ticket-table" style="display:none">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Ticket ID</th>
-              <th>Status</th>
-              <th>Scanned By</th>
-              <th>Scan Time</th>
-              <th>Email</th>
-              <th>Email Sent</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="table-body"></tbody>
-        </table>
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-directory')">
+          <span>👥</span> Attendees & Tickets
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-studio')">
+          <span>🎨</span> Ticket Studio
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-generator')">
+          <span>⚡</span> Batch Generator
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-settings')">
+          <span>⚙️</span> Database & Maintenance
+        </button>
       </div>
 
-      <div class="pagination">
-        <button class="btn btn-gray" onclick="prevPage()">← Prev</button>
-        <span id="page-info">Page 1</span>
-        <button class="btn btn-gray" onclick="nextPage()">Next →</button>
+      <div class="header-right">
+        <button class="btn btn-ghost" onclick="loadAllTickets()">
+          <span>↻</span> Refresh
+        </button>
+        <a href="index.html" target="_blank" class="btn btn-blue">
+          <span>📷</span> Open Scanner UI ↗
+        </a>
+      </div>
+    </header>
+
+    <div style="padding-top: 24px;">
+      
+      <!-- Top Live KPI Analytics Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <span>Total Registered</span>
+            <span>🎫</span>
+          </div>
+          <div id="kpi-total" class="kpi-value">0</div>
+          <div class="kpi-sub">
+            <span id="kpi-valid-count">0</span> valid tickets in database
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <span>Check-in Attendance</span>
+            <span>✓</span>
+          </div>
+          <div id="kpi-scanned" class="kpi-value" style="color: #34d399;">0</div>
+          <div class="kpi-sub">
+            <span id="kpi-scanned-pct">0%</span> checked in
+          </div>
+          <div class="progress-bar">
+            <div id="kpi-progress" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <span>VIP Access</span>
+            <span style="color: var(--vip-gold);">👑</span>
+          </div>
+          <div id="kpi-vip-count" class="kpi-value" style="color: var(--vip-gold);">0 / 0</div>
+          <div id="kpi-vip-sub" class="kpi-sub">0% VIP checked in</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <span>General & Guestlist</span>
+            <span style="color: var(--gst-purple);">⭐</span>
+          </div>
+          <div id="kpi-gen-sub" class="kpi-value" style="font-size: 24px; padding-top: 6px;">0 Gen • 0 Guest</div>
+          <div class="kpi-sub">Breakdown of entry passes</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">
+            <span>Multi-Day Passes</span>
+            <span style="color: #60a5fa;">📅</span>
+          </div>
+          <div id="kpi-multiday-count" class="kpi-value" style="color: #60a5fa;">0</div>
+          <div id="kpi-multiday-sub" class="kpi-sub">0 total day check-ins</div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- TAB 1: ATTENDEES & TICKETS DIRECTORY                              -->
+      <!-- ================================================================= -->
+      <div id="tab-directory" class="tab-content active">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input id="search-box" class="search-input" type="text" placeholder="Search by Ticket ID, Attendee, or Email..." oninput="filterTable()" />
+            
+            <div class="filter-pills">
+              <button class="pill active" onclick="setFilter('all', this)">All</button>
+              <button class="pill" onclick="setFilter('VIP', this)">👑 VIP</button>
+              <button class="pill" onclick="setFilter('General', this)">🎟️ General</button>
+              <button class="pill" onclick="setFilter('Guestlist', this)">⭐ Guestlist</button>
+              <button class="pill" onclick="setFilter('multiday', this)">📅 Multi-Day</button>
+              <button class="pill" onclick="setFilter('Valid', this)">○ Valid</button>
+              <button class="pill" onclick="setFilter('Scanned', this)">✓ Scanned</button>
+              <button class="pill" onclick="setFilter('unsent', this)">✉ Unsent Email</button>
+              <button class="pill" onclick="setFilter('unrendered', this)">📦 Unrendered</button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-ghost" onclick="exportCSV()">
+              <span>📥</span> Export CSV
+            </button>
+            <button id="bulk-mail-btn" class="btn btn-blue" onclick="bulkDispatchPasses()">
+              <span>✉</span> Dispatch Unsent Passes
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+          <div class="table-wrap">
+            <table id="tickets-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Ticket ID</th>
+                  <th>Tier</th>
+                  <th>Pass Type & Days</th>
+                  <th>Attendee Name</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Gate Staff</th>
+                  <th>Scan Time</th>
+                  <th>Pass File</th>
+                  <th>Email Status</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="table-body">
+                <tr><td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">Loading ticket database from Cloudflare edge...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- TAB 2: VISUAL TICKET STUDIO (TEMPLATE PASS GENERATOR)             -->
+      <!-- ================================================================= -->
+      <div id="tab-studio" class="tab-content">
+        <div class="studio-grid">
+          
+          <!-- Studio Configuration Controls -->
+          <div class="studio-panel">
+            <h3 style="font-size: 18px; font-weight: 700;">🎨 Ticket Pass Designer</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Upload your event flyer or blank ticket template graphic. The studio dynamically burns the QR code, attendee name, and tier badge into finished printable/email passes.
+            </p>
+
+            <!-- Template Image Upload -->
+            <div class="control-group">
+              <label>
+                <span>Upload Custom Ticket Template (PNG/JPG)</span>
+              </label>
+              <input id="template-upload" type="file" accept="image/*" class="control-input" onchange="handleTemplateUpload(event)" />
+            </div>
+
+            <!-- Event Details -->
+            <div class="control-group">
+              <label>Event Name Title</label>
+              <input id="studio-event-name" class="control-input" type="text" value="NEON HORIZON 2026" oninput="renderStudioCanvas()" />
+            </div>
+
+            <div class="control-group">
+              <label>Event Date & Venue</label>
+              <input id="studio-event-sub" class="control-input" type="text" value="OCT 24 • MAIN ARENA • DOORS 8 PM" oninput="renderStudioCanvas()" />
+            </div>
+
+            <div class="control-group">
+              <label>Preview Attendee Tier</label>
+              <select id="studio-preview-tier" class="control-input" onchange="renderStudioCanvas()">
+                <option value="VIP">👑 VIP Access</option>
+                <option value="General" selected>🎟️ General Admission</option>
+                <option value="Guestlist">⭐ Guestlist Access</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label>Preview Attendee Name</label>
+              <input id="studio-preview-name" class="control-input" type="text" value="Alexander Wright" oninput="renderStudioCanvas()" />
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- INTERACTIVE MULTI-ELEMENT STUDIO CUSTOMIZER                     -->
+            <!-- ============================================================= -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 14px; color: #fff;">🎯 Movable Studio Elements</span>
+                <span style="font-size: 11px; color: #60a5fa; font-weight: 500;">✋ Drag on canvas</span>
+              </div>
+
+              <!-- Element Selector Tabs -->
+              <div class="elem-selector-grid">
+                <button type="button" id="tab-elem-qr" class="elem-tab active" onclick="selectStudioElement('qr')">
+                  <span>🎯</span> QR Code
+                </button>
+                <button type="button" id="tab-elem-name" class="elem-tab" onclick="selectStudioElement('name')">
+                  <span>👤</span> Attendee Name
+                </button>
+                <button type="button" id="tab-elem-tier" class="elem-tab" onclick="selectStudioElement('tier')">
+                  <span>👑</span> Tier Badge
+                </button>
+                <button type="button" id="tab-elem-header" class="elem-tab" onclick="selectStudioElement('header')">
+                  <span>📅</span> Event Header
+                </button>
+              </div>
+
+              <!-- Live Position Indicator -->
+              <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.35); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--card-border); font-size: 12px;">
+                <span style="color: var(--text-muted);">Active: <strong id="active-elem-name" style="color: #60a5fa;">QR Code</strong></span>
+                <span style="font-family: monospace; font-weight: 700; color: #67e8f9;">
+                  X: <span id="elem-x-val">210px</span>, Y: <span id="elem-y-val">320px</span>
+                </span>
+              </div>
+
+              <!-- 1. QR Code Controls -->
+              <div id="ctrl-qr" class="elem-ctrl-panel" style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="control-group">
+                  <label>
+                    <span>QR Code Size</span>
+                    <strong id="qr-size-val">180px</strong>
+                  </label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <input id="studio-qr-size" type="range" min="80" max="400" value="180" style="flex: 1;" oninput="onQrSizeChange()" />
+                    <input id="studio-qr-size-num" class="control-input" type="number" min="60" max="600" value="180" style="width: 75px; padding: 6px 8px; text-align: center;" oninput="onQrSizeNumChange()" />
+                  </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; cursor: pointer; color: var(--text-muted);">
+                    <span>White QR Background Padding</span>
+                    <input type="checkbox" id="layer-qr-bg" checked onchange="toggleLayer('qrBg')" />
+                  </label>
+                  <label style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; cursor: pointer; color: var(--text-muted);">
+                    <span>Ticket ID Code Text under QR</span>
+                    <input type="checkbox" id="layer-code" checked onchange="toggleLayer('code')" />
+                  </label>
+                </div>
+              </div>
+
+              <!-- 2. Attendee Name Controls -->
+              <div id="ctrl-name" class="elem-ctrl-panel" style="display: none; flex-direction: column; gap: 12px;">
+                <div class="control-group">
+                  <label>
+                    <span>Attendee Name Font Size</span>
+                    <strong id="name-size-val">28px</strong>
+                  </label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <input id="studio-name-size" type="range" min="14" max="72" value="28" style="flex: 1;" oninput="onNameSizeChange()" />
+                    <input id="studio-name-size-num" class="control-input" type="number" min="14" max="72" value="28" style="width: 75px; padding: 6px 8px; text-align: center;" oninput="onNameSizeNumChange()" />
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label>Name Text Color</label>
+                  <div class="color-picker-wrap">
+                    <input type="color" id="name-color-picker" value="#ffffff" oninput="onNameColorChange()" />
+                    <span id="name-color-hex">#ffffff</span>
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label>Font Weight</label>
+                  <select id="name-font-weight" class="control-input" onchange="onNameFontWeightChange()">
+                    <option value="400">Regular</option>
+                    <option value="600">Semi-Bold</option>
+                    <option value="700" selected>Bold</option>
+                    <option value="800">Extra Bold</option>
+                  </select>
+                </div>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; cursor: pointer; color: var(--text-muted);">
+                  <span>Show Attendee Name</span>
+                  <input type="checkbox" id="layer-name" checked onchange="toggleLayer('name')" />
+                </label>
+              </div>
+
+              <!-- 3. Tier Badge Controls -->
+              <div id="ctrl-tier" class="elem-ctrl-panel" style="display: none; flex-direction: column; gap: 12px;">
+                <div class="control-group">
+                  <label>
+                    <span>Badge Width</span>
+                    <strong id="tier-w-val">260px</strong>
+                  </label>
+                  <input id="studio-tier-w" type="range" min="140" max="420" value="260" oninput="onTierWidthChange()" />
+                </div>
+
+                <div class="control-group">
+                  <label>
+                    <span>Badge Height</span>
+                    <strong id="tier-h-val">36px</strong>
+                  </label>
+                  <input id="studio-tier-h" type="range" min="24" max="64" value="36" oninput="onTierHeightChange()" />
+                </div>
+
+                <div class="control-group">
+                  <label>
+                    <span>Badge Font Size</span>
+                    <strong id="tier-size-val">13px</strong>
+                  </label>
+                  <input id="studio-tier-size" type="range" min="10" max="24" value="13" oninput="onTierFontSizeChange()" />
+                </div>
+
+                <div class="control-group">
+                  <label>Custom Badge Color (Optional)</label>
+                  <div class="color-picker-wrap">
+                    <input type="color" id="tier-color-picker" value="#f59e0b" oninput="onTierColorChange()" />
+                    <span id="tier-color-hex">#f59e0b</span>
+                  </div>
+                </div>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; cursor: pointer; color: var(--text-muted);">
+                  <span>Auto-Color by Tier (VIP: Gold, Gen: Green)</span>
+                  <input type="checkbox" id="tier-auto-color" checked onchange="onTierAutoColorToggle()" />
+                </label>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; cursor: pointer; color: var(--text-muted);">
+                  <span>Show Tier Badge Banner</span>
+                  <input type="checkbox" id="layer-tier" checked onchange="toggleLayer('tier')" />
+                </label>
+              </div>
+
+              <!-- 4. Event Header Controls -->
+              <div id="ctrl-header" class="elem-ctrl-panel" style="display: none; flex-direction: column; gap: 12px;">
+                <div class="control-group">
+                  <label>
+                    <span>Title Font Size</span>
+                    <strong id="header-size-val">26px</strong>
+                  </label>
+                  <input id="studio-header-size" type="range" min="16" max="60" value="26" oninput="onHeaderSizeChange()" />
+                </div>
+
+                <div class="control-group">
+                  <label>Title Text Color</label>
+                  <div class="color-picker-wrap">
+                    <input type="color" id="header-color-picker" value="#ffffff" oninput="onHeaderColorChange()" />
+                    <span id="header-color-hex">#ffffff</span>
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label>
+                    <span>Date/Venue Font Size</span>
+                    <strong id="sub-size-val">13px</strong>
+                  </label>
+                  <input id="studio-sub-size" type="range" min="10" max="28" value="13" oninput="onSubSizeChange()" />
+                </div>
+
+                <div class="control-group">
+                  <label>Date/Venue Text Color</label>
+                  <div class="color-picker-wrap">
+                    <input type="color" id="sub-color-picker" value="#a1a1aa" oninput="onSubColorChange()" />
+                    <span id="sub-color-hex">#a1a1aa</span>
+                  </div>
+                </div>
+
+                <label style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; cursor: pointer; color: var(--text-muted);">
+                  <span>Show Event Title & Date Header</span>
+                  <input type="checkbox" id="layer-header" checked onchange="toggleLayer('header')" />
+                </label>
+              </div>
+
+              <!-- Shared Quick Alignment Presets -->
+              <div class="control-group" style="margin-top: 4px;">
+                <label style="font-size: 11px;">Align Active Element</label>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-ghost" style="padding: 5px 9px; font-size: 11px;" onclick="alignActiveElement('left')">⬅ Left</button>
+                  <button type="button" class="btn btn-ghost" style="padding: 5px 9px; font-size: 11px;" onclick="alignActiveElement('center')">↔ Center</button>
+                  <button type="button" class="btn btn-ghost" style="padding: 5px 9px; font-size: 11px;" onclick="alignActiveElement('right')">➡ Right</button>
+                  <button type="button" class="btn btn-ghost" style="padding: 5px 9px; font-size: 11px;" onclick="alignActiveElement('top')">⬆ Top</button>
+                  <button type="button" class="btn btn-ghost" style="padding: 5px 9px; font-size: 11px;" onclick="alignActiveElement('middle')">↕ Middle</button>
+                  <button type="button" class="btn btn-ghost" style="padding: 5px 9px; font-size: 11px;" onclick="alignActiveElement('bottom')">⬇ Bottom</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Export Buttons -->
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+              <button class="btn btn-green" onclick="downloadPreviewPass()">
+                <span>💾</span> Download Preview Pass (.PNG)
+              </button>
+              <button id="batch-pass-btn" class="btn btn-blue" onclick="openBatchRenderModal()">
+                <span>⚡</span> Batch Export Passes (.ZIP)
+              </button>
+              <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+                Runs 100% locally in browser • Zero external cost
+              </div>
+            </div>
+          </div>
+
+          <!-- Studio Live Canvas Preview -->
+          <div class="studio-preview-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
+              <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px;">LIVE TICKET PASS PREVIEW</div>
+              <div id="canvas-drag-hint" style="font-size: 11px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 3px 10px; border-radius: 12px; font-weight: 600;">
+                ✋ Drag Any Element to Move
+              </div>
+            </div>
+            <canvas id="pass-canvas" width="600" height="900"></canvas>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">
+              Selected: <span id="canvas-pos-indicator" style="color: #67e8f9; font-family: monospace;">QR Code • X: 210px, Y: 320px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- TAB 3: MULTI-TIER BATCH TICKET GENERATOR                          -->
+      <!-- ================================================================= -->
+      <div id="tab-generator" class="tab-content">
+        <div style="max-width: 620px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 20px;">
+          <div>
+            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">⚡ Multi-Tier & Multi-Day Ticket Creator</h3>
+            <p style="font-size: 14px; color: var(--text-muted);">Generate cryptographic tickets for single-day or multi-day events (up to 10 days) categorized into VIP, General, and Guestlist tiers.</p>
+          </div>
+
+          <!-- Multi-Day Event Settings Card -->
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="font-size: 14px; color: #fff;">📅 Event Duration & Scan Validity</strong>
+                <div style="font-size: 12px; color: var(--text-muted);">Configure 1-day or up to 10-day multi-scan passes.</div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div class="control-group">
+                <label>Total Event Days (1 to 10)</label>
+                <select id="gen-total-days" class="control-input" onchange="updateGenDayAccessOptions()">
+                  <option value="1">1 Day (Single Day)</option>
+                  <option value="2" selected>2 Days (Weekend / 2-Day Event)</option>
+                  <option value="3">3 Days (3-Day Weekend)</option>
+                  <option value="4">4 Days</option>
+                  <option value="5">5 Days</option>
+                  <option value="6">6 Days</option>
+                  <option value="7">7 Days (Full Week)</option>
+                  <option value="8">8 Days</option>
+                  <option value="9">9 Days</option>
+                  <option value="10">10 Days (10-Day Festival)</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <label>Day Access Scope</label>
+                <select id="gen-access-mode" class="control-input" onchange="updateGenDayAccessOptions()">
+                  <option value="all_days">All Days Access (Full Event Pass)</option>
+                  <option value="day_1">Day 1 Only</option>
+                  <option value="day_2">Day 2 Only</option>
+                  <option value="custom">Custom Days Selection</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Custom Days Checkboxes -->
+            <div id="gen-custom-days-row" style="display: none; flex-direction: column; gap: 6px;">
+              <label style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Select Allowed Days:</label>
+              <div id="gen-days-checkboxes" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+
+            <div class="control-group">
+              <label>Pass Type Display Name</label>
+              <input id="gen-pass-name" class="control-input" type="text" placeholder="e.g. 2-Day VIP Festival Pass" oninput="this.dataset.userEdited='true'" />
+            </div>
+
+            <div id="gen-plan-summary" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #93c5fd;">
+              Passes will be valid for multiple check-ins: Day 1 and Day 2 (1 admission per day).
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="control-group">
+              <label>👑 VIP Passes Count</label>
+              <input id="gen-vip-count" class="control-input" type="number" value="25" min="0" max="2000" />
+            </div>
+
+            <div class="control-group">
+              <label>🎟️ General Admission Count</label>
+              <input id="gen-gen-count" class="control-input" type="number" value="150" min="0" max="3000" />
+            </div>
+
+            <div class="control-group">
+              <label>⭐ Guestlist Passes Count</label>
+              <input id="gen-gst-count" class="control-input" type="number" value="25" min="0" max="1000" />
+            </div>
+
+            <div class="control-group">
+              <label>Batch Event Tag</label>
+              <input id="gen-event-tag" class="control-input" type="text" placeholder="e.g. Wave 1" />
+            </div>
+          </div>
+
+          <button id="gen-submit-btn" class="btn btn-green" style="padding: 14px; font-size: 15px; justify-content: center;" onclick="generateTieredBatch()">
+            <span>✨ Generate & Save Tickets to Firebase</span>
+          </button>
+          
+          <div id="gen-status-msg" style="font-size: 13px; text-align: center; color: var(--text-muted);"></div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- TAB 4: DATABASE MAINTENANCE & CLEAN SLATE                         -->
+      <!-- ================================================================= -->
+      <div id="tab-settings" class="tab-content">
+        <div style="max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
+          
+          <!-- Wipe Database Card -->
+          <div style="background: var(--card-bg); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; gap: 14px; align-items: flex-start;">
+              <div style="font-size: 28px;">⚠️</div>
+              <div>
+                <h3 style="font-size: 18px; color: #f87171; font-weight: 700;">Clean Slate & Database Wipe</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">
+                  Clear old test records to launch a clean slate for a new event, or reset all check-in scan timestamps back to 'Valid'.
+                </p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap;">
+              <button class="btn btn-red" onclick="openResetModal('wipe_all')">
+                <span>🗑️ Wipe All Database Records</span>
+              </button>
+              <button class="btn btn-ghost" onclick="openResetModal('reset_scans')">
+                <span>🔄 Reset Scanned Statuses Only</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Configuration Card -->
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 16px;">
+            <h3 style="font-size: 18px; font-weight: 700;">⚙️ System Configuration</h3>
+            <div style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+              • <strong>Active API:</strong> <code id="cfg-api-url" style="color: #60a5fa;"></code><br/>
+              • <strong>Cloudflare Worker:</strong> <code>ticket-scanner-api</code><br/>
+              • <strong>Authentication:</strong> Master Passkey Verified via Cloudflare Edge API<br/>
+              • <strong>Email Delivery:</strong> Resend API Integration
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESET CONFIRMATION MODAL -->
+  <div id="reset-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="color: #ef4444; font-size: 18px; font-weight: 700;">Confirm Database Action</h3>
+      <p id="reset-modal-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"></p>
+      
+      <div class="control-group">
+        <label>Type <strong>CONFIRM_RESET</strong> to execute:</label>
+        <input id="reset-confirm-input" class="control-input" placeholder="CONFIRM_RESET" autocomplete="off" />
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button class="btn btn-ghost" onclick="closeResetModal()">Cancel</button>
+        <button id="reset-exec-btn" class="btn btn-red" onclick="executeDatabaseReset()">Execute Reset</button>
       </div>
     </div>
   </div>
 
+  <!-- BATCH EXPORT & PASS COMPILER MODAL -->
+  <div id="batch-render-modal" class="modal-overlay">
+    <div class="batch-modal-card">
+      
+      <!-- Screen 1: Configuration & Scope Selection -->
+      <div id="batch-prep-screen">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span>⚡</span> Pass Compiler & ZIP Exporter
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+              Client-side HTML5 canvas compositing • 100% free • Zero Cloudflare/Firebase compute limits
+            </p>
+          </div>
+          <button class="btn btn-ghost" style="padding: 4px 8px;" onclick="closeBatchRenderModal()">✕</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 16px;">
+          <div class="control-group">
+            <label>Pass Scope</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label class="scope-radio-card">
+                <input type="radio" name="batch-scope" value="unrendered" checked onchange="updateBatchSummary()" />
+                <div>
+                  <strong>Only Unrendered Tickets (Recommended)</strong>
+                  <div id="scope-unrendered-desc" style="font-size: 12px; color: var(--text-muted);">Skip passes already generated to avoid duplicates</div>
+                </div>
+              </label>
+              <label class="scope-radio-card">
+                <input type="radio" name="batch-scope" value="all" onchange="updateBatchSummary()" />
+                <div>
+                  <strong>All Database Tickets</strong>
+                  <div style="font-size: 12px; color: var(--text-muted);">Re-generate every pass from scratch</div>
+                </div>
+              </label>
+              <label class="scope-radio-card">
+                <input type="radio" name="batch-scope" value="VIP" onchange="updateBatchSummary()" />
+                <div>
+                  <strong>VIP Passes Only</strong>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Batch Size Limit</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <button type="button" class="btn btn-ghost batch-limit-btn active" onclick="setBatchLimit('all', this)">All</button>
+              <button type="button" class="btn btn-ghost batch-limit-btn" onclick="setBatchLimit(100, this)">100</button>
+              <button type="button" class="btn btn-ghost batch-limit-btn" onclick="setBatchLimit(250, this)">250</button>
+              <button type="button" class="btn btn-ghost batch-limit-btn" onclick="setBatchLimit(500, this)">500</button>
+            </div>
+          </div>
+
+          <div id="batch-summary-box" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #93c5fd; display: flex; align-items: center; justify-content: space-between;">
+            <span>Ready to compile:</span>
+            <strong id="batch-target-count" style="font-size: 15px; color: #fff;">0 passes</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button class="btn btn-ghost" onclick="closeBatchRenderModal()">Cancel</button>
+          <button id="batch-start-btn" class="btn btn-blue" onclick="startBatchRenderPipeline()">
+            <span>🚀 Start Compilation</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Screen 2: Active Non-Blocking Compilation Screen -->
+      <div id="batch-active-screen" style="display: none; flex-direction: column; gap: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 id="batch-status-title" style="font-size: 18px; font-weight: 700; color: #60a5fa;">
+            ⚙️ Compiling Passes...
+          </h3>
+          <span id="batch-pct-badge" style="font-family: monospace; font-size: 14px; font-weight: 700; color: #67e8f9;">0%</span>
+        </div>
+
+        <!-- Progress Bar -->
+        <div style="background: rgba(255, 255, 255, 0.08); border-radius: 10px; height: 12px; overflow: hidden; position: relative;">
+          <div id="batch-progress-bar" style="background: linear-gradient(90deg, #3b82f6, #06b6d4); height: 100%; width: 0%; transition: width 0.15s ease;"></div>
+        </div>
+
+        <!-- Metric Counters -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; border: 1px solid var(--card-border); text-align: center;">
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted);">Completed</div>
+            <div id="batch-count-metric" style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 2px;">0 / 0</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted);">Render Speed</div>
+            <div id="batch-speed-metric" style="font-size: 16px; font-weight: 700; color: #34d399; margin-top: 2px;">~0 /s</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted);">Estimated Left</div>
+            <div id="batch-eta-metric" style="font-size: 16px; font-weight: 700; color: #f59e0b; margin-top: 2px;">--</div>
+          </div>
+        </div>
+
+        <!-- Current Ticket Card Preview -->
+        <div style="display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px;">
+          <canvas id="batch-thumb-canvas" width="60" height="90" style="border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: #000;"></canvas>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 11px; color: var(--text-muted);">Current Ticket:</div>
+            <div id="batch-current-id" style="font-family: monospace; font-size: 15px; font-weight: 700; color: #67e8f9; margin-top: 2px;">---</div>
+            <div id="batch-current-attendee" style="font-size: 13px; color: #e4e4e7; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">---</div>
+          </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; flex-wrap: wrap;">
+          <button id="batch-pause-btn" class="btn btn-ghost" onclick="toggleBatchPause()">
+            <span>⏸️</span> Pause
+          </button>
+          <button id="batch-stop-btn" class="btn btn-blue" onclick="stopAndDownloadPartialZip()">
+            <span>⏹️</span> Stop & Download (<span id="batch-partial-count">0</span> Passes)
+          </button>
+          <button class="btn btn-ghost" style="color: #ef4444;" onclick="cancelBatchRender()">
+            ✕ Abort
+          </button>
+        </div>
+      </div>
+
+      <!-- Screen 3: Complete Screen -->
+      <div id="batch-done-screen" style="display: none; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 10px 0;">
+        <div style="font-size: 48px;">🎉</div>
+        <h3 style="font-size: 20px; font-weight: 700;">Compilation Complete!</h3>
+        <p id="batch-done-desc" style="font-size: 14px; color: var(--text-muted); line-height: 1.5; max-width: 400px;"></p>
+        <button class="btn btn-green" style="padding: 12px 24px;" onclick="closeBatchRenderModal()">
+          <span>✓ Done</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <script>
-    // 🌐 Cloudflare Worker API Settings
+    // 🌐 Cloudflare Workers API Settings
     const API_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
       ? "http://localhost:8787" 
       : window.location.origin;
 
-    // 🔑 Admin access key
-    const ACCESS_KEY = "Raghav@ticket";
+    let authToken = localStorage.getItem("admin_key") || "";
 
-    const PAGE_SIZE = 50;
-    let allTickets = []; // [{id, status, email, scanned_by, scan_time, email_sent}, ...]
-    let filtered = [];
-    let currentPage = 1;
+    let allTickets = [];
+    let currentFilter = "all";
+    let customTemplateImg = null;
+    let pendingResetMode = "";
 
-    function verifyKey() {
+    // =========================================================================
+    // STEP 1: AUTHENTICATION (Server-side API verification, no bare HTML keys)
+    // =========================================================================
+    async function verifyAdminKey() {
       const input = document.getElementById("key-input");
-      if (input.value === ACCESS_KEY) {
-        document.getElementById("key-screen").style.display = "none";
-        document.getElementById("main").style.display = "block";
-        loadTickets();
-      } else {
-        input.value = "";
-        input.classList.add("error");
-        document.getElementById("key-error").style.display = "block";
-        setTimeout(() => input.classList.remove("error"), 400);
-      }
-    }
+      const err = document.getElementById("key-error");
+      const enteredKey = input.value.trim();
 
-    async function loadTickets() {
-      document.getElementById("loading").style.display = "block";
-      document.getElementById("ticket-table").style.display = "none";
+      if (!enteredKey) return;
 
       try {
-        const res = await fetch(`${API_URL}/api/tickets`, {
-          headers: {
-            "Authorization": `Bearer ${ACCESS_KEY}`
-          }
-        });
-        const data = await res.json();
-
-        allTickets = data ? Object.entries(data).map(([id, val]) => ({
-          id,
-          status: val.status || "Valid",
-          email: val.email || "",
-          scanned_by: val.scanned_by || "",
-          scan_time: val.scan_time || "",
-          email_sent: val.email_sent || false,
-        })) : [];
-
-        updateStats();
-        renderTable();
-
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("ticket-table").style.display = "table";
-      } catch (err) {
-        document.getElementById("loading").textContent = "Error loading tickets. Check backend API.";
-        console.error(err);
-      }
-    }
-
-    function updateStats() {
-      document.getElementById("stat-total").textContent = allTickets.length;
-      document.getElementById("stat-scanned").textContent = allTickets.filter(t => t.status === "Scanned").length;
-      document.getElementById("stat-emails").textContent = allTickets.filter(t => t.email).length;
-      document.getElementById("stat-sent").textContent = allTickets.filter(t => t.email_sent).length;
-    }
-
-    function renderTable() {
-      const query = document.getElementById("search").value.toLowerCase();
-      const filter = document.getElementById("filter").value;
-
-      filtered = allTickets.filter(t => {
-        const matchSearch = !query || t.id.includes(query) || t.email.toLowerCase().includes(query);
-        let matchFilter = true;
-        if (filter === "valid") matchFilter = t.status === "Valid";
-        if (filter === "scanned") matchFilter = t.status === "Scanned";
-        if (filter === "no-email") matchFilter = !t.email;
-        if (filter === "email-sent") matchFilter = t.email_sent;
-        if (filter === "email-unsent") matchFilter = t.email && !t.email_sent;
-        return matchSearch && matchFilter;
-      });
-
-      currentPage = 1;
-      renderPage();
-    }
-
-    function renderPage() {
-      const start = (currentPage - 1) * PAGE_SIZE;
-      const page = filtered.slice(start, start + PAGE_SIZE);
-      const tbody = document.getElementById("table-body");
-      tbody.innerHTML = "";
-
-      page.forEach((t, i) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-        <td style="color:#555">${start + i + 1}</td>
-        <td style="font-family:monospace;color:#a5f3fc">${t.id}</td>
-        <td><span class="badge badge-${t.status.toLowerCase()}">${t.status}</span></td>
-        <td style="color:#888">${t.scanned_by || "—"}</td>
-        <td style="color:#888;font-size:12px">${t.scan_time || "—"}</td>
-        <td>
-          <input class="email-input" type="email" placeholder="email@example.com"
-            value="${t.email}" id="email-${t.id}"
-            onchange="markDirty('${t.id}')" oninput="markDirty('${t.id}')" />
-        </td>
-        <td>
-          <span class="badge ${t.email_sent ? 'badge-sent' : 'badge-unsent'}" id="status-badge-${t.id}">
-            ${t.email_sent ? "Sent ✓" : "Not sent"}
-          </span>
-        </td>
-        <td>
-          <div style="display: flex; gap: 8px;">
-            <button class="save-btn" id="save-${t.id}" onclick="saveEmail('${t.id}')" disabled>Save</button>
-            <button class="btn btn-blue" style="padding: 7px 12px; font-size: 13px;" id="send-${t.id}" onclick="sendTicketEmail('${t.id}')" ${t.email ? '' : 'disabled'}>Email ✉</button>
-          </div>
-        </td>
-      `;
-        tbody.appendChild(row);
-      });
-
-      const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
-      document.getElementById("page-info").textContent =
-        `Page ${currentPage} of ${totalPages} (${filtered.length} tickets)`;
-    }
-
-    function markDirty(id) {
-      const btn = document.getElementById(`save-${id}`);
-      btn.disabled = false;
-      btn.classList.remove("saved");
-      btn.textContent = "Save";
-    }
-
-    async function saveEmail(id) {
-      const emailVal = document.getElementById(`email-${id}`).value.trim();
-      const btn = document.getElementById(`save-${id}`);
-      const sendBtn = document.getElementById(`send-${id}`);
-      btn.disabled = true;
-      btn.textContent = "Saving...";
-
-      try {
-        const res = await fetch(`${API_URL}/api/save-email`, {
+        const res = await fetch(`${API_URL}/api/auth-verify`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${ACCESS_KEY}`
-          },
-          body: JSON.stringify({ ticketId: id, email: emailVal })
+            "Authorization": `Bearer ${enteredKey}`
+          }
         });
 
         if (res.ok) {
-          // Update local data
-          const ticket = allTickets.find(t => t.id === id);
-          if (ticket) ticket.email = emailVal;
-
-          btn.textContent = "Saved ✓";
-          btn.classList.add("saved");
-          if (emailVal) {
-            sendBtn.removeAttribute("disabled");
-          } else {
-            sendBtn.setAttribute("disabled", "true");
-          }
-          updateStats();
+          authToken = enteredKey;
+          localStorage.setItem("admin_key", enteredKey);
+          document.getElementById("key-screen").style.display = "none";
+          document.getElementById("main-app").style.display = "block";
+          document.getElementById("cfg-api-url").textContent = API_URL;
+          loadAllTickets();
+          initStudioCustomizer();
         } else {
-          btn.textContent = "Error";
+          input.value = "";
+          err.style.display = "block";
+        }
+      } catch (e) {
+        alert("Verification server unreachable: " + e.message);
+      }
+    }
+
+    // Tab Navigation
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      
+      event.currentTarget.classList.add("active");
+      document.getElementById(tabId).classList.add("active");
+
+      if (tabId === "tab-studio") {
+        renderStudioCanvas();
+      }
+    }
+
+    // =========================================================================
+    // STEP 2: LOAD TICKETS & MANAGE DIRECTORY
+    // =========================================================================
+    async function loadAllTickets() {
+      try {
+        const res = await fetch(`${API_URL}/api/tickets`, {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+
+        if (!res.ok || (data && data.error)) {
+          const errMsg = data ? (data.details || data.error) : res.statusText;
+          console.error("Firebase error loading tickets:", errMsg);
+          allTickets = [];
+          updateKPIs();
+          document.getElementById("table-body").innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 40px; color: #ef4444;">Database Connection Error: ${errMsg}</td></tr>`;
+          return;
+        }
+
+        allTickets = (data && typeof data === "object") ? Object.entries(data).filter(([id]) => id !== "error").map(([id, t]) => ({
+          id,
+          tier: t.tier || "General",
+          attendee_name: t.attendee_name || "",
+          email: t.email || "",
+          phone: t.phone || "",
+          status: t.status || "Valid",
+          scanned_by: t.scanned_by || "",
+          scan_time: t.scan_time || "",
+          email_sent: !!t.email_sent,
+          rendered: !!t.rendered,
+          notes: t.notes || "",
+          total_days: t.total_days || 1,
+          allowed_days: t.allowed_days || [1],
+          days_used: t.days_used || (t.status === "Scanned" || t.status === "Completed" ? 1 : 0),
+          daily_scans: t.daily_scans || {},
+          pass_type_name: t.pass_type_name || (t.total_days > 1 ? `${t.total_days}-Day Pass` : "1-Day Pass")
+        })) : [];
+
+        updateKPIs();
+        renderTable();
+      } catch (err) {
+        console.error("Error loading tickets:", err);
+      }
+    }
+
+    function updateKPIs() {
+      const total = allTickets.length;
+      const scanned = allTickets.filter(t => t.status === "Scanned" || t.status === "Completed" || (t.days_used && t.days_used > 0)).length;
+      const valid = allTickets.filter(t => t.status === "Valid").length;
+      const pct = total > 0 ? Math.round((scanned / total) * 100) : 0;
+
+      document.getElementById("kpi-total").textContent = total;
+      document.getElementById("kpi-valid-count").textContent = valid;
+      document.getElementById("kpi-scanned").textContent = scanned;
+      document.getElementById("kpi-scanned-pct").textContent = `${pct}%`;
+      document.getElementById("kpi-progress").style.width = `${pct}%`;
+
+      const vipTotal = allTickets.filter(t => t.tier === "VIP").length;
+      const vipScanned = allTickets.filter(t => t.tier === "VIP" && (t.status === "Scanned" || t.status === "Completed" || (t.days_used && t.days_used > 0))).length;
+      const vipPct = vipTotal > 0 ? Math.round((vipScanned / vipTotal) * 100) : 0;
+      document.getElementById("kpi-vip-count").textContent = `${vipScanned} / ${vipTotal}`;
+      document.getElementById("kpi-vip-sub").textContent = `${vipPct}% VIP checked in`;
+
+      const genCount = allTickets.filter(t => t.tier === "General").length;
+      const gstCount = allTickets.filter(t => t.tier === "Guestlist").length;
+      document.getElementById("kpi-gen-sub").textContent = `${genCount} Gen • ${gstCount} Guest`;
+
+      // Multi-Day KPI Card
+      const multiDayList = allTickets.filter(t => (t.total_days && t.total_days > 1) || (Array.isArray(t.allowed_days) && t.allowed_days.length > 1));
+      let totalDailyScans = 0;
+      multiDayList.forEach(t => {
+        if (t.daily_scans && typeof t.daily_scans === "object") {
+          Object.values(t.daily_scans).forEach(d => { if (d && d.scanned) totalDailyScans++; });
+        }
+      });
+      const multiKpiEl = document.getElementById("kpi-multiday-count");
+      if (multiKpiEl) multiKpiEl.textContent = multiDayList.length;
+      const multiKpiSub = document.getElementById("kpi-multiday-sub");
+      if (multiKpiSub) multiKpiSub.textContent = `${totalDailyScans} total daily admissions`;
+    }
+
+    function setFilter(filterType, element) {
+      currentFilter = filterType;
+      document.querySelectorAll(".filter-pills .pill").forEach(p => p.classList.remove("active"));
+      element.classList.add("active");
+      filterTable();
+    }
+
+    function filterTable() {
+      renderTable();
+    }
+
+    function renderTable() {
+      const q = (document.getElementById("search-box").value || "").toLowerCase().trim();
+      const tbody = document.getElementById("table-body");
+      tbody.innerHTML = "";
+
+      const filtered = allTickets.filter(t => {
+        const matchesQuery = !q || 
+          t.id.toLowerCase().includes(q) || 
+          t.attendee_name.toLowerCase().includes(q) || 
+          t.email.toLowerCase().includes(q) ||
+          (t.pass_type_name && t.pass_type_name.toLowerCase().includes(q));
+
+        if (!matchesQuery) return false;
+
+        if (currentFilter === "VIP") return t.tier === "VIP";
+        if (currentFilter === "General") return t.tier === "General";
+        if (currentFilter === "Guestlist") return t.tier === "Guestlist";
+        if (currentFilter === "multiday") return (t.total_days && t.total_days > 1) || (Array.isArray(t.allowed_days) && t.allowed_days.length > 1);
+        if (currentFilter === "Valid") return t.status === "Valid";
+        if (currentFilter === "Scanned") return t.status === "Scanned" || t.status === "Completed" || (t.days_used && t.days_used > 0);
+        if (currentFilter === "unsent") return !t.email_sent && t.email;
+        if (currentFilter === "unrendered") return !t.rendered;
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">No matching tickets found.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach((t, i) => {
+        const tierClass = t.tier.toLowerCase();
+        const tr = document.createElement("tr");
+
+        const totalDays = t.total_days || 1;
+        const allowedDays = Array.isArray(t.allowed_days) && t.allowed_days.length > 0 ? t.allowed_days : [1];
+        const dailyScans = t.daily_scans || {};
+        const daysUsed = t.days_used || (t.status === "Scanned" || t.status === "Completed" ? 1 : 0);
+        const passName = t.pass_type_name || (totalDays > 1 ? `${totalDays}-Day Pass` : "1-Day Pass");
+
+        let daysHtml = "";
+        if (totalDays > 1) {
+          const pills = [];
+          for (let d = 1; d <= totalDays; d++) {
+            const isAllowed = allowedDays.includes(d);
+            const isScanned = !!(dailyScans[`day_${d}`] && dailyScans[`day_${d}`].scanned);
+            if (isScanned) {
+              pills.push(`<span class="mini-day-pill scanned" title="Day ${d}: Scanned">D${d}✓</span>`);
+            } else if (isAllowed) {
+              pills.push(`<span class="mini-day-pill valid" title="Day ${d}: Valid for entry">D${d}○</span>`);
+            } else {
+              pills.push(`<span class="mini-day-pill disabled" title="Day ${d}: Not included">D${d}✕</span>`);
+            }
+          }
+          daysHtml = `
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font-size:12px; font-weight:700; color:#93c5fd;">${passName}</span>
+              <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                <span style="font-size:10px; color:var(--text-muted);">${daysUsed}/${allowedDays.length} used</span>
+                ${pills.join("")}
+              </div>
+            </div>
+          `;
+        } else {
+          daysHtml = `<span style="font-size:12px; color:var(--text-muted);">${allowedDays[0] && allowedDays[0] > 1 ? `Day ${allowedDays[0]} Only` : 'Single Day (1-Day)'}</span>`;
+        }
+
+        tr.innerHTML = `
+          <td style="color: #666;">${i + 1}</td>
+          <td style="font-family: monospace; font-weight: 700; color: #67e8f9;">${t.id}</td>
+          <td>
+            <span class="badge badge-${tierClass}">
+              ${t.tier === 'VIP' ? '👑' : t.tier === 'Guestlist' ? '⭐' : '🎟️'} ${t.tier}
+            </span>
+          </td>
+          <td>${daysHtml}</td>
+          <td>
+            <input class="cell-input" value="${t.attendee_name}" placeholder="Add name..." 
+              onchange="saveAttendeeField('${t.id}', 'attendee_name', this.value)" />
+          </td>
+          <td>
+            <input class="cell-input" value="${t.email}" placeholder="Add email..." 
+              onchange="saveAttendeeField('${t.id}', 'email', this.value)" />
+          </td>
+          <td>
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <span class="status-dot status-${t.status.toLowerCase()}"></span>
+              <span style="font-weight: 600;">${t.status}</span>
+            </span>
+          </td>
+          <td style="color: var(--text-muted);">${t.scanned_by || '—'}</td>
+          <td style="color: var(--text-muted); font-size: 12px;">${t.scan_time || '—'}</td>
+          <td>
+            <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${t.rendered ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.06)'}; color: ${t.rendered ? '#60a5fa' : '#888'};">
+              ${t.rendered ? 'Rendered ✓' : 'Unrendered'}
+            </span>
+          </td>
+          <td>
+            <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${t.email_sent ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)'}; color: ${t.email_sent ? '#34d399' : '#888'};">
+              ${t.email_sent ? 'Sent ✓' : 'Unsent'}
+            </span>
+          </td>
+          <td style="text-align: right;">
+            <button class="btn btn-ghost" style="padding: 6px 10px; font-size: 12px;" onclick="dispatchSinglePass('${t.id}')" title="Email Pass">
+              ✉ Pass
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function saveAttendeeField(ticketId, field, value) {
+      const ticket = allTickets.find(t => t.id === ticketId);
+      if (ticket) ticket[field] = value;
+
+      try {
+        await fetch(`${API_URL}/api/save-attendee`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ ticketId, [field]: value })
+        });
+      } catch (e) {
+        console.error("Save error:", e);
+      }
+    }
+
+    // =========================================================================
+    // STEP 3: MULTI-ELEMENT INTERACTIVE TICKET STUDIO & MOVABLE CANVAS
+    // =========================================================================
+    let selectedElement = 'qr'; // 'qr' | 'name' | 'tier' | 'header'
+    let hoveredElement = null;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragElemStartPos = { x: 0, y: 0 };
+
+    // Element 1: QR Code
+    let qrX = 210;
+    let qrY = 320;
+    let qrSize = 180;
+    let showQrBg = true;
+    let showCode = true;
+
+    // Element 2: Attendee Name
+    let nameX = 300;
+    let nameY = 255;
+    let nameFontSize = 28;
+    let nameColor = "#ffffff";
+    let nameFontWeight = "700";
+    let showAttendeeName = true;
+
+    // Element 3: Tier Badge
+    let tierX = 170;
+    let tierY = 170;
+    let tierBadgeWidth = 260;
+    let tierBadgeHeight = 36;
+    let tierFontSize = 13;
+    let tierAutoColor = true;
+    let tierCustomBgColor = "#f59e0b";
+    let tierTextColor = "#000000";
+    let showTierBadge = true;
+
+    // Element 4: Event Header (Title & Date)
+    let headerX = 300;
+    let headerY = 90;
+    let headerFontSize = 26;
+    let headerColor = "#ffffff";
+    let subFontSize = 13;
+    let subColor = "#a1a1aa";
+    let showHeader = true;
+
+    function initStudioCustomizer() {
+      loadSavedStudioLayout();
+      initCanvasDragListeners();
+      selectStudioElement('qr');
+      renderStudioCanvas();
+    }
+
+    function selectStudioElement(elemKey) {
+      selectedElement = elemKey;
+      document.querySelectorAll(".elem-tab").forEach(tab => tab.classList.remove("active"));
+      const activeTab = document.getElementById(`tab-elem-${elemKey}`);
+      if (activeTab) activeTab.classList.add("active");
+
+      document.querySelectorAll(".elem-ctrl-panel").forEach(p => p.style.display = "none");
+      const activePanel = document.getElementById(`ctrl-${elemKey}`);
+      if (activePanel) activePanel.style.display = "flex";
+
+      const nameMap = { qr: "QR Code", name: "Attendee Name", tier: "Tier Badge", header: "Event Header" };
+      document.getElementById("active-elem-name").textContent = nameMap[elemKey] || "Element";
+
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+    }
+
+    function getElementPos(elemKey) {
+      if (elemKey === 'qr') return { x: qrX, y: qrY };
+      if (elemKey === 'name') return { x: nameX, y: nameY };
+      if (elemKey === 'tier') return { x: tierX, y: tierY };
+      if (elemKey === 'header') return { x: headerX, y: headerY };
+      return { x: 0, y: 0 };
+    }
+
+    function setElementPos(elemKey, x, y) {
+      if (elemKey === 'qr') { qrX = x; qrY = y; }
+      else if (elemKey === 'name') { nameX = x; nameY = y; }
+      else if (elemKey === 'tier') { tierX = x; tierY = y; }
+      else if (elemKey === 'header') { headerX = x; headerY = y; }
+      syncCurrentElementInputs();
+    }
+
+    function syncCurrentElementInputs() {
+      const pos = getElementPos(selectedElement);
+      document.getElementById("elem-x-val").textContent = `${Math.round(pos.x)}px`;
+      document.getElementById("elem-y-val").textContent = `${Math.round(pos.y)}px`;
+
+      const nameMap = { qr: "QR Code", name: "Attendee Name", tier: "Tier Badge", header: "Event Header" };
+      const posInd = document.getElementById("canvas-pos-indicator");
+      if (posInd) posInd.textContent = `${nameMap[selectedElement] || 'Element'} • X: ${Math.round(pos.x)}px, Y: ${Math.round(pos.y)}px`;
+
+      // QR inputs
+      const qrSlider = document.getElementById("studio-qr-size");
+      const qrNum = document.getElementById("studio-qr-size-num");
+      const qrLbl = document.getElementById("qr-size-val");
+      if (qrSlider) qrSlider.value = qrSize;
+      if (qrNum) qrNum.value = qrSize;
+      if (qrLbl) qrLbl.textContent = `${qrSize}px`;
+
+      // Name inputs
+      const nameSlider = document.getElementById("studio-name-size");
+      const nameNum = document.getElementById("studio-name-size-num");
+      const nameLbl = document.getElementById("name-size-val");
+      const nameColorPicker = document.getElementById("name-color-picker");
+      const nameColorHex = document.getElementById("name-color-hex");
+      if (nameSlider) nameSlider.value = nameFontSize;
+      if (nameNum) nameNum.value = nameFontSize;
+      if (nameLbl) nameLbl.textContent = `${nameFontSize}px`;
+      if (nameColorPicker) nameColorPicker.value = nameColor;
+      if (nameColorHex) nameColorHex.textContent = nameColor;
+
+      // Tier inputs
+      const tierWSlider = document.getElementById("studio-tier-w");
+      const tierHSlider = document.getElementById("studio-tier-h");
+      const tierSizeSlider = document.getElementById("studio-tier-size");
+      if (tierWSlider) tierWSlider.value = tierBadgeWidth;
+      if (tierHSlider) tierHSlider.value = tierBadgeHeight;
+      if (tierSizeSlider) tierSizeSlider.value = tierFontSize;
+      document.getElementById("tier-w-val").textContent = `${tierBadgeWidth}px`;
+      document.getElementById("tier-h-val").textContent = `${tierBadgeHeight}px`;
+      document.getElementById("tier-size-val").textContent = `${tierFontSize}px`;
+      document.getElementById("tier-color-picker").value = tierCustomBgColor;
+      document.getElementById("tier-color-hex").textContent = tierCustomBgColor;
+
+      // Header inputs
+      document.getElementById("studio-header-size").value = headerFontSize;
+      document.getElementById("header-size-val").textContent = `${headerFontSize}px`;
+      document.getElementById("header-color-picker").value = headerColor;
+      document.getElementById("header-color-hex").textContent = headerColor;
+      document.getElementById("studio-sub-size").value = subFontSize;
+      document.getElementById("sub-size-val").textContent = `${subFontSize}px`;
+      document.getElementById("sub-color-picker").value = subColor.startsWith("#") ? subColor : "#a1a1aa";
+      document.getElementById("sub-color-hex").textContent = subColor;
+    }
+
+    // QR events
+    function onQrSizeChange() {
+      qrSize = parseInt(document.getElementById("studio-qr-size").value, 10) || 180;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onQrSizeNumChange() {
+      qrSize = parseInt(document.getElementById("studio-qr-size-num").value, 10) || 180;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+
+    // Name events
+    function onNameSizeChange() {
+      nameFontSize = parseInt(document.getElementById("studio-name-size").value, 10) || 28;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onNameSizeNumChange() {
+      nameFontSize = parseInt(document.getElementById("studio-name-size-num").value, 10) || 28;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onNameColorChange() {
+      nameColor = document.getElementById("name-color-picker").value;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onNameFontWeightChange() {
+      nameFontWeight = document.getElementById("name-font-weight").value;
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+
+    // Tier events
+    function onTierWidthChange() {
+      tierBadgeWidth = parseInt(document.getElementById("studio-tier-w").value, 10) || 260;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onTierHeightChange() {
+      tierBadgeHeight = parseInt(document.getElementById("studio-tier-h").value, 10) || 36;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onTierFontSizeChange() {
+      tierFontSize = parseInt(document.getElementById("studio-tier-size").value, 10) || 13;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onTierColorChange() {
+      tierCustomBgColor = document.getElementById("tier-color-picker").value;
+      document.getElementById("tier-auto-color").checked = false;
+      tierAutoColor = false;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onTierAutoColorToggle() {
+      tierAutoColor = document.getElementById("tier-auto-color").checked;
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+
+    // Header events
+    function onHeaderSizeChange() {
+      headerFontSize = parseInt(document.getElementById("studio-header-size").value, 10) || 26;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onHeaderColorChange() {
+      headerColor = document.getElementById("header-color-picker").value;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onSubSizeChange() {
+      subFontSize = parseInt(document.getElementById("studio-sub-size").value, 10) || 13;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+    function onSubColorChange() {
+      subColor = document.getElementById("sub-color-picker").value;
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+
+    // Layer toggles
+    function toggleLayer(layerKey) {
+      if (layerKey === 'qrBg') showQrBg = document.getElementById("layer-qr-bg").checked;
+      if (layerKey === 'code') showCode = document.getElementById("layer-code").checked;
+      if (layerKey === 'name') showAttendeeName = document.getElementById("layer-name").checked;
+      if (layerKey === 'tier') showTierBadge = document.getElementById("layer-tier").checked;
+      if (layerKey === 'header') showHeader = document.getElementById("layer-header").checked;
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+
+    // Alignment presets for whichever element is active
+    function alignActiveElement(preset) {
+      const canvas = document.getElementById("pass-canvas");
+      const w = canvas.width || 600;
+      const h = canvas.height || 900;
+
+      if (selectedElement === 'qr') {
+        if (preset === 'left') qrX = 30;
+        if (preset === 'center') qrX = Math.round((w - qrSize) / 2);
+        if (preset === 'right') qrX = Math.max(0, w - qrSize - 30);
+        if (preset === 'top') qrY = 40;
+        if (preset === 'middle') qrY = Math.round((h - qrSize) / 2);
+        if (preset === 'bottom') qrY = Math.max(0, h - qrSize - 60);
+      } else if (selectedElement === 'name') {
+        if (preset === 'left') nameX = 140;
+        if (preset === 'center') nameX = Math.round(w / 2);
+        if (preset === 'right') nameX = w - 140;
+        if (preset === 'top') nameY = 80;
+        if (preset === 'middle') nameY = Math.round(h / 2);
+        if (preset === 'bottom') nameY = h - 90;
+      } else if (selectedElement === 'tier') {
+        if (preset === 'left') tierX = 30;
+        if (preset === 'center') tierX = Math.round((w - tierBadgeWidth) / 2);
+        if (preset === 'right') tierX = Math.max(0, w - tierBadgeWidth - 30);
+        if (preset === 'top') tierY = 50;
+        if (preset === 'middle') tierY = Math.round((h - tierBadgeHeight) / 2);
+        if (preset === 'bottom') tierY = h - tierBadgeHeight - 50;
+      } else if (selectedElement === 'header') {
+        if (preset === 'left') headerX = 160;
+        if (preset === 'center') headerX = Math.round(w / 2);
+        if (preset === 'right') headerX = w - 160;
+        if (preset === 'top') headerY = 70;
+        if (preset === 'middle') headerY = Math.round(h / 2);
+        if (preset === 'bottom') headerY = h - 110;
+      }
+
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
+    }
+
+    function handleTemplateUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          customTemplateImg = img;
+          showHeader = false;
+          const hdrToggle = document.getElementById("layer-header");
+          if (hdrToggle) hdrToggle.checked = false;
+
+          qrX = Math.round((img.naturalWidth - qrSize) / 2);
+          qrY = Math.round(img.naturalHeight * 0.45);
+          tierX = Math.round((img.naturalWidth - tierBadgeWidth) / 2);
+          nameX = Math.round(img.naturalWidth / 2);
+          headerX = Math.round(img.naturalWidth / 2);
+
+          syncCurrentElementInputs();
+          renderStudioCanvas();
+          saveStudioLayout();
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Helper: generate QR code canvas
+    function generateQRCanvas(text, size = 180) {
+      return new Promise((resolve) => {
+        const div = document.createElement("div");
+        new QRCode(div, {
+          text: text,
+          width: size,
+          height: size,
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        setTimeout(() => {
+          const canvas = div.querySelector("canvas");
+          resolve(canvas);
+        }, 50);
+      });
+    }
+
+    // =========================================================================
+    // HIT TESTING & CANVAS BOUNDING BOXES FOR ALL 4 ELEMENTS
+    // =========================================================================
+    function getCanvasPos(e) {
+      const canvas = document.getElementById("pass-canvas");
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function pointInRect(p, r) {
+      return p.x >= r.x && p.x <= r.x + r.width && p.y >= r.y && p.y <= r.y + r.height;
+    }
+
+    function getElementBounds(elemKey) {
+      const canvas = document.getElementById("pass-canvas");
+      const ctx = canvas.getContext("2d");
+
+      if (elemKey === 'qr') {
+        const pad = showQrBg ? 16 : 4;
+        const codeH = showCode ? 48 : 0;
+        return {
+          x: qrX - pad,
+          y: qrY - pad,
+          width: qrSize + (pad * 2),
+          height: qrSize + (pad * 2) + codeH,
+          label: "QR Code"
+        };
+      }
+
+      if (elemKey === 'name') {
+        ctx.font = `${nameFontWeight} ${nameFontSize}px 'Outfit', sans-serif`;
+        const sampleText = document.getElementById("studio-preview-name").value || "Attendee Name";
+        const textMetrics = ctx.measureText(sampleText);
+        const w = Math.max(140, textMetrics.width + 30);
+        const h = nameFontSize + 18;
+        return {
+          x: nameX - (w / 2),
+          y: nameY - nameFontSize,
+          width: w,
+          height: h,
+          label: "Attendee Name"
+        };
+      }
+
+      if (elemKey === 'tier') {
+        return {
+          x: tierX,
+          y: tierY,
+          width: tierBadgeWidth,
+          height: tierBadgeHeight,
+          label: "Tier Badge"
+        };
+      }
+
+      if (elemKey === 'header') {
+        ctx.font = `bold ${headerFontSize}px 'Outfit', sans-serif`;
+        const titleText = document.getElementById("studio-event-name").value || "EVENT TITLE";
+        const w = Math.max(200, ctx.measureText(titleText).width + 40);
+        const h = headerFontSize + subFontSize + 34;
+        return {
+          x: headerX - (w / 2),
+          y: headerY - headerFontSize,
+          width: w,
+          height: h,
+          label: "Event Header"
+        };
+      }
+
+      return { x: 0, y: 0, width: 0, height: 0, label: "" };
+    }
+
+    function getElementAtPos(pos) {
+      // Hit-test in priority order
+      if (pointInRect(pos, getElementBounds('qr'))) return 'qr';
+      if (showAttendeeName && pointInRect(pos, getElementBounds('name'))) return 'name';
+      if (showTierBadge && pointInRect(pos, getElementBounds('tier'))) return 'tier';
+      if (showHeader && pointInRect(pos, getElementBounds('header'))) return 'header';
+      return null;
+    }
+
+    function initCanvasDragListeners() {
+      const canvas = document.getElementById("pass-canvas");
+      if (!canvas) return;
+
+      function onStart(e) {
+        const pos = getCanvasPos(e);
+        const hit = getElementAtPos(pos);
+        if (hit) {
+          isDragging = true;
+          selectStudioElement(hit);
+          dragStartX = pos.x;
+          dragStartY = pos.y;
+          dragElemStartPos = { ...getElementPos(hit) };
+          canvas.style.cursor = "grabbing";
+          if (e.type === "touchstart") e.preventDefault();
+          renderStudioCanvas(undefined, undefined, undefined, false);
+        }
+      }
+
+      function onMove(e) {
+        const pos = getCanvasPos(e);
+        if (isDragging) {
+          if (e.type === "touchmove") e.preventDefault();
+          const dx = pos.x - dragStartX;
+          const dy = pos.y - dragStartY;
+
+          let newX = Math.round(dragElemStartPos.x + dx);
+          let newY = Math.round(dragElemStartPos.y + dy);
+
+          // Boundaries
+          if (selectedElement === 'qr') {
+            newX = Math.max(0, Math.min(canvas.width - qrSize, newX));
+            newY = Math.max(0, Math.min(canvas.height - qrSize, newY));
+          } else if (selectedElement === 'tier') {
+            newX = Math.max(0, Math.min(canvas.width - tierBadgeWidth, newX));
+            newY = Math.max(0, Math.min(canvas.height - tierBadgeHeight, newY));
+          } else {
+            newX = Math.max(40, Math.min(canvas.width - 40, newX));
+            newY = Math.max(30, Math.min(canvas.height - 30, newY));
+          }
+
+          setElementPos(selectedElement, newX, newY);
+          renderStudioCanvas(undefined, undefined, undefined, false);
+        } else {
+          const hit = getElementAtPos(pos);
+          if (hit !== hoveredElement) {
+            hoveredElement = hit;
+            canvas.style.cursor = hit ? "grab" : "default";
+            renderStudioCanvas(undefined, undefined, undefined, false);
+          }
+        }
+      }
+
+      function onEnd() {
+        if (isDragging) {
+          isDragging = false;
+          canvas.style.cursor = hoveredElement ? "grab" : "default";
+          saveStudioLayout();
+          renderStudioCanvas(undefined, undefined, undefined, false);
+        }
+      }
+
+      canvas.addEventListener("mousedown", onStart);
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onEnd);
+
+      canvas.addEventListener("touchstart", onStart, { passive: false });
+      window.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("touchend", onEnd);
+    }
+
+    // =========================================================================
+    // CANVAS COMPOSITOR ENGINE (Renders Live Preview & High-Res PNG Passes)
+    // =========================================================================
+    async function renderStudioCanvas(sampleTicketId = "VIP-8F2B10", sampleTier = null, sampleName = null, isExport = false) {
+      const canvas = document.getElementById("pass-canvas");
+      const ctx = canvas.getContext("2d");
+
+      const eventName = document.getElementById("studio-event-name").value || "EVENT TITLE";
+      const eventSub = document.getElementById("studio-event-sub").value || "VENUE & DATE";
+      const tier = sampleTier || document.getElementById("studio-preview-tier").value || "General";
+      const attendee = sampleName || document.getElementById("studio-preview-name").value || "Attendee Name";
+
+      // Match canvas resolution to template or standard flyer ratio
+      let w = 600;
+      let h = 900;
+      if (customTemplateImg) {
+        w = customTemplateImg.naturalWidth || 600;
+        h = customTemplateImg.naturalHeight || 900;
+      }
+      canvas.width = w;
+      canvas.height = h;
+
+      if (customTemplateImg) {
+        ctx.drawImage(customTemplateImg, 0, 0, w, h);
+      } else {
+        // Built-in Luxury Event Pass Gradient
+        const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+        bgGrad.addColorStop(0, "#0c0d12");
+        bgGrad.addColorStop(0.5, "#14151e");
+        bgGrad.addColorStop(1, "#08090d");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Subtle geometric ring
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(w / 2, 220, 200, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Pass Border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(20, 20, w - 40, h - 40);
+      }
+
+      // 1. Header Section (Event Title & Date)
+      if (showHeader) {
+        ctx.fillStyle = headerColor;
+        ctx.font = `bold ${headerFontSize}px 'Outfit', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(eventName, headerX, headerY);
+
+        ctx.fillStyle = subColor;
+        ctx.font = `600 ${subFontSize}px 'Outfit', sans-serif`;
+        ctx.letterSpacing = "2px";
+        ctx.fillText(eventSub, headerX, headerY + headerFontSize + 6);
+      }
+
+      // 2. Tier Badge Banner
+      if (showTierBadge) {
+        let badgeBg = tierCustomBgColor;
+        let badgeLabel = "GENERAL ADMISSION";
+
+        if (tierAutoColor) {
+          if (tier === "VIP") {
+            badgeBg = "#f59e0b";
+            badgeLabel = "👑 OFFICIAL VIP PASS";
+          } else if (tier === "Guestlist") {
+            badgeBg = "#a855f7";
+            badgeLabel = "⭐ HONORARY GUESTLIST";
+          } else {
+            badgeBg = "#10b981";
+            badgeLabel = "🎟️ GENERAL ADMISSION";
+          }
+        } else {
+          badgeLabel = `${tier.toUpperCase()} PASS`;
+        }
+
+        ctx.fillStyle = badgeBg;
+        ctx.beginPath();
+        ctx.roundRect(tierX, tierY, tierBadgeWidth, tierBadgeHeight, Math.round(tierBadgeHeight / 2));
+        ctx.fill();
+
+        ctx.fillStyle = tierTextColor;
+        ctx.font = `bold ${tierFontSize}px 'Outfit', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(badgeLabel, tierX + (tierBadgeWidth / 2), tierY + (tierBadgeHeight * 0.65));
+      }
+
+      // 3. Attendee Name
+      if (showAttendeeName) {
+        ctx.fillStyle = nameColor;
+        ctx.font = `${nameFontWeight} ${nameFontSize}px 'Outfit', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(attendee, nameX, nameY);
+      }
+
+      // 4. Movable QR Code Drawing
+      const pad = showQrBg ? 16 : 0;
+      if (showQrBg) {
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.roundRect(qrX - pad, qrY - pad, qrSize + (pad * 2), qrSize + (pad * 2), 16);
+        ctx.fill();
+      }
+
+      const qrCanvas = await generateQRCanvas(sampleTicketId, qrSize);
+      if (qrCanvas) {
+        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+      }
+
+      // Ticket ID Code Text (under QR)
+      if (showCode) {
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 22px 'JetBrains Mono', monospace";
+        ctx.letterSpacing = "2px";
+        ctx.textAlign = "center";
+        ctx.fillText(sampleTicketId, qrX + qrSize / 2, qrY + qrSize + 36);
+      }
+
+      // Security Notice Footer (Default luxury template only)
+      if (!customTemplateImg && showHeader) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.font = "500 11px 'Outfit', sans-serif";
+        ctx.letterSpacing = "1px";
+        ctx.textAlign = "center";
+        ctx.fillText("VALID FOR SINGLE GATE SCAN • PRESENT ON MOBILE DEVICE", w / 2, h - 50);
+      }
+
+      // SELECTION / HOVER OUTLINES (Only in live interactive preview, NOT in exported passes)
+      if (!isExport) {
+        const targetHighlight = isDragging ? selectedElement : (hoveredElement || selectedElement);
+        if (targetHighlight) {
+          const b = getElementBounds(targetHighlight);
+          ctx.save();
+          ctx.strokeStyle = isDragging ? "#38bdf8" : "rgba(56, 189, 248, 0.85)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.strokeRect(b.x, b.y, b.width, b.height);
+
+          // 4 Corner anchors
+          ctx.setLineDash([]);
+          ctx.fillStyle = "#38bdf8";
+          const hs = 8;
+          ctx.fillRect(b.x - hs/2, b.y - hs/2, hs, hs);
+          ctx.fillRect(b.x + b.width - hs/2, b.y - hs/2, hs, hs);
+          ctx.fillRect(b.x - hs/2, b.y + b.height - hs/2, hs, hs);
+          ctx.fillRect(b.x + b.width - hs/2, b.y + b.height - hs/2, hs, hs);
+
+          // Floating Tag Pill
+          const tagW = Math.max(130, b.label.length * 8 + 36);
+          ctx.fillStyle = "rgba(14, 165, 233, 0.95)";
+          ctx.beginPath();
+          ctx.roundRect(b.x, b.y - 25, tagW, 20, 5);
+          ctx.fill();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 11px 'JetBrains Mono', monospace";
+          ctx.textAlign = "left";
+          ctx.fillText(`🎯 ${b.label}`, b.x + 8, b.y - 11);
+          ctx.restore();
+        }
+      }
+
+      return canvas.toDataURL("image/png");
+    }
+
+    // Save and load customized layout in localStorage
+    function saveStudioLayout() {
+      const config = {
+        qrX, qrY, qrSize, showQrBg, showCode,
+        nameX, nameY, nameFontSize, nameColor, nameFontWeight, showAttendeeName,
+        tierX, tierY, tierBadgeWidth, tierBadgeHeight, tierFontSize, tierAutoColor, tierCustomBgColor, tierTextColor, showTierBadge,
+        headerX, headerY, headerFontSize, headerColor, subFontSize, subColor, showHeader
+      };
+      localStorage.setItem("studio_layout_v2", JSON.stringify(config));
+    }
+
+    function loadSavedStudioLayout() {
+      try {
+        const raw = localStorage.getItem("studio_layout_v2");
+        if (raw) {
+          const c = JSON.parse(raw);
+          if (c.qrX !== undefined) qrX = c.qrX;
+          if (c.qrY !== undefined) qrY = c.qrY;
+          if (c.qrSize !== undefined) qrSize = c.qrSize;
+          if (c.nameX !== undefined) nameX = c.nameX;
+          if (c.nameY !== undefined) nameY = c.nameY;
+          if (c.nameFontSize !== undefined) nameFontSize = c.nameFontSize;
+          if (c.nameColor !== undefined) nameColor = c.nameColor;
+          if (c.tierX !== undefined) tierX = c.tierX;
+          if (c.tierY !== undefined) tierY = c.tierY;
+          if (c.tierBadgeWidth !== undefined) tierBadgeWidth = c.tierBadgeWidth;
+          if (c.tierBadgeHeight !== undefined) tierBadgeHeight = c.tierBadgeHeight;
+          if (c.tierFontSize !== undefined) tierFontSize = c.tierFontSize;
+          if (c.headerX !== undefined) headerX = c.headerX;
+          if (c.headerY !== undefined) headerY = c.headerY;
+          if (c.headerFontSize !== undefined) headerFontSize = c.headerFontSize;
+        }
+      } catch (_) {}
+    }
+
+    // Download single preview pass (.PNG)
+    async function downloadPreviewPass() {
+      const dataUrl = await renderStudioCanvas(undefined, undefined, undefined, true);
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      saveAs(blob, "ticket_pass_preview.png");
+      renderStudioCanvas(undefined, undefined, undefined, false);
+    }
+
+    // =========================================================================
+    // STEP 4: PRODUCTION BATCH PASS COMPILER & NON-BLOCKING EXPORTER
+    // =========================================================================
+    let isExportRunning = false;
+    let isExportPaused = false;
+    let isExportCancelled = false;
+    let currentBatchZip = null;
+    let currentBatchManifest = "";
+    let currentBatchTickets = [];
+    let currentBatchRenderedIds = [];
+    let batchLimitChoice = 'all';
+
+    function openBatchRenderModal() {
+      if (allTickets.length === 0) {
+        alert("No tickets loaded in database to generate passes for.");
+        return;
+      }
+      document.getElementById("batch-prep-screen").style.display = "block";
+      document.getElementById("batch-active-screen").style.display = "none";
+      document.getElementById("batch-done-screen").style.display = "none";
+      updateBatchSummary();
+      document.getElementById("batch-render-modal").style.display = "flex";
+    }
+
+    function closeBatchRenderModal() {
+      if (isExportRunning) {
+        if (!confirm("Compilation is in progress. Aborting will stop compilation. Close?")) return;
+        cancelBatchRender();
+      }
+      document.getElementById("batch-render-modal").style.display = "none";
+    }
+
+    function setBatchLimit(limit, btn) {
+      batchLimitChoice = limit;
+      document.querySelectorAll(".batch-limit-btn").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+      updateBatchSummary();
+    }
+
+    function updateBatchSummary() {
+      const scopeRadio = document.querySelector('input[name="batch-scope"]:checked');
+      const scope = scopeRadio ? scopeRadio.value : "unrendered";
+
+      let filtered = allTickets;
+      if (scope === "unrendered") filtered = allTickets.filter(t => !t.rendered);
+      else if (scope === "VIP") filtered = allTickets.filter(t => t.tier === "VIP");
+
+      let count = filtered.length;
+      if (batchLimitChoice !== 'all') {
+        count = Math.min(count, parseInt(batchLimitChoice, 10));
+      }
+
+      const unrenderedCount = allTickets.filter(t => !t.rendered).length;
+      document.getElementById("scope-unrendered-desc").textContent = `${unrenderedCount} tickets pending pass generation`;
+      document.getElementById("batch-target-count").textContent = `${count} passes`;
+    }
+
+    function preventUnloadHandler(e) {
+      e.preventDefault();
+      e.returnValue = "Pass compilation in progress! Leaving now will cancel the export.";
+      return e.returnValue;
+    }
+
+    async function startBatchRenderPipeline() {
+      const scopeRadio = document.querySelector('input[name="batch-scope"]:checked');
+      const scope = scopeRadio ? scopeRadio.value : "unrendered";
+
+      let eligible = allTickets;
+      if (scope === "unrendered") eligible = allTickets.filter(t => !t.rendered);
+      else if (scope === "VIP") eligible = allTickets.filter(t => t.tier === "VIP");
+
+      if (eligible.length === 0) {
+        alert("No tickets match the selected scope.");
+        return;
+      }
+
+      let toRender = eligible;
+      if (batchLimitChoice !== 'all') {
+        const lim = parseInt(batchLimitChoice, 10);
+        toRender = eligible.slice(0, lim);
+      }
+
+      currentBatchTickets = toRender;
+      currentBatchZip = new JSZip();
+      currentBatchManifest = "Ticket_ID,Tier,Attendee_Name,Email,Status\r\n";
+      currentBatchRenderedIds = [];
+      isExportRunning = true;
+      isExportPaused = false;
+      isExportCancelled = false;
+
+      // Lock UI & prevent reload
+      window.addEventListener("beforeunload", preventUnloadHandler);
+
+      document.getElementById("batch-prep-screen").style.display = "none";
+      document.getElementById("batch-active-screen").style.display = "flex";
+      document.getElementById("batch-pause-btn").innerHTML = `<span>⏸️</span> Pause`;
+
+      const startTime = performance.now();
+      const total = toRender.length;
+
+      for (let i = 0; i < total; i++) {
+        if (isExportCancelled) break;
+
+        // Non-blocking pause loop
+        while (isExportPaused) {
+          await new Promise(r => setTimeout(r, 200));
+          if (isExportCancelled) break;
+        }
+        if (isExportCancelled) break;
+
+        const t = toRender[i];
+
+        // Yield execution to browser event loop (Prevents UI lockup!)
+        await new Promise(r => setTimeout(r, 0));
+
+        // Render pass with isExport=true (clean, zero handles)
+        const attendeeName = t.attendee_name || `Attendee ${i + 1}`;
+        const dataUrl = await renderStudioCanvas(t.id, t.tier, attendeeName, true);
+        const base64 = dataUrl.split(",")[1];
+
+        currentBatchZip.file(`${t.id}_pass.png`, base64, { base64: true });
+        currentBatchRenderedIds.push(t.id);
+        currentBatchManifest += `"${t.id}","${t.tier}","${attendeeName}","${t.email}","${t.status}"\r\n`;
+
+        // Update progress UI & metrics
+        const elapsedSec = (performance.now() - startTime) / 1000;
+        const passesPerSec = (i + 1) / Math.max(0.1, elapsedSec);
+        const remainingPasses = total - (i + 1);
+        const etaSec = Math.round(remainingPasses / Math.max(1, passesPerSec));
+
+        const pct = Math.round(((i + 1) / total) * 100);
+        document.getElementById("batch-progress-bar").style.width = `${pct}%`;
+        document.getElementById("batch-pct-badge").textContent = `${pct}%`;
+        document.getElementById("batch-count-metric").textContent = `${i + 1} / ${total}`;
+        document.getElementById("batch-speed-metric").textContent = `~${passesPerSec.toFixed(1)} /s`;
+        document.getElementById("batch-eta-metric").textContent = etaSec > 60 ? `~${Math.round(etaSec / 60)}m` : `~${etaSec}s`;
+        document.getElementById("batch-partial-count").textContent = i + 1;
+
+        document.getElementById("batch-current-id").textContent = t.id;
+        document.getElementById("batch-current-attendee").textContent = attendeeName;
+
+        // Draw mini thumbnail
+        drawBatchThumb(dataUrl);
+      }
+
+      if (!isExportCancelled && currentBatchRenderedIds.length > 0) {
+        await finalizeAndDownloadBatch(currentBatchRenderedIds.length === total);
+      }
+    }
+
+    function drawBatchThumb(dataUrl) {
+      const thumbCanvas = document.getElementById("batch-thumb-canvas");
+      if (!thumbCanvas) return;
+      const ctx = thumbCanvas.getContext("2d");
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, thumbCanvas.width, thumbCanvas.height);
+      };
+      img.src = dataUrl;
+    }
+
+    function toggleBatchPause() {
+      isExportPaused = !isExportPaused;
+      const btn = document.getElementById("batch-pause-btn");
+      const title = document.getElementById("batch-status-title");
+
+      if (isExportPaused) {
+        btn.innerHTML = `<span>▶️</span> Resume`;
+        title.textContent = `⏸️ Compilation Paused`;
+        title.style.color = `#f59e0b`;
+      } else {
+        btn.innerHTML = `<span>⏸️</span> Pause`;
+        title.textContent = `⚙️ Compiling Passes...`;
+        title.style.color = `#60a5fa`;
+      }
+    }
+
+    async function stopAndDownloadPartialZip() {
+      if (currentBatchRenderedIds.length === 0) {
+        alert("No passes rendered yet to package.");
+        return;
+      }
+      isExportCancelled = true;
+      await finalizeAndDownloadBatch(false);
+    }
+
+    function cancelBatchRender() {
+      isExportCancelled = true;
+      isExportRunning = false;
+      window.removeEventListener("beforeunload", preventUnloadHandler);
+      document.getElementById("batch-render-modal").style.display = "none";
+      renderStudioCanvas(undefined, undefined, undefined, false);
+    }
+
+    async function finalizeAndDownloadBatch(isFullSuccess) {
+      const count = currentBatchRenderedIds.length;
+      document.getElementById("batch-status-title").textContent = "📦 Compressing ZIP file in browser...";
+      document.getElementById("batch-status-title").style.color = "#34d399";
+
+      currentBatchZip.file("tickets_manifest.csv", currentBatchManifest);
+      const zipBlob = await currentBatchZip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, `event_ticket_passes_${count}.zip`);
+
+      // Mark rendered in Firebase via Cloudflare Worker
+      try {
+        await fetch(`${API_URL}/api/mark-rendered`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ ticketIds: currentBatchRenderedIds })
+        });
+
+        // Mark local state
+        currentBatchRenderedIds.forEach(id => {
+          const found = allTickets.find(t => t.id === id);
+          if (found) found.rendered = true;
+        });
+        renderTable();
+      } catch (err) {
+        console.error("Error marking passes rendered:", err);
+      }
+
+      // Cleanup
+      window.removeEventListener("beforeunload", preventUnloadHandler);
+      isExportRunning = false;
+
+      document.getElementById("batch-active-screen").style.display = "none";
+      document.getElementById("batch-done-screen").style.display = "flex";
+      document.getElementById("batch-done-desc").textContent = `Successfully compiled and packaged ${count} ticket passes into ZIP! All ${count} tickets have been marked rendered in the database.`;
+      
+      renderStudioCanvas(undefined, undefined, undefined, false);
+    }
+
+    // =========================================================================
+    // STEP 5: MULTI-TIER & MULTI-DAY BATCH TICKET GENERATION
+    // =========================================================================
+    function updateGenDayAccessOptions() {
+      const totalDays = parseInt(document.getElementById("gen-total-days").value, 10) || 1;
+      const modeSelect = document.getElementById("gen-access-mode");
+      const currentMode = modeSelect.value;
+      const customRow = document.getElementById("gen-custom-days-row");
+
+      let optionsHtml = `<option value="all_days">All Days Access (Full ${totalDays}-Day Pass)</option>`;
+      for (let d = 1; d <= totalDays; d++) {
+        optionsHtml += `<option value="day_${d}">Day ${d} Only</option>`;
+      }
+      optionsHtml += `<option value="custom">Custom Days Selection</option>`;
+      modeSelect.innerHTML = optionsHtml;
+
+      if (modeSelect.querySelector(`option[value="${currentMode}"]`)) {
+        modeSelect.value = currentMode;
+      } else {
+        modeSelect.value = "all_days";
+      }
+
+      if (modeSelect.value === "custom") {
+        customRow.style.display = "flex";
+        const container = document.getElementById("gen-days-checkboxes");
+        container.innerHTML = "";
+        for (let d = 1; d <= totalDays; d++) {
+          const lbl = document.createElement("label");
+          lbl.style.cssText = "display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px;";
+          lbl.innerHTML = `<input type="checkbox" value="${d}" checked onchange="updateGenPlanSummary()" /> Day ${d}`;
+          container.appendChild(lbl);
+        }
+      } else {
+        customRow.style.display = "none";
+      }
+
+      updateGenPlanSummary();
+    }
+
+    function updateGenPlanSummary() {
+      const totalDays = parseInt(document.getElementById("gen-total-days").value, 10) || 1;
+      const mode = document.getElementById("gen-access-mode").value;
+      const summaryEl = document.getElementById("gen-plan-summary");
+      const passNameInput = document.getElementById("gen-pass-name");
+
+      let allowedDays = [];
+      let summaryText = "";
+      let defaultName = "";
+
+      if (mode === "all_days") {
+        allowedDays = Array.from({ length: totalDays }, (_, i) => i + 1);
+        defaultName = totalDays > 1 ? `${totalDays}-Day Pass` : `Single Day Pass`;
+        summaryText = totalDays > 1 
+          ? `Passes will be valid for entry on ALL ${totalDays} days (Days ${allowedDays.join(", ")}). Each day permits 1 gate scan admission.`
+          : `Single Day Pass valid for Day 1 entry.`;
+      } else if (mode.startsWith("day_")) {
+        const d = parseInt(mode.replace("day_", ""), 10);
+        allowedDays = [d];
+        defaultName = `Day ${d} Single Pass`;
+        summaryText = `Passes will be strictly valid ONLY on Day ${d}. Scanners operating on any other day will block entry.`;
+      } else if (mode === "custom") {
+        const checked = Array.from(document.querySelectorAll("#gen-days-checkboxes input:checked")).map(cb => parseInt(cb.value, 10));
+        allowedDays = checked.length > 0 ? checked : [1];
+        defaultName = `Custom Pass (Days ${allowedDays.join(", ")})`;
+        summaryText = `Passes valid for Day(s): ${allowedDays.join(", ")}.`;
+      }
+
+      if (!passNameInput.dataset.userEdited) {
+        passNameInput.value = defaultName;
+      }
+      summaryEl.textContent = summaryText;
+    }
+
+    async function generateTieredBatch() {
+      const vipCount = parseInt(document.getElementById("gen-vip-count").value, 10) || 0;
+      const genCount = parseInt(document.getElementById("gen-gen-count").value, 10) || 0;
+      const gstCount = parseInt(document.getElementById("gen-gst-count").value, 10) || 0;
+      const eventTag = (document.getElementById("gen-event-tag").value || "").trim();
+      const btn = document.getElementById("gen-submit-btn");
+      const statusEl = document.getElementById("gen-status-msg");
+
+      const totalDays = parseInt(document.getElementById("gen-total-days").value, 10) || 1;
+      const accessMode = document.getElementById("gen-access-mode").value;
+      let allowedDays = [];
+      if (accessMode === "all_days") {
+        allowedDays = Array.from({ length: totalDays }, (_, i) => i + 1);
+      } else if (accessMode.startsWith("day_")) {
+        allowedDays = [parseInt(accessMode.replace("day_", ""), 10)];
+      } else if (accessMode === "custom") {
+        allowedDays = Array.from(document.querySelectorAll("#gen-days-checkboxes input:checked")).map(cb => parseInt(cb.value, 10));
+        if (allowedDays.length === 0) allowedDays = [1];
+      }
+
+      const passTypeName = (document.getElementById("gen-pass-name").value || "").trim() || (totalDays > 1 ? `${totalDays}-Day Pass` : "Single Day Pass");
+
+      const batches = [];
+      if (vipCount > 0) batches.push({ tier: "VIP", count: vipCount, total_days: totalDays, allowed_days: allowedDays, pass_type_name: passTypeName, notes: eventTag });
+      if (genCount > 0) batches.push({ tier: "General", count: genCount, total_days: totalDays, allowed_days: allowedDays, pass_type_name: passTypeName, notes: eventTag });
+      if (gstCount > 0) batches.push({ tier: "Guestlist", count: gstCount, total_days: totalDays, allowed_days: allowedDays, pass_type_name: passTypeName, notes: eventTag });
+
+      if (batches.length === 0) {
+        alert("Please enter a ticket count greater than 0 for at least one tier.");
+        return;
+      }
+
+      btn.disabled = true;
+      statusEl.textContent = `Generating ${totalDays}-day cryptographic passes on Cloudflare edge...`;
+
+      try {
+        const res = await fetch(`${API_URL}/api/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ batches })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          statusEl.textContent = `✓ Successfully generated ${data.count} fresh ${totalDays}-day tickets!`;
+          await loadAllTickets();
+          setTimeout(() => {
+            statusEl.textContent = "";
+            btn.disabled = false;
+          }, 3000);
+        } else {
+          const errMsg = data ? (data.details || data.error) : res.statusText;
+          statusEl.textContent = "Error: " + errMsg;
           btn.disabled = false;
         }
       } catch (err) {
-        btn.textContent = "Error";
+        statusEl.textContent = "Network error: " + err.message;
         btn.disabled = false;
       }
     }
 
-    async function sendTicketEmail(id) {
-      const sendBtn = document.getElementById(`send-${id}`);
-      const emailVal = document.getElementById(`email-${id}`).value.trim();
-      const originalText = sendBtn.textContent;
-      sendBtn.disabled = true;
-      sendBtn.textContent = "Sending...";
+    // =========================================================================
+    // STEP 6: DATABASE MAINTENANCE & RESET
+    // =========================================================================
+    function openResetModal(mode) {
+      pendingResetMode = mode;
+      const desc = document.getElementById("reset-modal-desc");
+      if (mode === "wipe_all") {
+        desc.textContent = "WARNING: This will permanently DELETE all tickets from the database. All existing QR codes will become invalid.";
+      } else {
+        desc.textContent = "This will reset all scanned tickets back to 'Valid' state, clearing the gatekeeper name and timestamp while preserving attendee assignments.";
+      }
+      document.getElementById("reset-confirm-input").value = "";
+      document.getElementById("reset-modal").style.display = "flex";
+    }
+
+    function closeResetModal() {
+      document.getElementById("reset-modal").style.display = "none";
+    }
+
+    async function executeDatabaseReset() {
+      const confirmVal = document.getElementById("reset-confirm-input").value.trim();
+      if (confirmVal !== "CONFIRM_RESET") {
+        alert("Please type 'CONFIRM_RESET' exactly to authorize.");
+        return;
+      }
+
+      const btn = document.getElementById("reset-exec-btn");
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_URL}/api/reset-db`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            mode: pendingResetMode,
+            confirm: confirmVal
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert(data.message || "Reset completed!");
+          closeResetModal();
+          loadAllTickets();
+        } else {
+          alert("Error: " + data.error);
+        }
+      } catch (err) {
+        alert("Network error.");
+      }
+      btn.disabled = false;
+    }
+
+    // =========================================================================
+    // STEP 7: EMAIL DISPATCHER & CSV EXPORT
+    // =========================================================================
+    async function dispatchSinglePass(ticketId) {
+      const ticket = allTickets.find(t => t.id === ticketId);
+      if (!ticket || !ticket.email) {
+        alert("Please assign an attendee email address before sending.");
+        return;
+      }
+
+      if (!confirm(`Send ticket pass to ${ticket.email}?`)) return;
 
       try {
         const res = await fetch(`${API_URL}/api/send-email`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${ACCESS_KEY}`
+            "Authorization": `Bearer ${authToken}`
           },
-          body: JSON.stringify({ ticketId: id, email: emailVal })
+          body: JSON.stringify({
+            ticketId: ticket.id,
+            email: ticket.email,
+            attendee_name: ticket.attendee_name,
+            tier: ticket.tier,
+            eventName: document.getElementById("studio-event-name").value
+          })
         });
 
         if (res.ok) {
-          sendBtn.textContent = "Sent ✓";
-          sendBtn.classList.remove("btn-blue");
-          sendBtn.classList.add("btn-green");
-          
-          // Update local state
-          const ticket = allTickets.find(t => t.id === id);
-          if (ticket) ticket.email_sent = true;
-          
-          const statusBadge = document.getElementById(`status-badge-${id}`);
-          if (statusBadge) {
-            statusBadge.className = "badge badge-sent";
-            statusBadge.textContent = "Sent ✓";
-          }
-          
-          updateStats();
+          ticket.email_sent = true;
+          renderTable();
+          alert("Ticket pass email dispatched successfully!");
         } else {
-          const data = await res.json();
-          alert("Error sending email: " + (data.details || data.error));
-          sendBtn.disabled = false;
-          sendBtn.textContent = originalText;
+          const err = await res.json();
+          alert("Failed to send email: " + (err.details || err.error));
         }
-      } catch (err) {
-        alert("Network error sending email.");
-        sendBtn.disabled = false;
-        sendBtn.textContent = originalText;
+      } catch (e) {
+        alert("Network error sending pass.");
       }
     }
 
-    // ✉ Bulk Send Unsent Emails
-    async function bulkSendEmails() {
+    async function bulkDispatchPasses() {
       const unsent = allTickets.filter(t => t.email && !t.email_sent);
       if (unsent.length === 0) {
         alert("No unsent tickets with assigned email addresses found.");
         return;
       }
 
-      if (!confirm(`Are you sure you want to send emails to all ${unsent.length} pending tickets?`)) {
-        return;
-      }
+      if (!confirm(`Dispatch passes to all ${unsent.length} pending attendees?`)) return;
 
-      const bulkBtn = document.getElementById("bulk-email-btn");
-      const originalText = bulkBtn.textContent;
-      bulkBtn.disabled = true;
+      const btn = document.getElementById("bulk-mail-btn");
+      btn.disabled = true;
 
       for (let i = 0; i < unsent.length; i++) {
         const t = unsent[i];
-        bulkBtn.textContent = `Sending (${i + 1}/${unsent.length})...`;
-        
+        btn.textContent = `Sending (${i + 1}/${unsent.length})...`;
+
         try {
-          const res = await fetch(`${API_URL}/api/send-email`, {
+          await fetch(`${API_URL}/api/send-email`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${ACCESS_KEY}`
+              "Authorization": `Bearer ${authToken}`
             },
-            body: JSON.stringify({ ticketId: t.id, email: t.email })
+            body: JSON.stringify({
+              ticketId: t.id,
+              email: t.email,
+              attendee_name: t.attendee_name,
+              tier: t.tier,
+              eventName: document.getElementById("studio-event-name").value
+            })
           });
-
-          if (res.ok) {
-            t.email_sent = true;
-          }
+          t.email_sent = true;
         } catch (err) {
-          console.error(`Failed to send bulk email for ${t.id}:`, err);
+          console.error(`Error sending pass to ${t.id}:`, err);
         }
       }
 
-      bulkBtn.disabled = false;
-      bulkBtn.textContent = originalText;
-      alert("Bulk emailing completed!");
-      loadTickets();
+      btn.disabled = false;
+      btn.textContent = "✉ Dispatch Unsent Passes";
+      alert("Bulk dispatch complete!");
+      renderTable();
     }
 
-    // 🎫 Dynamic Browser-side QR code generator
-    function generateQRCodeBase64(text) {
-      return new Promise((resolve) => {
-        const div = document.createElement("div");
-        const qrcode = new QRCode(div, {
-          text: text,
-          width: 256,
-          height: 256,
-          correctLevel: QRCode.CorrectLevel.H
-        });
-        
-        // Wait a small timeout for QRCode rendering to complete
-        setTimeout(() => {
-          const canvas = div.querySelector("canvas");
-          if (canvas) {
-            resolve(canvas.toDataURL("image/png").split(",")[1]);
-          } else {
-            const img = div.querySelector("img");
-            if (img && img.src) {
-              resolve(img.src.split(",")[1]);
-            } else {
-              resolve("");
-            }
-          }
-        }, 60);
+    function exportCSV() {
+      let csv = "Ticket_ID,Tier,Pass_Type,Total_Days,Allowed_Days,Days_Used,Attendee_Name,Email,Status,Scanned_By,Scan_Time,Rendered\r\n";
+      allTickets.forEach(t => {
+        const allowed = Array.isArray(t.allowed_days) ? t.allowed_days.join(";") : "1";
+        csv += `"${t.id}","${t.tier}","${t.pass_type_name || ''}","${t.total_days || 1}","${allowed}","${t.days_used || 0}","${t.attendee_name}","${t.email}","${t.status}","${t.scanned_by}","${t.scan_time}","${t.rendered ? 'Yes' : 'No'}"\r\n`;
       });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      saveAs(blob, `ticket_database_export_${new Date().toISOString().slice(0, 10)}.csv`);
     }
 
-    // 🎫 Ticket Generation and ZIP & Excel CSV mapping download
-    async function generateTickets() {
-      const countInput = document.getElementById("gen-count");
-      const genBtn = document.getElementById("gen-btn");
-      const progressEl = document.getElementById("gen-progress");
-      
-      const count = parseInt(countInput.value, 10);
-      if (isNaN(count) || count <= 0 || count > 1500) {
-        alert("Please enter a valid ticket count between 1 and 1,500.");
-        return;
+    // Auto-login with saved key & initialize multi-day creator options
+    window.addEventListener("DOMContentLoaded", () => {
+      updateGenDayAccessOptions();
+      const savedKey = localStorage.getItem("admin_key");
+      if (savedKey) {
+        document.getElementById("key-input").value = savedKey;
+        verifyAdminKey();
       }
-
-      genBtn.disabled = true;
-      countInput.disabled = true;
-      progressEl.style.display = "inline-block";
-      progressEl.textContent = "Creating ticket database in Firebase...";
-
-      try {
-        // 1. Call Backend Worker to generate ticket database records
-        const res = await fetch(`${API_URL}/api/generate`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${ACCESS_KEY}`
-          },
-          body: JSON.stringify({ count: count })
-        });
-        
-        if (!res.ok) {
-          const errData = await res.json();
-          alert("Error generating tickets in database: " + errData.error);
-          resetGenUI();
-          return;
-        }
-
-        const data = await res.json();
-        const ticketIds = data.tickets; // Array of generated unique 8-character codes
-
-        // 2. Generate QRs & ZIP package sequentially in the browser
-        progressEl.textContent = "Initializing ZIP compiler...";
-        const zip = new JSZip();
-        
-        // CSV Metadata Sheet (Excel readable)
-        let csvContent = "Ticket Name,Ticket Code\r\n";
-
-        for (let i = 0; i < ticketIds.length; i++) {
-          const ticketId = ticketIds[i];
-          const ticketName = `ticket_${i + 1}`;
-          
-          progressEl.textContent = `Rendering QRs: ${Math.round(((i + 1) / ticketIds.length) * 100)}%`;
-          
-          // Generate QR code base64 image data
-          const base64Data = await generateQRCodeBase64(ticketId);
-          if (base64Data) {
-            zip.file(`${ticketName}.png`, base64Data, { base64: true });
-          }
-          
-          // Append row mapping sequential name to Firebase unique code
-          csvContent += `${ticketName},${ticketId}\r\n`;
-        }
-
-        // Add Excel CSV mapping database to the ZIP file
-        zip.file("ticket_list.csv", csvContent);
-
-        // 3. Output ZIP folder for download
-        progressEl.textContent = "Compressing ZIP file...";
-        const contentBlob = await zip.generateAsync({ type: "blob" });
-        saveAs(contentBlob, `tickets_package_${count}.zip`);
-
-        progressEl.textContent = "Success! Package downloaded.";
-        setTimeout(resetGenUI, 3000);
-        loadTickets(); // Refresh lists
-
-      } catch (err) {
-        alert("Network error generating tickets.");
-        console.error(err);
-        resetGenUI();
-      }
-
-      function resetGenUI() {
-        genBtn.disabled = false;
-        countInput.disabled = false;
-        countInput.value = "";
-        progressEl.textContent = "";
-        progressEl.style.display = "none";
-      }
-    }
-
-    function prevPage() {
-      if (currentPage > 1) { currentPage--; renderPage(); }
-    }
-
-    function nextPage() {
-      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-      if (currentPage < totalPages) { currentPage++; renderPage(); }
-    }
-
-    // Allow Enter key on key screen
-    document.getElementById("key-input").addEventListener("keydown", e => {
-      if (e.key === "Enter") verifyKey();
     });
   </script>
 </body>
-
 </html>

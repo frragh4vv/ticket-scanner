@@ -1,41 +1,88 @@
+"""🎟️ TicketMaker CLI - Multi-Tier QR & Database Generator
+
+Generates cryptographically unique QR codes categorized by tier:
+- VIP passes (VIP-XXXXXX)
+- General Admission passes (GEN-XXXXXX)
+- Guestlist passes (GST-XXXXXX)
+"""
+
 import qrcode
-import uuid
+import secrets
 import csv
 import os
 import shutil
 
 # Configuration
-QR_FOLDER = "tickets_for_appsheet"
-CSV_FILE = "appsheet_database.csv"
-COUNT = 1500
+QR_FOLDER = "tickets_output"
+CSV_FILE = "tickets_database.csv"
 
-# 1. WIPE OLD DATA for a fresh start
-if os.path.exists(QR_FOLDER):
-    shutil.rmtree(QR_FOLDER) # Deletes the whole folder
-os.makedirs(QR_FOLDER)
+# Batch counts
+TIER_COUNTS = {
+    "VIP": 50,
+    "General": 400,
+    "Guestlist": 50
+}
 
-if os.path.exists(CSV_FILE):
-    os.remove(CSV_FILE) # Deletes the old CSV
+PREFIX_MAP = {
+    "VIP": "VIP",
+    "General": "GEN",
+    "Guestlist": "GST"
+}
 
-# 2. Generate 1000 fresh IDs and QR Images
-ticket_data = []
+def generate_code(length=6):
+    charset = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    return "".join(secrets.choice(charset) for _ in range(length))
 
-print(f"Generating {COUNT} fresh QR codes...")
-for i in range(1, COUNT + 1):
-    # Generating a unique 8-character ID
-    unique_id = str(uuid.uuid4())[:8] 
-    
-    # Create and Save QR
-    img = qrcode.make(unique_id)
-    img.save(f"{QR_FOLDER}/ticket_{i}.png")
-    
-    # Prepare row for CSV
-    ticket_data.append([unique_id, "Valid", "", ""])
+def main():
+    # 1. Clean slate: Wipe old local assets
+    if os.path.exists(QR_FOLDER):
+        shutil.rmtree(QR_FOLDER)
+    os.makedirs(QR_FOLDER)
 
-# 3. Save to a brand new CSV
-with open(CSV_FILE, "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Ticket_ID", "Status", "Scanned_By", "Scan_Time"])
-    writer.writerows(ticket_data)
+    for tier in TIER_COUNTS.keys():
+        os.makedirs(os.path.join(QR_FOLDER, tier.lower()), exist_ok=True)
 
-print(f"Success! {COUNT} fresh tickets are ready in '{QR_FOLDER}'.")
+    if os.path.exists(CSV_FILE):
+        os.remove(CSV_FILE)
+
+    ticket_rows = []
+    total_generated = 0
+
+    print("🚀 Generating multi-tier QR tickets...")
+
+    # 2. Generate per tier
+    for tier, count in TIER_COUNTS.items():
+        prefix = PREFIX_MAP.get(tier, "GEN")
+        print(f"  • Generating {count} {tier} tickets ({prefix}-*)...")
+
+        for i in range(1, count + 1):
+            ticket_id = f"{prefix}-{generate_code(6)}"
+            
+            # Render High-Resolution QR code
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(ticket_id)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+            
+            # Save into tier folder
+            file_path = os.path.join(QR_FOLDER, tier.lower(), f"{ticket_id}.png")
+            img.save(file_path)
+
+            ticket_rows.append([ticket_id, tier, "Valid", "", "", "", ""])
+            total_generated += 1
+
+    # 3. Save to CSV manifest
+    with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Ticket_ID", "Tier", "Status", "Attendee_Name", "Email", "Scanned_By", "Scan_Time"])
+        writer.writerows(ticket_rows)
+
+    print(f"\n✅ Success! Generated {total_generated} tickets in '{QR_FOLDER}/' and saved to '{CSV_FILE}'.")
+
+if __name__ == "__main__":
+    main()

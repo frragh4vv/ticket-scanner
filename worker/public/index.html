@@ -3,322 +3,1506 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Ticket Scanner</title>
+  <title>TicketScanner Pro • Gate Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-dark: #09090b;
+      --card-bg: rgba(24, 24, 27, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      
+      --color-vip: #f59e0b;
+      --color-vip-glow: rgba(245, 158, 11, 0.25);
+      --color-gen: #10b981;
+      --color-gen-glow: rgba(16, 185, 129, 0.25);
+      --color-gst: #a855f7;
+      --color-gst-glow: rgba(168, 85, 247, 0.25);
+      --color-dup: #f97316;
+      --color-err: #ef4444;
+      --primary: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f0f0f;
-      color: #fff;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-dark);
+      background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      overflow-x: hidden;
     }
 
+    /* Top Navigation Bar */
     header {
       width: 100%;
-      background: #1a1a1a;
-      padding: 16px;
+      background: rgba(18, 18, 20, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-btn {
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .badge-btn:hover, .badge-btn:active {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .scan-counter {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Auth & Onboarding Cards */
+    .gate-screen {
+      width: 100%;
+      max-width: 440px;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
       text-align: center;
-      font-size: 20px;
+      margin: auto 0;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .gate-card {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .gate-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 6px auto;
+    }
+
+    .gate-card h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .gate-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .gate-input {
+      width: 100%;
+      padding: 15px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: rgba(10, 10, 12, 0.8);
+      color: #fff;
+      font-size: 16px;
+      text-align: center;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .gate-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+
+    .gate-input.error {
+      border-color: var(--color-err);
+      animation: shake 0.35s ease;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Scanner Viewport */
+    #scanner-screen {
+      display: none;
+      width: 100%;
+      max-width: 460px;
+      padding: 16px;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .camera-card {
+      width: 100%;
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: #000;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      aspect-ratio: 1 / 1;
+      max-height: 420px;
+    }
+
+    #reader {
+      width: 100% !important;
+      height: 100% !important;
+      border: none !important;
+    }
+
+    #reader video {
+      object-fit: cover !important;
+      border-radius: 24px !important;
+    }
+
+    /* Reticle Laser Scanner Overlay */
+    .scan-reticle {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reticle-frame {
+      width: 68%;
+      height: 68%;
+      position: relative;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+    }
+
+    .reticle-corner {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: #3b82f6;
+      border-style: solid;
+    }
+
+    .reticle-corner.tl { top: -2px; left: -2px; border-width: 4px 0 0 4px; border-top-left-radius: 18px; }
+    .reticle-corner.tr { top: -2px; right: -2px; border-width: 4px 4px 0 0; border-top-right-radius: 18px; }
+    .reticle-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 4px 4px; border-bottom-left-radius: 18px; }
+    .reticle-corner.br { bottom: -2px; right: -2px; border-width: 0 4px 4px 0; border-bottom-right-radius: 18px; }
+
+    .laser-line {
+      position: absolute;
+      top: 0;
+      left: 5%;
+      width: 90%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #3b82f6, #60a5fa, transparent);
+      box-shadow: 0 0 12px #3b82f6;
+      animation: laserMove 2.2s infinite ease-in-out;
+      border-radius: 2px;
+    }
+
+    @keyframes laserMove {
+      0%, 100% { top: 6%; opacity: 0.2; }
+      50% { top: 90%; opacity: 1; }
+    }
+
+    /* Controls Bar below camera */
+    .camera-controls {
+      position: absolute;
+      bottom: 14px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .tool-btn {
+      background: rgba(18, 18, 20, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .tool-btn.active {
+      background: #f59e0b;
+      color: #000;
+      border-color: #f59e0b;
+    }
+
+    .camera-status {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 1.6s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* ==================================================================== */
+    /* PINNED RESULT CARD & SCAN NEXT WORKFLOW                              */
+    /* ==================================================================== */
+    .result-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .result-sheet {
+      width: 100%;
+      max-width: 440px;
+      background: #141416;
+      border-radius: 28px;
+      border: 2px solid var(--card-border);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      position: relative;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Result State Variants */
+    .result-sheet.valid {
+      border-color: var(--color-gen);
+      box-shadow: 0 10px 40px var(--color-gen-glow);
+    }
+
+    .result-sheet.valid.tier-vip {
+      border-color: var(--color-vip);
+      box-shadow: 0 10px 45px var(--color-vip-glow);
+    }
+
+    .result-sheet.valid.tier-guestlist {
+      border-color: var(--color-gst);
+      box-shadow: 0 10px 45px var(--color-gst-glow);
+    }
+
+    .result-sheet.duplicate {
+      border-color: var(--color-dup);
+      box-shadow: 0 10px 40px rgba(249, 115, 22, 0.3);
+    }
+
+    .result-sheet.invalid, .result-sheet.notfound {
+      border-color: var(--color-err);
+      box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+    }
+
+    .status-badge {
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 13px;
       font-weight: 700;
       letter-spacing: 1px;
-      border-bottom: 2px solid #333;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge.valid { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+    .status-badge.duplicate { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid #f97316; }
+    .status-badge.invalid { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .status-badge.wrong_day { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+
+    .result-sheet.wrong_day {
+      border-color: #f59e0b;
+      box-shadow: 0 10px 40px rgba(245, 158, 11, 0.35);
+    }
+
+    /* Multi-Day Strip & Timeline */
+    .multiday-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #93c5fd;
+    }
+
+    .multiday-pill {
+      background: #2563eb;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .daily-timeline {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+    }
+
+    .day-chip {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .day-chip.scanned {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .day-chip.valid {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .day-chip.not-allowed {
+      background: rgba(255, 255, 255, 0.04);
+      color: #71717a;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      opacity: 0.6;
+    }
+
+    .day-chip.active-day {
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      border-color: #3b82f6 !important;
+    }
+
+    .btn-reentry {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid #f97316;
+      background: rgba(249, 115, 22, 0.15);
+      color: #fdba74;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-reentry:hover {
+      background: rgba(249, 115, 22, 0.25);
+      color: #fff;
+    }
+
+    /* Event Day Picker Modal */
+    .day-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .day-modal-card {
+      width: 100%;
+      max-width: 380px;
+      background: #141416;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      animation: popIn 0.2s ease;
+    }
+
+    .day-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .day-btn {
+      padding: 12px 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .day-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .day-btn.active {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 0 14px rgba(37, 99, 235, 0.6);
+    }
+
+    .tier-chip {
+      padding: 8px 22px;
+      border-radius: 24px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tier-chip.vip {
+      background: linear-gradient(135deg, #78350f, #b45309);
+      color: #fef3c7;
+      border: 1px solid #f59e0b;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .tier-chip.general {
+      background: linear-gradient(135deg, #064e3b, #047857);
+      color: #d1fae5;
+      border: 1px solid #10b981;
+    }
+
+    .tier-chip.guestlist {
+      background: linear-gradient(135deg, #581c87, #7e22ce);
+      color: #f3e8ff;
+      border: 1px solid #a855f7;
+    }
+
+    .ticket-code-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #fff;
+      padding: 6px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .attendee-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .result-meta {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .meta-row strong {
+      color: var(--text-main);
+    }
+
+    /* THE SCAN NEXT BUTTON */
+    .btn-scan-next {
+      width: 100%;
+      padding: 18px;
+      border-radius: 18px;
+      border: none;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+      transition: all 0.2s;
     }
 
-    #scanner-name-tag {
-      font-size: 13px;
-      background: #333;
-      padding: 4px 10px;
-      border-radius: 20px;
-      color: #aaa;
-      cursor: pointer;
-      display: none;
+    .btn-scan-next:active {
+      transform: scale(0.97);
     }
 
-    /* Shared card style for key + name screens */
-    .gate-screen {
+    .scan-next-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Auto Scan Toggle Switch */
+    .auto-mode-bar {
       width: 100%;
-      max-width: 420px;
-      padding: 40px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 10px 16px;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 16px;
-    }
-
-    .gate-screen h2 { font-size: 22px; text-align: center; }
-    .gate-screen p  { color: #888; font-size: 14px; text-align: center; }
-
-    .gate-input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 2px solid #333;
-      background: #1a1a1a;
-      color: #fff;
-      font-size: 18px;
-      text-align: center;
-      letter-spacing: 2px;
-      transition: border-color 0.2s;
-    }
-
-    .gate-input:focus { outline: none; border-color: #3b82f6; }
-    .gate-input.error { border-color: #ef4444; animation: shake 0.3s ease; }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25%       { transform: translateX(-8px); }
-      75%       { transform: translateX(8px); }
-    }
-
-    .gate-btn {
-      width: 100%;
-      padding: 14px;
-      background: #3b82f6;
-      border: none;
-      border-radius: 12px;
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background 0.2s;
-    }
-
-    .gate-btn:active { background: #2563eb; }
-
-    .error-msg {
-      color: #ef4444;
+      justify-content: space-between;
       font-size: 13px;
-      display: none;
+      color: var(--text-muted);
     }
 
-    /* Scanner screen */
-    #scanner-screen { display: none; width: 100%; max-width: 420px; padding: 20px; }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
 
-    #reader { border-radius: 16px; overflow: hidden; border: 3px solid #444; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
 
-    #result-box {
-      margin-top: 24px;
-      padding: 28px 20px;
-      border-radius: 20px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: 700;
-      line-height: 1.5;
-      white-space: pre-line;
-      display: none;
-      animation: popIn 0.2s ease;
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #27272a;
+      transition: .2s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider { background-color: #3b82f6; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* Manual Section */
+    .manual-card {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 14px 18px;
+    }
+
+    .manual-card summary {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .manual-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes popIn {
-      from { transform: scale(0.85); opacity: 0; }
-      to   { transform: scale(1);    opacity: 1; }
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
     }
 
-    .valid     { background: #14532d; border: 3px solid #22c55e; color: #bbf7d0; }
-    .duplicate { background: #431407; border: 3px solid #f97316; color: #fed7aa; }
-    .invalid   { background: #450a0a; border: 3px solid #ef4444; color: #fecaca; }
-    .notfound  { background: #1e1b4b; border: 3px solid #818cf8; color: #c7d2fe; }
-
-    #scanning-status { text-align: center; color: #888; margin-top: 16px; font-size: 14px; }
-
-    #manual-section { margin-top: 30px; width: 100%; }
-    #manual-section summary { color: #888; font-size: 13px; cursor: pointer; text-align: center; padding: 8px; }
-    #manual-form { display: flex; gap: 8px; margin-top: 10px; }
-
-    #manual-input {
-      flex: 1; padding: 12px; border-radius: 10px;
-      border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 15px;
-    }
-
-    #manual-btn {
-      padding: 12px 18px; background: #3b82f6; border: none;
-      border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; font-size: 15px;
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
     }
   </style>
 </head>
 <body>
 
-<header>
-  🎟️ TICKET SCANNER
-  <span id="scanner-name-tag" onclick="changeName()"></span>
-</header>
-
-<!-- Step 1: Access Key -->
-<div id="key-screen" class="gate-screen">
-  <h2>🔐 Enter Access Key</h2>
-  <p>This scanner is restricted to authorised staff only.</p>
-  <input id="key-input" class="gate-input" type="password" placeholder="••••••••••" maxlength="20" autocomplete="off"
-    onkeydown="if(event.key==='Enter') verifyKey()" />
-  <p id="key-error" class="error-msg">Incorrect key. Try again.</p>
-  <button class="gate-btn" onclick="verifyKey()">Unlock</button>
-</div>
-
-<!-- Step 2: Enter Name -->
-<div id="name-screen" class="gate-screen" style="display:none;">
-  <h2>Who is scanning?</h2>
-  <p>Enter your name or gate number so we know who scanned each ticket.</p>
-  <input id="name-input" class="gate-input" type="text" placeholder="e.g. Gate 1 / Ravi" maxlength="30"
-    autocomplete="off" style="letter-spacing:normal;"
-    onkeydown="if(event.key==='Enter') startScanning()" />
-  <button class="gate-btn" onclick="startScanning()">Start Scanning</button>
-</div>
-
-<!-- Step 3: Scanner -->
-<div id="scanner-screen">
-  <div id="reader"></div>
-  <p id="scanning-status">Initializing camera...</p>
-  <div id="result-box"></div>
-
-  <details id="manual-section">
-    <summary>Enter ticket ID manually</summary>
-    <div id="manual-form">
-      <input id="manual-input" type="text" placeholder="Ticket ID (e.g. 3f8a12bc)" maxlength="36" autocomplete="off" />
-      <button id="manual-btn" onclick="manualCheck()">Check</button>
+  <!-- Top Navigation Bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🎟️</div>
+      <span>TicketScanner <span style="font-weight: 300; opacity: 0.6; font-size: 13px;">PRO</span></span>
     </div>
-  </details>
-</div>
+    <div class="header-actions">
+      <button id="day-badge-btn" class="badge-btn" onclick="openDayPickerModal()" title="Switch Active Event Day">
+        <span>📅</span> <span id="header-day-label">Day 1</span>
+      </button>
+      <div id="scan-count-badge" class="scan-counter" style="display:none;">0 Scanned</div>
+      <div id="scanner-name-tag" class="badge-btn" style="display:none;" onclick="changeName()">
+        <span>👤</span> <span id="operator-label">Gate</span>
+      </div>
+      <button id="sound-btn" class="badge-btn" onclick="toggleMute()" title="Toggle Audio Chimes">
+        <span id="sound-icon">🔔</span>
+      </button>
+    </div>
+  </header>
 
-<script>
-  // 🌐 Cloudflare Worker API Settings
-  const API_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://localhost:8787" 
-    : window.location.origin;
+  <!-- Step 1: Security Access Key Screen -->
+  <div id="key-screen" class="gate-screen">
+    <div class="gate-card">
+      <div class="gate-icon">🔐</div>
+      <h2>Staff Authentication</h2>
+      <p>Enter the gate passkey to unlock the camera scanner for this session.</p>
+      <input id="key-input" class="gate-input" type="password" placeholder="••••••••••" maxlength="30" autocomplete="off"
+        onkeydown="if(event.key==='Enter') verifyKey()" />
+      <p id="key-error" style="color: #ef4444; font-size: 13px; display: none;">Invalid passkey. Please check and retry.</p>
+      <button class="btn-primary" onclick="verifyKey()">
+        <span>Unlock Gate Scanner</span> ➔
+      </button>
+    </div>
+  </div>
 
-  // 🔑 Scanner access key
-  const ACCESS_KEY = "Raghav@ticket";
+  <!-- Step 2: Gate / Staff Identity Screen -->
+  <div id="name-screen" class="gate-screen" style="display:none;">
+    <div class="gate-card">
+      <div class="gate-icon">🏷️</div>
+      <h2>Gate Identifier</h2>
+      <p>Assign this terminal a station name and choose the active event day.</p>
+      
+      <div style="text-align: left; width: 100%;">
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: block;">Gate / Operator Name:</label>
+        <input id="name-input" class="gate-input" type="text" placeholder="e.g. VIP Gate 1 / Alex" maxlength="32"
+          autocomplete="off" style="letter-spacing: normal;"
+          onkeydown="if(event.key==='Enter') startScanning()" />
+      </div>
 
-  let scannerName = "";
-  let isProcessing = false;
-  let lastScanned = "";
-  let resultTimeout = null;
-  let qrStarted = false;
+      <div style="text-align: left; width: 100%;">
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: block;">Active Event Day (1 to 10):</label>
+        <select id="login-day-select" class="gate-input" style="cursor: pointer; padding: 12px 14px;">
+          <option value="1">Day 1 (Opening Day)</option>
+          <option value="2">Day 2</option>
+          <option value="3">Day 3</option>
+          <option value="4">Day 4</option>
+          <option value="5">Day 5</option>
+          <option value="6">Day 6</option>
+          <option value="7">Day 7</option>
+          <option value="8">Day 8</option>
+          <option value="9">Day 9</option>
+          <option value="10">Day 10 (Finale)</option>
+        </select>
+      </div>
 
-  const resultBox = document.getElementById("result-box");
-  const statusEl  = document.getElementById("scanning-status");
+      <button class="btn-primary" onclick="startScanning()">
+        <span>Begin Scanning</span> ➔
+      </button>
+    </div>
+  </div>
 
-  function verifyKey() {
-    const input = document.getElementById("key-input");
-    const errorMsg = document.getElementById("key-error");
+  <!-- Step 3: Main Scanner View -->
+  <div id="scanner-screen">
+    
+    <!-- Camera Viewport Card -->
+    <div class="camera-card">
+      <div id="reader"></div>
+      
+      <!-- Reticle & Laser Effect -->
+      <div class="scan-reticle">
+        <div class="reticle-frame">
+          <div class="reticle-corner tl"></div>
+          <div class="reticle-corner tr"></div>
+          <div class="reticle-corner bl"></div>
+          <div class="reticle-corner br"></div>
+          <div class="laser-line"></div>
+        </div>
+      </div>
 
-    if (input.value === ACCESS_KEY) {
-      document.getElementById("key-screen").style.display = "none";
-      document.getElementById("name-screen").style.display = "flex";
-      setTimeout(() => document.getElementById("name-input").focus(), 100);
-    } else {
-      input.value = "";
-      input.classList.add("error");
-      errorMsg.style.display = "block";
-      setTimeout(() => input.classList.remove("error"), 400);
+      <!-- Quick Action Controls -->
+      <div class="camera-controls">
+        <button id="torch-btn" class="tool-btn" onclick="toggleTorch()">
+          <span>🔦</span> <span id="torch-label">Flash</span>
+        </button>
+        <button id="camera-flip-btn" class="tool-btn" onclick="switchCamera()">
+          <span>🔄</span> <span>Flip</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Ticker -->
+    <div class="camera-status">
+      <div class="pulse-dot"></div>
+      <span id="scanning-status">Ready. Align QR code inside frame...</span>
+    </div>
+
+    <!-- Auto-Scan Mode Switcher -->
+    <div class="auto-mode-bar">
+      <div>
+        <div style="font-weight: 600; color: #fff;">Continuous Scan Flow</div>
+        <div style="font-size: 11px;">Keeps modal pinned until you tap 'Scan Next'</div>
+      </div>
+      <label class="toggle-switch" title="Auto-resume scanning after 3 seconds">
+        <input id="auto-scan-toggle" type="checkbox" onchange="toggleAutoScanMode()" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- Manual Code Fallback -->
+    <details class="manual-card">
+      <summary>
+        <span>⌨️ Manual Code Lookup</span>
+        <span style="font-size: 11px; opacity: 0.7;">Click to expand</span>
+      </summary>
+      <div class="manual-form">
+        <input id="manual-input" class="gate-input" type="text" placeholder="e.g. VIP-8F2A10" maxlength="32" autocomplete="off"
+          style="text-align: left; padding: 10px 14px; font-family: monospace; font-size: 14px;"
+          onkeydown="if(event.key==='Enter') manualCheck()" />
+        <button class="btn-primary" style="width: auto; padding: 10px 18px; font-size: 14px;" onclick="manualCheck()">
+          Check
+        </button>
+      </div>
+    </details>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- PINNED SCAN RESULT MODAL (DOES NOT CLOSE UNTIL USER TAPS SCAN NEXT)  -->
+  <!-- ==================================================================== -->
+  <div id="result-overlay" class="result-overlay" onclick="handleOverlayClick(event)">
+    <div id="result-sheet" class="result-sheet">
+      
+      <!-- Status Tag (Approved, Duplicate, Invalid, Wrong Day) -->
+      <div id="res-status-badge" class="status-badge valid">
+        <span id="res-status-icon">✓</span>
+        <span id="res-status-text">ENTRY APPROVED</span>
+      </div>
+
+      <!-- Tier Badge (VIP, General, Guestlist) -->
+      <div id="res-tier-chip" class="tier-chip vip">
+        <span id="res-tier-icon">👑</span>
+        <span id="res-tier-text">VIP ACCESS</span>
+      </div>
+
+      <!-- Multi-Day Pass Badge -->
+      <div id="res-multiday-badge" class="multiday-badge" style="display:none;">
+        <span id="res-multiday-name">2-DAY PASS</span>
+        <span id="res-multiday-progress" class="multiday-pill">Day 1 of 2</span>
+      </div>
+
+      <!-- Ticket ID Monospace -->
+      <div id="res-ticket-id" class="ticket-code-display">VIP-7A2B9C</div>
+
+      <!-- Attendee Name if assigned -->
+      <div id="res-attendee-name" class="attendee-name" style="display:none;"></div>
+
+      <!-- Daily Scan Breakdown Timeline -->
+      <div id="res-daily-timeline" class="daily-timeline" style="display:none;"></div>
+
+      <!-- Audit Metadata Details -->
+      <div class="result-meta">
+        <div class="meta-row">
+          <span>Gate Station:</span>
+          <strong id="res-meta-scanner">—</strong>
+        </div>
+        <div class="meta-row">
+          <span>Scan Timestamp:</span>
+          <strong id="res-meta-time">—</strong>
+        </div>
+        <div id="res-meta-note-row" class="meta-row" style="display:none;">
+          <span>Notice:</span>
+          <strong id="res-meta-notes" style="color: #f97316;">—</strong>
+        </div>
+      </div>
+
+      <!-- Re-entry Authorization Button (Shown on duplicates / re-entries) -->
+      <button id="res-reentry-btn" class="btn-reentry" style="display:none;" onclick="triggerReEntryScan()">
+        <span>🔄 Authorize Re-Entry for Today</span>
+      </button>
+
+      <!-- PRIMARY 'SCAN NEXT' ACTION BUTTON -->
+      <button id="scan-next-btn" class="btn-scan-next" onclick="scanNextTicket()">
+        <span>📷</span>
+        <span>Scan Next Ticket</span>
+      </button>
+
+      <div class="scan-next-hint">Press <strong>Spacebar</strong> or tap anywhere to scan next</div>
+    </div>
+  </div>
+
+  <!-- Active Day Picker Modal -->
+  <div id="day-picker-modal" class="day-modal-overlay" style="display:none;" onclick="if(event.target.id==='day-picker-modal') closeDayPickerModal()">
+    <div class="day-modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:18px; font-weight:700;">Select Active Event Day</h3>
+        <button class="badge-btn" onclick="closeDayPickerModal()">✕</button>
+      </div>
+      <p style="font-size:13px; color:var(--text-muted); line-height:1.4;">
+        Current scanner check-ins will be recorded for this day.
+      </p>
+      <div class="day-grid" id="day-picker-grid"></div>
+    </div>
+  </div>
+
+  <script>
+    // 🌐 Cloudflare Workers API Endpoint Configuration
+    const API_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://localhost:8787" 
+      : window.location.origin;
+
+    let authToken = localStorage.getItem("scanner_key") || "";
+
+    let scannerName = "";
+    let isProcessing = false;
+    let lastScannedId = "";
+    let html5QrCode = null;
+    let qrStarted = false;
+    let isMuted = false;
+    let isTorchOn = false;
+    let currentFacingMode = "environment";
+    let sessionScannedCount = 0;
+    let autoScanEnabled = false;
+    let autoScanTimeout = null;
+
+    // Active Event Day Tracking (1 to 10)
+    let currentEventDay = parseInt(localStorage.getItem("scanner_event_day"), 10) || 1;
+
+    function updateEventDayUI() {
+      const headerLabel = document.getElementById("header-day-label");
+      if (headerLabel) headerLabel.textContent = `Day ${currentEventDay}`;
+      const loginSelect = document.getElementById("login-day-select");
+      if (loginSelect) loginSelect.value = String(currentEventDay);
+      renderDayPicker();
     }
-  }
 
-  function startScanning() {
-    const nameVal = document.getElementById("name-input").value.trim();
-    if (!nameVal) {
-      alert("Please enter your name first.");
-      return;
-    }
-    scannerName = nameVal;
-
-    const tag = document.getElementById("scanner-name-tag");
-    tag.textContent = "👤 " + scannerName + " ✎";
-    tag.style.display = "inline-block";
-
-    document.getElementById("name-screen").style.display = "none";
-    document.getElementById("scanner-screen").style.display = "block";
-
-    if (!qrStarted) {
-      qrStarted = true;
-      const html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 15, qrbox: { width: 250, height: 250 } },
-        (decodedText) => { checkTicket(decodedText.trim()); },
-        () => {}
-      ).then(() => {
-        statusEl.textContent = "Point camera at a QR code...";
-      }).catch((err) => {
-        statusEl.textContent = "Camera error: " + err;
-      });
-    }
-  }
-
-  function changeName() {
-    document.getElementById("scanner-screen").style.display = "none";
-    document.getElementById("name-screen").style.display = "flex";
-    document.getElementById("name-input").value = scannerName;
-  }
-
-  function showResult(data) {
-    resultBox.className = "";
-    resultBox.classList.add(data.result);
-    resultBox.textContent = data.message;
-    resultBox.style.display = "block";
-
-    if (navigator.vibrate) {
-      if (data.result === "valid") navigator.vibrate([100, 50, 100]);
-      else navigator.vibrate(500);
+    function setEventDay(day) {
+      currentEventDay = Math.max(1, Math.min(10, parseInt(day, 10) || 1));
+      localStorage.setItem("scanner_event_day", currentEventDay);
+      updateEventDayUI();
+      closeDayPickerModal();
     }
 
-    clearTimeout(resultTimeout);
-    resultTimeout = setTimeout(() => {
-      resultBox.style.display = "none";
-      isProcessing = false;
-      lastScanned = "";
-      statusEl.textContent = "Point camera at a QR code...";
-    }, 3000);
-  }
+    function openDayPickerModal() {
+      renderDayPicker();
+      document.getElementById("day-picker-modal").style.display = "flex";
+    }
 
-  async function checkTicket(ticketId) {
-    if (isProcessing || ticketId === lastScanned) return;
-    isProcessing = true;
-    lastScanned = ticketId;
-    statusEl.textContent = "Checking...";
+    function closeDayPickerModal() {
+      document.getElementById("day-picker-modal").style.display = "none";
+    }
 
-    try {
-      const res = await fetch(`${API_URL}/api/check`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${ACCESS_KEY}`
-        },
-        body: JSON.stringify({
-          ticketId: ticketId,
-          scannerName: scannerName
-        })
-      });
-      const data = await res.json();
+    function renderDayPicker() {
+      const grid = document.getElementById("day-picker-grid");
+      if (!grid) return;
+      grid.innerHTML = "";
+      for (let d = 1; d <= 10; d++) {
+        const btn = document.createElement("button");
+        btn.className = "day-btn" + (d === currentEventDay ? " active" : "");
+        btn.textContent = `Day ${d}`;
+        btn.onclick = () => setEventDay(d);
+        grid.appendChild(btn);
+      }
+    }
 
-      if (res.ok) {
-        showResult(data);
+    // Web Audio Synthesizer (Zero external audio file dependencies)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, type = "sine", duration = 0.15, delay = 0) {
+      if (isMuted) return;
+      try {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + delay);
+        osc.stop(audioCtx.currentTime + delay + duration);
+      } catch (e) {
+        console.warn("Audio play blocked", e);
+      }
+    }
+
+    function playSoundForTier(tier, result) {
+      if (result === "valid") {
+        if (tier === "VIP") {
+          // VIP Fanfare chord (587Hz -> 880Hz)
+          playTone(587.33, "triangle", 0.12, 0);
+          playTone(880.00, "triangle", 0.28, 0.1);
+        } else if (tier === "Guestlist") {
+          // Guestlist melodic chime (440Hz -> 659Hz)
+          playTone(440.00, "sine", 0.14, 0);
+          playTone(659.25, "sine", 0.22, 0.1);
+        } else {
+          // General clean confirmation chime
+          playTone(523.25, "sine", 0.10, 0);
+          playTone(659.25, "sine", 0.18, 0.08);
+        }
+      } else if (result === "duplicate" || result === "wrong_day") {
+        // Warning buzz (340Hz -> 240Hz)
+        playTone(340, "sawtooth", 0.18, 0);
+        playTone(240, "sawtooth", 0.25, 0.15);
       } else {
-        showResult({ result: "invalid", message: data.error || "Verification failed." });
+        // Invalid harsh low buzz (180Hz)
+        playTone(180, "sawtooth", 0.35, 0);
+      }
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      document.getElementById("sound-icon").textContent = isMuted ? "🔇" : "🔔";
+    }
+
+    // Step 1: Authentication verification via server API (No passwords in bare HTML)
+    async function verifyKey() {
+      const input = document.getElementById("key-input");
+      const err = document.getElementById("key-error");
+      const enteredKey = input.value.trim();
+
+      if (!enteredKey) return;
+
+      try {
+        const res = await fetch(`${API_URL}/api/auth-verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${enteredKey}`
+          }
+        });
+
+        if (res.ok) {
+          authToken = enteredKey;
+          localStorage.setItem("scanner_key", enteredKey);
+          document.getElementById("key-screen").style.display = "none";
+          document.getElementById("name-screen").style.display = "flex";
+          
+          // Auto-fill remembered name if available
+          const savedName = localStorage.getItem("scanner_name");
+          if (savedName) document.getElementById("name-input").value = savedName;
+          setTimeout(() => document.getElementById("name-input").focus(), 150);
+        } else {
+          input.value = "";
+          input.classList.add("error");
+          err.style.display = "block";
+          setTimeout(() => input.classList.remove("error"), 400);
+        }
+      } catch (e) {
+        alert("Verification server unreachable: " + e.message);
+      }
+    }
+
+    // Step 2: Initialize Scanner Terminal
+    function startScanning() {
+      const nameVal = document.getElementById("name-input").value.trim();
+      if (!nameVal) {
+        alert("Please enter a gate or scanner operator name.");
+        return;
       }
 
-    } catch (err) {
-      showResult({ result: "invalid", message: "Network error.\nCheck your internet." });
-      isProcessing = false;
+      scannerName = nameVal;
+      localStorage.setItem("scanner_name", scannerName);
+
+      // Check chosen day from login form
+      const chosenDay = parseInt(document.getElementById("login-day-select").value, 10);
+      if (chosenDay) setEventDay(chosenDay);
+
+      document.getElementById("operator-label").textContent = scannerName;
+      document.getElementById("scanner-name-tag").style.display = "flex";
+      document.getElementById("scan-count-badge").style.display = "block";
+
+      document.getElementById("name-screen").style.display = "none";
+      document.getElementById("scanner-screen").style.display = "flex";
+
+      initCamera();
     }
-  }
 
-  function manualCheck() {
-    const val = document.getElementById("manual-input").value.trim();
-    if (!val) return;
-    isProcessing = false;
-    lastScanned = "";
-    checkTicket(val);
-    document.getElementById("manual-input").value = "";
-  }
-</script>
+    function changeName() {
+      if (html5QrCode && qrStarted) {
+        html5QrCode.stop().then(() => {
+          qrStarted = false;
+        }).catch(() => {});
+      }
+      document.getElementById("scanner-screen").style.display = "none";
+      document.getElementById("name-screen").style.display = "flex";
+    }
 
+    // Step 3: Camera & QR Engine
+    function initCamera() {
+      if (qrStarted) return;
+      
+      html5QrCode = new Html5Qrcode("reader");
+      const config = {
+        fps: 20,
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const edge = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72);
+          return { width: edge, height: edge };
+        },
+        aspectRatio: 1.0
+      };
+
+      html5QrCode.start(
+        { facingMode: currentFacingMode },
+        config,
+        (decodedText) => {
+          handleDetectedCode(decodedText);
+        },
+        () => {}
+      ).then(() => {
+        qrStarted = true;
+        document.getElementById("scanning-status").textContent = `Camera active (Day ${currentEventDay}). Ready for QR codes...`;
+      }).catch((err) => {
+        console.error("Camera start error:", err);
+        document.getElementById("scanning-status").textContent = "Camera error: " + err;
+      });
+    }
+
+    function switchCamera() {
+      if (!html5QrCode || !qrStarted) return;
+      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+      html5QrCode.stop().then(() => {
+        qrStarted = false;
+        initCamera();
+      });
+    }
+
+    async function toggleTorch() {
+      if (!html5QrCode) return;
+      try {
+        isTorchOn = !isTorchOn;
+        await html5QrCode.applyVideoConstraints({
+          advanced: [{ torch: isTorchOn }]
+        });
+        const btn = document.getElementById("torch-btn");
+        if (isTorchOn) {
+          btn.classList.add("active");
+          document.getElementById("torch-label").textContent = "On";
+        } else {
+          btn.classList.remove("active");
+          document.getElementById("torch-label").textContent = "Flash";
+        }
+      } catch (err) {
+        alert("Torch not supported on this device/camera.");
+      }
+    }
+
+    // Step 4: Verification API Call
+    async function handleDetectedCode(rawText, isReEntry = false) {
+      const code = (rawText || "").trim();
+      if (!code || isProcessing || (code === lastScannedId && !isReEntry)) return;
+
+      isProcessing = true;
+      lastScannedId = code;
+      document.getElementById("scanning-status").textContent = isReEntry 
+        ? `Authorizing Day ${currentEventDay} re-entry for ${code}...` 
+        : `Verifying ${code} for Day ${currentEventDay}...`;
+
+      // Pause QR scanner processing while showing result
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.pause(true);
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/api/check`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            ticketId: code,
+            scannerName: scannerName,
+            eventDay: currentEventDay,
+            allowReEntry: !!isReEntry
+          })
+        });
+
+        const data = await res.json();
+        showScanResult(data, code);
+
+      } catch (err) {
+        showScanResult({
+          result: "invalid",
+          message: "Network Error: Could not reach verification server.",
+          ticket: { id: code }
+        }, code);
+      }
+    }
+
+    // Step 5: Render Result & Workflow
+    function showScanResult(data, fallbackId) {
+      const result = data.result || "invalid";
+      const ticket = data.ticket || { id: fallbackId };
+      const tier = ticket.tier || "General";
+      const sheet = document.getElementById("result-sheet");
+      const overlay = document.getElementById("result-overlay");
+
+      // Reset classes
+      sheet.className = "result-sheet " + result;
+      sheet.classList.add("tier-" + tier.toLowerCase());
+
+      const statusBadge = document.getElementById("res-status-badge");
+      statusBadge.className = "status-badge " + result;
+
+      const tierChip = document.getElementById("res-tier-chip");
+      tierChip.className = "tier-chip " + tier.toLowerCase();
+
+      // Configure badge text & icon
+      if (result === "valid") {
+        document.getElementById("res-status-text").textContent = data.isReEntry ? "RE-ENTRY APPROVED" : "ENTRY APPROVED";
+        document.getElementById("res-status-icon").textContent = "✓";
+        sessionScannedCount++;
+        document.getElementById("scan-count-badge").textContent = `${sessionScannedCount} Scanned`;
+      } else if (result === "duplicate") {
+        document.getElementById("res-status-text").textContent = `ALREADY SCANNED TODAY (Day ${currentEventDay})`;
+        document.getElementById("res-status-icon").textContent = "⚠️";
+      } else if (result === "wrong_day") {
+        document.getElementById("res-status-text").textContent = "WRONG EVENT DAY";
+        document.getElementById("res-status-icon").textContent = "⛔";
+      } else if (result === "notfound") {
+        document.getElementById("res-status-text").textContent = "NOT FOUND IN SYSTEM";
+        document.getElementById("res-status-icon").textContent = "✕";
+      } else {
+        document.getElementById("res-status-text").textContent = "INVALID PASS";
+        document.getElementById("res-status-icon").textContent = "✕";
+      }
+
+      // Configure Tier
+      if (tier === "VIP") {
+        document.getElementById("res-tier-text").textContent = "VIP PASS";
+        document.getElementById("res-tier-icon").textContent = "👑";
+      } else if (tier === "Guestlist") {
+        document.getElementById("res-tier-text").textContent = "GUESTLIST PASS";
+        document.getElementById("res-tier-icon").textContent = "⭐";
+      } else {
+        document.getElementById("res-tier-text").textContent = "GENERAL ADMISSION";
+        document.getElementById("res-tier-icon").textContent = "🎟️";
+      }
+
+      // Configure Multi-Day Pass Strip & Timeline
+      const totalDays = ticket.total_days || 1;
+      const allowedDays = Array.isArray(ticket.allowed_days) && ticket.allowed_days.length > 0
+        ? ticket.allowed_days
+        : [1];
+      const dailyScans = data.daily_scans || ticket.daily_scans || {};
+      const daysUsed = ticket.days_used || (data.daysUsed || (ticket.status === 'Scanned' ? 1 : 0));
+
+      const multiBadge = document.getElementById("res-multiday-badge");
+      const timelineEl = document.getElementById("res-daily-timeline");
+
+      if (totalDays > 1 || allowedDays.length > 1) {
+        multiBadge.style.display = "flex";
+        const passTypeName = ticket.pass_type_name || `${totalDays}-Day Event Pass`;
+        document.getElementById("res-multiday-name").textContent = passTypeName;
+        document.getElementById("res-multiday-progress").textContent = `${daysUsed}/${allowedDays.length} Days Used`;
+
+        // Render day timeline chips
+        timelineEl.innerHTML = "";
+        for (let d = 1; d <= totalDays; d++) {
+          const isAllowed = allowedDays.includes(d);
+          const dayRecord = dailyScans[`day_${d}`];
+          const isScanned = !!(dayRecord && dayRecord.scanned);
+          const isCurrentDay = d === currentEventDay;
+
+          const chip = document.createElement("span");
+          chip.className = "day-chip " + (isScanned ? "scanned" : isAllowed ? "valid" : "not-allowed");
+          if (isCurrentDay) chip.classList.add("active-day");
+
+          let label = `Day ${d}: `;
+          if (isScanned) {
+            label += "✓ Scanned";
+            if (dayRecord.scan_time) {
+              const timePart = dayRecord.scan_time.split(",")[1] || dayRecord.scan_time;
+              label += ` (${timePart.trim()})`;
+            }
+          } else if (isAllowed) {
+            label += isCurrentDay ? "○ Ready to Admit" : "○ Valid";
+          } else {
+            label += "✕ Not Included";
+          }
+          chip.textContent = label;
+          timelineEl.appendChild(chip);
+        }
+        timelineEl.style.display = "flex";
+      } else {
+        multiBadge.style.display = "none";
+        timelineEl.style.display = "none";
+      }
+
+      // Ticket ID
+      document.getElementById("res-ticket-id").textContent = ticket.id || fallbackId;
+
+      // Attendee Name
+      const attendeeEl = document.getElementById("res-attendee-name");
+      if (ticket.attendee_name) {
+        attendeeEl.textContent = ticket.attendee_name;
+        attendeeEl.style.display = "block";
+      } else {
+        attendeeEl.style.display = "none";
+      }
+
+      // Audit meta
+      document.getElementById("res-meta-scanner").textContent = ticket.scanned_by || scannerName;
+      document.getElementById("res-meta-time").textContent = ticket.scan_time || new Date().toLocaleTimeString();
+
+      const noteRow = document.getElementById("res-meta-note-row");
+      const notesEl = document.getElementById("res-meta-notes");
+      if (result === "wrong_day") {
+        noteRow.style.display = "flex";
+        notesEl.style.color = "#fbbf24";
+        notesEl.textContent = `Valid on Day(s): ${allowedDays.join(', ')} • Current scanner set to Day ${currentEventDay}`;
+      } else if (result === "duplicate") {
+        noteRow.style.display = "flex";
+        notesEl.style.color = "#f97316";
+        notesEl.textContent = `Already verified today by ${ticket.scanned_by || "another gate"}`;
+      } else if (data.isReEntry) {
+        noteRow.style.display = "flex";
+        notesEl.style.color = "#34d399";
+        notesEl.textContent = `Re-Entry logged at ${ticket.scan_time} by ${scannerName}`;
+      } else {
+        noteRow.style.display = "none";
+      }
+
+      // Re-entry Action button
+      const reEntryBtn = document.getElementById("res-reentry-btn");
+      if (result === "duplicate") {
+        reEntryBtn.style.display = "flex";
+        reEntryBtn.innerHTML = `<span>🔄</span> <span>Authorize Re-Entry for Day ${currentEventDay}</span>`;
+      } else {
+        reEntryBtn.style.display = "none";
+      }
+
+      // Audio & Vibration Feedback
+      playSoundForTier(tier, result);
+      if (navigator.vibrate) {
+        if (result === "valid") navigator.vibrate([100, 60, 100]);
+        else navigator.vibrate([300, 100, 300]);
+      }
+
+      // DISPLAY RESULT MODAL (PINNED UNTIL USER CLICKS 'SCAN NEXT')
+      overlay.style.display = "flex";
+
+      // Optional Auto-Scan timeout (if user opted into hands-free mode)
+      clearTimeout(autoScanTimeout);
+      if (autoScanEnabled && result === "valid") {
+        autoScanTimeout = setTimeout(() => {
+          scanNextTicket();
+        }, 2800);
+      }
+    }
+
+    function triggerReEntryScan() {
+      if (!lastScannedId) return;
+      isProcessing = false;
+      handleDetectedCode(lastScannedId, true);
+    }
+
+    // THE SCAN NEXT HANDLER (Closes modal and resets camera)
+    function scanNextTicket() {
+      clearTimeout(autoScanTimeout);
+      document.getElementById("result-overlay").style.display = "none";
+      
+      isProcessing = false;
+      lastScannedId = "";
+      document.getElementById("scanning-status").textContent = `Ready (Day ${currentEventDay}). Point camera at next ticket...`;
+
+      // Resume camera scanning
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.resume();
+      }
+    }
+
+    function handleOverlayClick(event) {
+      // If clicked on backdrop outside the card, also scan next
+      if (event.target.id === "result-overlay") {
+        scanNextTicket();
+      }
+    }
+
+    function toggleAutoScanMode() {
+      autoScanEnabled = document.getElementById("auto-scan-toggle").checked;
+    }
+
+    function manualCheck() {
+      const val = document.getElementById("manual-input").value.trim();
+      if (!val) return;
+      isProcessing = false;
+      lastScannedId = "";
+      handleDetectedCode(val);
+      document.getElementById("manual-input").value = "";
+    }
+
+    // Keyboard Shortcuts: Spacebar or Enter triggers "Scan Next"
+    document.addEventListener("keydown", (e) => {
+      const overlay = document.getElementById("result-overlay");
+      if (overlay.style.display === "flex") {
+        if (e.code === "Space" || e.key === "Enter" || e.key === "Escape") {
+          e.preventDefault();
+          scanNextTicket();
+        }
+      }
+    });
+
+    // Auto-login with saved key if available and init event day
+    window.addEventListener("DOMContentLoaded", () => {
+      updateEventDayUI();
+      const savedKey = localStorage.getItem("scanner_key");
+      if (savedKey) {
+        document.getElementById("key-input").value = savedKey;
+        verifyKey();
+      }
+    });
+  </script>
 </body>
 </html>
