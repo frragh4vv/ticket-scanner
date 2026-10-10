@@ -4,13 +4,15 @@ compatibility_date = "2026-05-29"
 
 # Serve the frontend (index.html / admin.html) as static assets straight from
 # Cloudflare's global edge. Requests that match a file in ./public are served
-# as static assets (free, unmetered, highly available); anything else (e.g.
-# /api/*) falls through to the Worker script in src/index.js.
+# as static assets; anything else (e.g. /api/*) falls through to the Worker script in src/index.js.
 [assets]
 directory = "./public"
 
 [vars]
 FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app"
-# Note: Upload FIREBASE_SECRET and RESEND_API_KEY as Cloudflare Secrets:
-# npx wrangler secret put FIREBASE_SECRET
-# npx wrangler secret put RESEND_API_KEY
+
+# 🗄️ Cloudflare D1 Relational SQLite Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "ticket-scanner-db"
+database_id = "00000000-0000-0000-0000-000000000000"

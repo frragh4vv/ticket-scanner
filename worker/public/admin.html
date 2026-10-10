@@ -695,6 +695,16 @@
         </div>
       </div>
 
+      <!-- Multi-Tenant Event Switcher -->
+      <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.04); padding: 4px 8px; border-radius: 12px; border: 1px solid var(--card-border);">
+        <span style="font-size: 14px;">🎪</span>
+        <select id="event-selector" onchange="onEventSelectChanged()" style="background: transparent; color: #fff; border: none; font-size: 13px; font-weight: 600; cursor: pointer; outline: none; max-width: 200px;">
+          <option value="evt_sunburn2026" style="background: #18181b;">Sunburn Arena 2026 (3-Day)</option>
+          <option value="ALL" style="background: #18181b;">All Events</option>
+        </select>
+        <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 11px; height: auto;" onclick="openNewEventModal()" title="Create New Event">+ Event</button>
+      </div>
+
       <!-- Navigation Tabs -->
       <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('tab-directory')">
@@ -711,8 +721,22 @@
         </button>
       </div>
 
-      <div class="header-right">
-        <button class="btn btn-ghost" onclick="loadAllTickets()">
+      <div class="header-right" style="display: flex; align-items: center; gap: 10px;">
+        <!-- Volunteer Gate PIN -->
+        <div class="gate-pin-badge" style="display: flex; align-items: center; gap: 6px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); padding: 5px 12px; border-radius: 20px; font-size: 12px;">
+          <span style="color: var(--text-muted);">Gate PIN:</span>
+          <strong id="header-gate-pin" style="color: #60a5fa; font-family: monospace; letter-spacing: 1px;">8421</strong>
+          <button onclick="copyGateLink()" title="Copy Volunteer Scanner Link" style="background: none; border: none; cursor: pointer; font-size: 13px; padding: 0; color: #60a5fa;">📋</button>
+        </div>
+
+        <!-- Ticket Credits Wallet -->
+        <div onclick="openRechargeModal()" style="display: flex; align-items: center; gap: 7px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 88, 12, 0.15)); border: 1px solid rgba(245, 158, 11, 0.4); padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: transform 0.2s;" title="Click to buy more ticket credits">
+          <span style="color: #f59e0b; font-size: 13px;">⚡</span>
+          <span style="font-weight: 700; color: #fbbf24;"><span id="header-credits-count">500</span> Passes</span>
+          <span style="background: #f59e0b; color: #000; font-size: 10px; font-weight: 800; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">+</span>
+        </div>
+
+        <button class="btn btn-ghost" onclick="loadAllTickets(currentPage)">
           <span>↻</span> Refresh
         </button>
         <a href="index.html" target="_blank" class="btn btn-blue">
@@ -833,6 +857,17 @@
                 <tr><td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">Loading ticket database from Cloudflare edge...</td></tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Server-Side Pagination Bar -->
+          <div class="pagination-bar" id="pagination-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--card-border); font-size: 13px; color: var(--text-muted); background: rgba(0,0,0,0.15);">
+            <div>
+              Showing <span id="page-showing-count" style="font-weight: 600; color: #fff;">0</span> tickets • Page <span id="current-page-num" style="font-weight: 600; color: #fff;">1</span> of <span id="total-page-num" style="font-weight: 600; color: #fff;">1</span> (<span id="total-tickets-count">0</span> total in D1)
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button id="prev-page-btn" class="btn btn-ghost" onclick="changePage(-1)" style="padding: 6px 14px; font-size: 12px;">« Previous</button>
+              <button id="next-page-btn" class="btn btn-ghost" onclick="changePage(1)" style="padding: 6px 14px; font-size: 12px;">Next »</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1398,6 +1433,119 @@
     </div>
   </div>
 
+  <!-- RECHARGE & BILLING MODAL (UPI / RAZORPAY TICKET CREDITS) -->
+  <div id="recharge-modal" class="batch-render-modal" style="display: none;" onclick="if(event.target.id==='recharge-modal') closeRechargeModal()">
+    <div class="batch-modal-card" style="max-width: 520px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 20px; font-weight: 700;">⚡ Buy Ticket Credits</h3>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+            Current Balance: <strong id="modal-current-credits" style="color: #f59e0b;">500</strong> Passes Available
+          </p>
+        </div>
+        <button class="btn btn-ghost" style="padding: 6px 10px; font-size: 14px;" onclick="closeRechargeModal()">✕</button>
+      </div>
+
+      <!-- Pricing Options -->
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+        
+        <!-- Starter Option -->
+        <label class="scope-radio-card" id="card-pack-starter" onclick="selectCreditPack('starter', 500, 1499)">
+          <input type="radio" name="credit-pack" value="starter" />
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="font-size: 15px; color: #fff;">Starter Pack • 500 Passes</strong>
+              <span style="font-size: 16px; font-weight: 800; color: #38bdf8;">₹1,499</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">₹3.00 / pass • Ideal for club nights & college fests</div>
+          </div>
+        </label>
+
+        <!-- Pro Option (Default) -->
+        <label class="scope-radio-card" id="card-pack-pro" onclick="selectCreditPack('pro', 2500, 6250)" style="border-color: rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.08);">
+          <input type="radio" name="credit-pack" value="pro" checked />
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="font-size: 15px; color: #fff;">
+                Pro Growth • 2,500 Passes <span style="font-size: 10px; background: #3b82f6; color: #fff; padding: 2px 6px; border-radius: 10px; margin-left: 4px;">POPULAR</span>
+              </strong>
+              <span style="font-size: 16px; font-weight: 800; color: #38bdf8;">₹6,250</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">₹2.50 / pass • Multi-day festival & concert tier</div>
+          </div>
+        </label>
+
+        <!-- Enterprise Option -->
+        <label class="scope-radio-card" id="card-pack-enterprise" onclick="selectCreditPack('enterprise', 10000, 19999)">
+          <input type="radio" name="credit-pack" value="enterprise" />
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="font-size: 15px; color: #fff;">Enterprise • 10,000 Passes</strong>
+              <span style="font-size: 16px; font-weight: 800; color: #38bdf8;">₹19,999</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">₹2.00 / pass • Mega stadiums & multi-venue series</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Payment Method Badge -->
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--card-border); font-size: 12px; color: var(--text-muted);">
+        <span>💳 Instant Checkout via:</span>
+        <strong style="color: #e4e4e7;">UPI (GPay / PhonePe / Paytm) & Cards</strong>
+      </div>
+
+      <button id="recharge-pay-btn" class="btn btn-green" style="width: 100%; padding: 14px; font-size: 15px; justify-content: center;" onclick="executeCreditRecharge()">
+        <span>⚡ Pay ₹6,250 & Unlock 2,500 Passes</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CREATE NEW EVENT MODAL -->
+  <div id="new-event-modal" class="batch-render-modal" style="display: none;" onclick="if(event.target.id==='new-event-modal') closeNewEventModal()">
+    <div class="batch-modal-card" style="max-width: 480px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 18px; font-weight: 700;">🎪 Create New Event Workspace</h3>
+        <button class="btn btn-ghost" style="padding: 6px 10px; font-size: 14px;" onclick="closeNewEventModal()">✕</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+        <div>
+          <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Event Title:</label>
+          <input id="new-event-title" class="key-input" style="text-align: left; padding: 10px 14px; font-size: 14px; letter-spacing: normal;" placeholder="e.g. Electric Daisy Carnival 2026" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Duration (Days):</label>
+            <select id="new-event-days" class="key-input" style="text-align: left; padding: 10px 14px; font-size: 14px; letter-spacing: normal;">
+              <option value="1">1 Day</option>
+              <option value="2">2 Days</option>
+              <option value="3" selected>3 Days</option>
+              <option value="4">4 Days</option>
+              <option value="5">5 Days</option>
+              <option value="7">7 Days</option>
+              <option value="10">10 Days</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Start Date:</label>
+            <input id="new-event-date" type="date" class="key-input" style="text-align: left; padding: 9px 12px; font-size: 13px; letter-spacing: normal;" />
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Volunteer Gate PIN (4 digits):</label>
+          <input id="new-event-pin" class="key-input" style="font-family: monospace; font-size: 16px; letter-spacing: 3px;" placeholder="8421" maxlength="6" value="8421" />
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Volunteers use this PIN to scan tickets at entrance gates.</div>
+        </div>
+      </div>
+
+      <button class="btn btn-blue" style="width: 100%; padding: 12px; font-size: 14px; justify-content: center; margin-top: 6px;" onclick="submitNewEvent()">
+        <span>✓ Create Event Workspace</span>
+      </button>
+    </div>
+  </div>
+
   <script>
     // 🌐 Cloudflare Workers API Settings
     const API_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
@@ -1406,13 +1554,24 @@
 
     let authToken = localStorage.getItem("admin_key") || "";
 
+    // Multi-Tenant & Pagination State
+    let currentEventId = localStorage.getItem("current_event_id") || "evt_sunburn2026";
+    let currentPage = 1;
+    let pageSize = 50;
+    let totalPages = 1;
+    let totalTicketsCount = 0;
+    let currentCreditsBalance = 500;
+    let selectedPack = { id: 'pro', credits: 2500, amount: 6250 };
+    let currentEventsList = [];
+    let statsETag = "";
+
     let allTickets = [];
     let currentFilter = "all";
     let customTemplateImg = null;
     let pendingResetMode = "";
 
     // =========================================================================
-    // STEP 1: AUTHENTICATION (Server-side API verification, no bare HTML keys)
+    // STEP 1: AUTHENTICATION & MULTI-TENANT INITIALIZATION
     // =========================================================================
     async function verifyAdminKey() {
       const input = document.getElementById("key-input");
@@ -1436,14 +1595,36 @@
           document.getElementById("key-screen").style.display = "none";
           document.getElementById("main-app").style.display = "block";
           document.getElementById("cfg-api-url").textContent = API_URL;
-          loadAllTickets();
+          
+          await initOrganizerSession();
+          await loadEvents();
+          await loadAllTickets(1);
           initStudioCustomizer();
+          pollStats();
+          setInterval(pollStats, 15000); // 15s edge-cached background poll
         } else {
           input.value = "";
           err.style.display = "block";
         }
       } catch (e) {
         alert("Verification server unreachable: " + e.message);
+      }
+    }
+
+    async function initOrganizerSession() {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.organizer) {
+            currentCreditsBalance = data.organizer.ticket_credits || 500;
+            document.getElementById("header-credits-count").textContent = currentCreditsBalance;
+          }
+        }
+      } catch (e) {
+        console.warn("Could not fetch organizer profile:", e);
       }
     }
 
@@ -1461,54 +1642,212 @@
     }
 
     // =========================================================================
-    // STEP 2: LOAD TICKETS & MANAGE DIRECTORY
+    // EVENT SELECTOR & GATE PIN SHARING
     // =========================================================================
-    async function loadAllTickets() {
+    async function loadEvents() {
       try {
-        const res = await fetch(`${API_URL}/api/tickets`, {
+        const res = await fetch(`${API_URL}/api/events`, {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          currentEventsList = data.events || [];
+          const sel = document.getElementById("event-selector");
+          sel.innerHTML = "";
+          
+          currentEventsList.forEach(ev => {
+            const opt = document.createElement("option");
+            opt.value = ev.id;
+            opt.textContent = `${ev.title} (${ev.total_days}D)`;
+            opt.style.background = "#18181b";
+            sel.appendChild(opt);
+          });
+
+          const allOpt = document.createElement("option");
+          allOpt.value = "ALL";
+          allOpt.textContent = "All Events (Consolidated)";
+          allOpt.style.background = "#18181b";
+          sel.appendChild(allOpt);
+
+          if (currentEventsList.some(e => e.id === currentEventId)) {
+            sel.value = currentEventId;
+          } else if (currentEventsList.length > 0) {
+            currentEventId = currentEventsList[0].id;
+            sel.value = currentEventId;
+          }
+          updateGatePinBadge();
+        }
+      } catch (e) {
+        console.error("Error loading events:", e);
+      }
+    }
+
+    function updateGatePinBadge() {
+      const ev = currentEventsList.find(e => e.id === currentEventId);
+      const pin = ev ? ev.gate_pin : "8421";
+      document.getElementById("header-gate-pin").textContent = pin;
+    }
+
+    function onEventSelectChanged() {
+      currentEventId = document.getElementById("event-selector").value;
+      localStorage.setItem("current_event_id", currentEventId);
+      updateGatePinBadge();
+      statsETag = ""; // reset ETag for fresh event
+      loadAllTickets(1);
+    }
+
+    function copyGateLink() {
+      const ev = currentEventsList.find(e => e.id === currentEventId);
+      const pin = ev ? ev.gate_pin : "8421";
+      const link = `${window.location.origin}/index.html?event=${encodeURIComponent(currentEventId)}&pin=${pin}`;
+      navigator.clipboard.writeText(link).then(() => {
+        alert(`✓ Turnstile Gate Link Copied!\n\nLink: ${link}\nPIN: ${pin}\n\nShare this link with volunteer bouncers. They can scan without admin access!`);
+      }).catch(() => {
+        prompt("Copy Gate Link:", link);
+      });
+    }
+
+    function openNewEventModal() {
+      document.getElementById("new-event-modal").style.display = "flex";
+      document.getElementById("new-event-pin").value = Math.floor(1000 + Math.random() * 9000).toString();
+      document.getElementById("new-event-date").value = new Date().toISOString().split("T")[0];
+    }
+
+    function closeNewEventModal() {
+      document.getElementById("new-event-modal").style.display = "none";
+    }
+
+    async function submitNewEvent() {
+      const title = (document.getElementById("new-event-title").value || "").trim();
+      const days = parseInt(document.getElementById("new-event-days").value, 10) || 1;
+      const date = document.getElementById("new-event-date").value || new Date().toISOString().split("T")[0];
+      const pin = (document.getElementById("new-event-pin").value || "").trim() || "8421";
+
+      if (!title) {
+        alert("Please enter an event title.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/api/events`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+          body: JSON.stringify({ title, total_days: days, start_date: date, gate_pin: pin })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          closeNewEventModal();
+          currentEventId = data.event.id;
+          localStorage.setItem("current_event_id", currentEventId);
+          await loadEvents();
+          await loadAllTickets(1);
+          alert(`✓ Created event: ${title}!`);
+        }
+      } catch (e) {
+        alert("Failed to create event: " + e.message);
+      }
+    }
+
+    // =========================================================================
+    // STEP 2: LOAD TICKETS & SERVER-SIDE PAGINATION (D1 Edge Engine)
+    // =========================================================================
+    async function loadAllTickets(page = 1) {
+      currentPage = page;
+      try {
+        const q = (document.getElementById("search-box")?.value || "").trim();
+        const tierParam = currentFilter === 'all' || currentFilter === 'multiday' || currentFilter === 'Valid' || currentFilter === 'Scanned' ? '' : currentFilter;
+        const statusParam = currentFilter === 'Valid' ? 'valid' : currentFilter === 'Scanned' ? 'scanned' : '';
+        const url = `${API_URL}/api/tickets?event_id=${encodeURIComponent(currentEventId)}&page=${currentPage}&limit=${pageSize}&tier=${encodeURIComponent(tierParam)}&status=${encodeURIComponent(statusParam)}&q=${encodeURIComponent(q)}`;
+
+        const res = await fetch(url, {
           headers: { "Authorization": `Bearer ${authToken}` }
         });
         const data = await res.json();
 
         if (!res.ok || (data && data.error)) {
           const errMsg = data ? (data.details || data.error) : res.statusText;
-          console.error("Firebase error loading tickets:", errMsg);
-          allTickets = [];
-          updateKPIs();
+          console.error("Database error loading tickets:", errMsg);
           document.getElementById("table-body").innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 40px; color: #ef4444;">Database Connection Error: ${errMsg}</td></tr>`;
           return;
         }
 
-        allTickets = (data && typeof data === "object") ? Object.entries(data).filter(([id]) => id !== "error").map(([id, t]) => ({
-          id,
-          tier: t.tier || "General",
-          attendee_name: t.attendee_name || "",
-          email: t.email || "",
-          phone: t.phone || "",
-          status: t.status || "Valid",
-          scanned_by: t.scanned_by || "",
-          scan_time: t.scan_time || "",
-          email_sent: !!t.email_sent,
-          rendered: !!t.rendered,
-          notes: t.notes || "",
-          total_days: t.total_days || 1,
-          allowed_days: t.allowed_days || [1],
-          days_used: t.days_used || (t.status === "Scanned" || t.status === "Completed" ? 1 : 0),
-          daily_scans: t.daily_scans || {},
-          pass_type_name: t.pass_type_name || (t.total_days > 1 ? `${t.total_days}-Day Pass` : "1-Day Pass")
-        })) : [];
+        // Support both D1 paginated response and legacy array format
+        if (data.tickets) {
+          allTickets = data.tickets;
+          totalTicketsCount = data.total || data.tickets.length;
+          totalPages = data.totalPages || 1;
+        } else if (Array.isArray(data)) {
+          allTickets = data;
+          totalTicketsCount = data.length;
+          totalPages = 1;
+        } else if (typeof data === "object") {
+          allTickets = Object.entries(data).filter(([id]) => id !== "error").map(([id, t]) => ({ id, ...t }));
+          totalTicketsCount = allTickets.length;
+          totalPages = 1;
+        }
 
-        updateKPIs();
+        updatePaginationUI();
         renderTable();
+        pollStats();
       } catch (err) {
         console.error("Error loading tickets:", err);
       }
     }
 
-    function updateKPIs() {
-      const total = allTickets.length;
-      const scanned = allTickets.filter(t => t.status === "Scanned" || t.status === "Completed" || (t.days_used && t.days_used > 0)).length;
-      const valid = allTickets.filter(t => t.status === "Valid").length;
+    function updatePaginationUI() {
+      const showCountEl = document.getElementById("page-showing-count");
+      const curPageEl = document.getElementById("current-page-num");
+      const totPageEl = document.getElementById("total-page-num");
+      const totCountEl = document.getElementById("total-tickets-count");
+      const prevBtn = document.getElementById("prev-page-btn");
+      const nextBtn = document.getElementById("next-page-btn");
+
+      if (showCountEl) showCountEl.textContent = allTickets.length;
+      if (curPageEl) curPageEl.textContent = currentPage;
+      if (totPageEl) totPageEl.textContent = totalPages;
+      if (totCountEl) totCountEl.textContent = totalTicketsCount;
+
+      if (prevBtn) prevBtn.disabled = currentPage <= 1;
+      if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    }
+
+    function changePage(delta) {
+      const targetPage = currentPage + delta;
+      if (targetPage >= 1 && targetPage <= totalPages) {
+        loadAllTickets(targetPage);
+      }
+    }
+
+    // =========================================================================
+    // STEP 3: EDGE STATS POLLING (HTTP 304 ETag Caching)
+    // =========================================================================
+    async function pollStats() {
+      try {
+        const headers = { "Authorization": `Bearer ${authToken}` };
+        if (statsETag) headers["If-None-Match"] = statsETag;
+        
+        const res = await fetch(`${API_URL}/api/stats?event_id=${encodeURIComponent(currentEventId)}`, { headers });
+        if (res.status === 304) {
+          // 304 Not Modified: Data is identical, zero DOM recalculation needed!
+          return;
+        }
+        
+        const newETag = res.headers.get("ETag");
+        if (newETag) statsETag = newETag;
+
+        if (res.ok) {
+          const stats = await res.json();
+          applyStatsToKPIs(stats);
+        }
+      } catch (e) {
+        console.warn("Stats poll error:", e);
+      }
+    }
+
+    function applyStatsToKPIs(stats) {
+      const total = stats.total || 0;
+      const scanned = stats.scanned || 0;
+      const valid = stats.valid || 0;
       const pct = total > 0 ? Math.round((scanned / total) * 100) : 0;
 
       document.getElementById("kpi-total").textContent = total;
@@ -1517,39 +1856,98 @@
       document.getElementById("kpi-scanned-pct").textContent = `${pct}%`;
       document.getElementById("kpi-progress").style.width = `${pct}%`;
 
-      const vipTotal = allTickets.filter(t => t.tier === "VIP").length;
-      const vipScanned = allTickets.filter(t => t.tier === "VIP" && (t.status === "Scanned" || t.status === "Completed" || (t.days_used && t.days_used > 0))).length;
-      const vipPct = vipTotal > 0 ? Math.round((vipScanned / vipTotal) * 100) : 0;
-      document.getElementById("kpi-vip-count").textContent = `${vipScanned} / ${vipTotal}`;
+      const vip = stats.tiers?.VIP || { total: 0, scanned: 0 };
+      const vipPct = vip.total > 0 ? Math.round((vip.scanned / vip.total) * 100) : 0;
+      document.getElementById("kpi-vip-count").textContent = `${vip.scanned} / ${vip.total}`;
       document.getElementById("kpi-vip-sub").textContent = `${vipPct}% VIP checked in`;
 
-      const genCount = allTickets.filter(t => t.tier === "General").length;
-      const gstCount = allTickets.filter(t => t.tier === "Guestlist").length;
-      document.getElementById("kpi-gen-sub").textContent = `${genCount} Gen • ${gstCount} Guest`;
+      const gen = stats.tiers?.General || { total: 0 };
+      const gst = stats.tiers?.Guestlist || { total: 0 };
+      document.getElementById("kpi-gen-sub").textContent = `${gen.total} Gen • ${gst.total} Guest`;
 
-      // Multi-Day KPI Card
-      const multiDayList = allTickets.filter(t => (t.total_days && t.total_days > 1) || (Array.isArray(t.allowed_days) && t.allowed_days.length > 1));
-      let totalDailyScans = 0;
-      multiDayList.forEach(t => {
-        if (t.daily_scans && typeof t.daily_scans === "object") {
-          Object.values(t.daily_scans).forEach(d => { if (d && d.scanned) totalDailyScans++; });
+      const multiKpiEl = document.getElementById("kpi-multiday-count");
+      if (multiKpiEl) multiKpiEl.textContent = stats.multiDayCount || 0;
+      const multiKpiSub = document.getElementById("kpi-multiday-sub");
+      if (multiKpiSub) {
+        let totalDayScans = 0;
+        if (stats.scansByDay) Object.values(stats.scansByDay).forEach(v => totalDayScans += v);
+        multiKpiSub.textContent = `${totalDayScans} total daily admissions`;
+      }
+    }
+
+    // =========================================================================
+    // STEP 4: RECHARGE & BILLING HANDLERS
+    // =========================================================================
+    function openRechargeModal() {
+      document.getElementById("modal-current-credits").textContent = currentCreditsBalance;
+      document.getElementById("recharge-modal").style.display = "flex";
+    }
+
+    function closeRechargeModal() {
+      document.getElementById("recharge-modal").style.display = "none";
+    }
+
+    function selectCreditPack(packId, credits, amount) {
+      selectedPack = { id: packId, credits, amount };
+      ['starter', 'pro', 'enterprise'].forEach(p => {
+        const el = document.getElementById(`card-pack-${p}`);
+        if (el) {
+          if (p === packId) {
+            el.style.borderColor = "rgba(59, 130, 246, 0.5)";
+            el.style.background = "rgba(59, 130, 246, 0.08)";
+          } else {
+            el.style.borderColor = "var(--card-border)";
+            el.style.background = "rgba(255, 255, 255, 0.02)";
+          }
         }
       });
-      const multiKpiEl = document.getElementById("kpi-multiday-count");
-      if (multiKpiEl) multiKpiEl.textContent = multiDayList.length;
-      const multiKpiSub = document.getElementById("kpi-multiday-sub");
-      if (multiKpiSub) multiKpiSub.textContent = `${totalDailyScans} total daily admissions`;
+      document.getElementById("recharge-pay-btn").innerHTML = `<span>⚡ Pay ₹${amount.toLocaleString()} & Unlock ${credits.toLocaleString()} Passes</span>`;
+    }
+
+    async function executeCreditRecharge() {
+      const btn = document.getElementById("recharge-pay-btn");
+      btn.disabled = true;
+      btn.textContent = "Processing UPI / Gateway Handshake...";
+
+      try {
+        const createRes = await fetch(`${API_URL}/api/billing/create-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+          body: JSON.stringify({ pack: selectedPack.id })
+        });
+        const order = await createRes.json();
+
+        // Simulate instant secure UPI checkout confirmation
+        const verifyRes = await fetch(`${API_URL}/api/billing/verify-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+          body: JSON.stringify({ order_id: order.order_id, credits: selectedPack.credits })
+        });
+        const ver = await verifyRes.json();
+
+        if (ver.ok) {
+          currentCreditsBalance = ver.new_balance;
+          document.getElementById("header-credits-count").textContent = currentCreditsBalance;
+          closeRechargeModal();
+          alert(`🎉 Payment Successful!\n\nAdded ${selectedPack.credits.toLocaleString()} Passes to your organizer wallet.\nNew Balance: ${currentCreditsBalance.toLocaleString()} Passes.`);
+        }
+      } catch (e) {
+        alert("Payment verification error: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>⚡ Pay ₹${selectedPack.amount.toLocaleString()} & Unlock ${selectedPack.credits.toLocaleString()} Passes</span>`;
+      }
     }
 
     function setFilter(filterType, element) {
       currentFilter = filterType;
       document.querySelectorAll(".filter-pills .pill").forEach(p => p.classList.remove("active"));
       element.classList.add("active");
-      filterTable();
+      loadAllTickets(1);
     }
 
     function filterTable() {
-      renderTable();
+      loadAllTickets(1);
     }
 
     function renderTable() {

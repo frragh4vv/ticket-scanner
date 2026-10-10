@@ -1105,7 +1105,7 @@
       document.getElementById("sound-icon").textContent = isMuted ? "🔇" : "🔔";
     }
 
-    // Step 1: Authentication verification via server API (No passwords in bare HTML)
+    // Step 1: Authentication verification via server API (Gate PIN or Master Key)
     async function verifyKey() {
       const input = document.getElementById("key-input");
       const err = document.getElementById("key-error");
@@ -1114,23 +1114,37 @@
       if (!enteredKey) return;
 
       try {
-        const res = await fetch(`${API_URL}/api/auth-verify`, {
+        const params = new URLSearchParams(window.location.search);
+        const eventId = params.get("event") || "";
+
+        // Try Gate PIN auth first
+        let res = await fetch(`${API_URL}/api/gate/auth`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${enteredKey}`
-          }
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event_id: eventId, pin: enteredKey })
         });
 
+        if (!res.ok) {
+          // Fallback to master passkey check
+          res = await fetch(`${API_URL}/api/auth-verify`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${enteredKey}`
+            }
+          });
+        }
+
         if (res.ok) {
-          authToken = enteredKey;
+          const authData = await res.json();
+          authToken = authData.token || enteredKey;
           localStorage.setItem("scanner_key", enteredKey);
           document.getElementById("key-screen").style.display = "none";
           document.getElementById("name-screen").style.display = "flex";
           
           // Auto-fill remembered name if available
-          const savedName = localStorage.getItem("scanner_name");
-          if (savedName) document.getElementById("name-input").value = savedName;
+          const savedName = localStorage.getItem("scanner_name") || "Gate Turnstile 1";
+          document.getElementById("name-input").value = savedName;
           setTimeout(() => document.getElementById("name-input").focus(), 150);
         } else {
           input.value = "";
@@ -1494,9 +1508,20 @@
       }
     });
 
-    // Auto-login with saved key if available and init event day
+    // Auto-login with URL pin parameter or saved key
     window.addEventListener("DOMContentLoaded", () => {
       updateEventDayUI();
+      const params = new URLSearchParams(window.location.search);
+      const urlPin = params.get("pin");
+      const urlDay = params.get("day");
+      if (urlDay) setEventDay(parseInt(urlDay, 10));
+
+      if (urlPin) {
+        document.getElementById("key-input").value = urlPin;
+        verifyKey();
+        return;
+      }
+
       const savedKey = localStorage.getItem("scanner_key");
       if (savedKey) {
         document.getElementById("key-input").value = savedKey;

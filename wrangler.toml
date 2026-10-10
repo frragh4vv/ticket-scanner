@@ -10,3 +10,9 @@ directory = "worker/public"
 
 [vars]
 FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app"
+
+# 🗄️ Cloudflare D1 Relational SQLite Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "ticket-scanner-db"
+database_id = "00000000-0000-0000-0000-000000000000"
