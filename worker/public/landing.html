@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TicketScanner Pro • Next-Gen Edge Event Ticketing & Gate Verification</title>
+  <meta name="description" content="Awwwards-grade event ticketing platform powered by Cloudflare Workers & D1 SQLite. Sub-5ms gate scanning, multi-day turnstile access, and zero commission." />
+
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #050505;
+      --card-bg: rgba(18, 18, 22, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-glow: rgba(59, 130, 246, 0.3);
+      --text-main: rgba(255, 255, 255, 0.92);
+      --text-muted: rgba(255, 255, 255, 0.58);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.35);
+      --vip-gold: #f59e0b;
+      --vip-glow: rgba(245, 158, 11, 0.35);
+      --gen-green: #10b981;
+      --gst-purple: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    /* Ambient Subtle Grid & Noise */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-image: 
+        radial-gradient(circle at 50% 20%, rgba(59, 130, 246, 0.07) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header Nav */
+    header {
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      padding: 18px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(5, 5, 5, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--card-border);
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .brand-name {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-tag {
+      background: linear-gradient(135deg, #3b82f6, #a855f7);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      letter-spacing: 1px;
+      margin-left: 4px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: #fff;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border: none;
+      outline: none;
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(59, 130, 246, 0.6);
+    }
+
+    /* SCROLLYTELLING CONTAINER */
+    #scrolly-container {
+      position: relative;
+      height: 420vh; /* 4.2x Viewport Height */
+      width: 100%;
+    }
+
+    /* Sticky Canvas Viewport */
+    #canvas-viewport {
+      position: sticky;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #pass-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Story Overlay Cards */
+    .story-overlay {
+      position: absolute;
+      width: 100%;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .story-section {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 0 8vw;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .story-card {
+      pointer-events: auto;
+      max-width: 540px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .story-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .story-card.centered {
+      margin: 0 auto;
+      text-align: center;
+      max-width: 780px;
+    }
+
+    .story-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #60a5fa;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .story-title {
+      font-size: clamp(38px, 5.5vw, 68px);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #ffffff 40%, rgba(255, 255, 255, 0.65) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .story-desc {
+      font-size: clamp(16px, 1.3vw, 19px);
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .tech-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .tech-chip strong {
+      color: #fff;
+    }
+
+    /* Live Telemetry Card */
+    .telemetry-box {
+      background: rgba(10, 10, 14, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 22px;
+      margin-top: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+    .telemetry-row:last-child { border-bottom: none; }
+
+    /* ROI CALCULATOR SECTION */
+    .section-standard {
+      position: relative;
+      padding: 120px 24px;
+      max-width: 1280px;
+      margin: 0 auto;
+      z-index: 30;
+    }
+
+    .calc-card {
+      background: radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+                  rgba(18, 18, 24, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: clamp(28px, 4vw, 54px);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+
+    @media (max-width: 900px) {
+      .calc-card { grid-template-columns: 1fr; }
+      header { padding: 14px 20px; }
+      .nav-links { display: none; }
+    }
+
+    .slider-wrap {
+      margin: 28px 0;
+    }
+
+    .calc-slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+      cursor: pointer;
+      accent-color: #3b82f6;
+    }
+
+    .calc-stat-hero {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+    }
+
+    .calc-number {
+      font-size: clamp(38px, 4.5vw, 56px);
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      color: #34d399;
+      margin: 8px 0;
+    }
+
+    /* Sound Synthesizer Demo Strip */
+    .sound-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .sound-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sound-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Pricing Section */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .pricing-card {
+      background: rgba(18, 18, 24, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 36px 30px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .pricing-card:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-4px);
+    }
+
+    .pricing-card.featured {
+      background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 80%), rgba(20, 20, 28, 0.95);
+      border: 1px solid #3b82f6;
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
+    }
+
+    .price-rate {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: #fff;
+      margin: 16px 0;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 60px 40px;
+      background: #050505;
+      color: var(--text-muted);
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      z-index: 30;
+      position: relative;
+    }
+
+    /* Progress Indicator Pill */
+    #scroll-badge {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      background: rgba(18, 18, 22, 0.85);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot-live {
+      width: 8px; height: 8px; border-radius: 50%; background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header>
+    <a href="#" class="brand">
+      <div class="brand-icon">🎟️</div>
+      <div class="brand-name">TicketScanner<span class="brand-tag">PRO</span></div>
+    </a>
+
+    <div class="nav-links">
+      <a href="#architecture" class="nav-link">Architecture</a>
+      <a href="#deconstructed" class="nav-link">Deconstruction</a>
+      <a href="#calculator" class="nav-link">ROI Calculator</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+    </div>
+
+    <div class="nav-actions">
+      <a href="index.html" class="btn btn-ghost">
+        <span>📷</span> Gate Scanner
+      </a>
+      <a href="admin.html" class="btn btn-primary">
+        <span>⚡</span> Launch Studio
+      </a>
+    </div>
+  </header>
+
+  <!-- Live Telemetry Pill -->
+  <div id="scroll-badge">
+    <div class="dot-live"></div>
+    <span id="scroll-pct-label">0% SCROLL</span> • EDGE READY
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 400VH SCROLLYTELLING CONTAINER: EXPLODING 3D PASS SEQUENCE            -->
+  <!-- ===================================================================== -->
+  <div id="scrolly-container">
+    
+    <!-- Sticky Canvas -->
+    <div id="canvas-viewport">
+      <canvas id="pass-canvas"></canvas>
+    </div>
+
+    <!-- Scroll Linked Text Story -->
+    <div class="story-overlay">
+      
+      <!-- SCENE 1: 0% - 20% -->
+      <section class="story-section" id="scene-1">
+        <div class="story-card visible" id="card-1">
+          <div class="story-pill">
+            <span>👑</span> Next-Gen Event Infrastructure
+          </div>
+          <h1 class="story-title">TicketScanner Pro.<br/>Pure Edge Speed.</h1>
+          <p class="story-desc">
+            The zero-commission ticketing engine and turnstile scanner. Engineered on Cloudflare Global Edge with native D1 SQLite for sub-5ms admissions and zero gate lockups.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <a href="admin.html" class="btn btn-primary" style="padding: 14px 28px; font-size: 15px;">
+              <span>⚡</span> Open Command Center ➔
+            </a>
+            <a href="index.html" class="btn btn-ghost" style="padding: 14px 24px; font-size: 15px;">
+              <span>📷</span> Live Turnstile Scanner
+            </a>
+          </div>
+          <div class="chip-row">
+            <span class="tech-chip">⚡ <strong>3.2ms</strong> Gate Verification</span>
+            <span class="tech-chip">🌐 <strong>100,000</strong> Scans/Day Free</span>
+            <span class="tech-chip">💰 <strong>₹0.00</strong> Platform %</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENE 2: 25% - 48% (Exploded Layers) -->
+      <section class="story-section" id="scene-2" style="justify-content: flex-end;">
+        <div class="story-card" id="card-2">
+          <div class="story-pill" style="color: #c084fc;">
+            <span>🔬</span> Deconstructed Architecture
+          </div>
+          <h2 class="story-title" style="font-size: clamp(34px, 4.5vw, 56px);">Anatomy of Zero-Latency Access.</h2>
+          <p class="story-desc">
+            Legacy ticketing platforms choke on bloated web apps and remote Singapore databases. We disassembled the pass into four independent edge-accelerated layers.
+          </p>
+          <div class="telemetry-box">
+            <div class="telemetry-row">
+              <span style="color:#60a5fa;">Layer 1: Visual Studio</span>
+              <strong style="color:#fff;">In-Browser HTML5 Canvas</strong>
+            </div>
+            <div class="telemetry-row">
+              <span style="color:#34d399;">Layer 2: Cryptographic Matrix</span>
+              <strong style="color:#fff;">HMAC Base32 Collision-Free</strong>
+            </div>
+            <div class="telemetry-row">
+              <span style="color:#f59e0b;">Layer 3: Multi-Day Turnstile</span>
+              <strong style="color:#fff;">Days 1–10 Re-Entry Lock</strong>
+            </div>
+            <div class="telemetry-row">
+              <span style="color:#a855f7;">Layer 4: D1 Edge Engine</span>
+              <strong style="color:#fff;">Distributed SQLite (3ms)</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENE 3: 50% - 75% (Edge Concurrency) -->
+      <section class="story-section" id="scene-3">
+        <div class="story-card" id="card-3">
+          <div class="story-pill" style="color: #34d399;">
+            <span>🛡️</span> Turnstiles that Never Stall
+          </div>
+          <h2 class="story-title" style="font-size: clamp(34px, 4.5vw, 56px);">Simultaneous Dual-Scan Prevention.</h2>
+          <p class="story-desc">
+            20 entrance gates scanning thousands of attendees simultaneously. Our atomic SQLite conditional updates prevent double-entry fraud with 100% ACID consistency.
+          </p>
+          <div class="chip-row">
+            <span class="tech-chip">🔄 <strong>HTTP 304 ETag</strong> 0ms Cache</span>
+            <span class="tech-chip">🚫 <strong>Zero</strong> Duplicate Leaks</span>
+            <span class="tech-chip">⚡ <strong>99.7%</strong> Less Bandwidth</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCENE 4: 80% - 100% (Reassembled Re-engagement) -->
+      <section class="story-section" id="scene-4" style="justify-content: center;">
+        <div class="story-card centered" id="card-4">
+          <div class="story-pill" style="color: #f59e0b;">
+            <span>🎟️</span> Unified Pass Reassembly
+          </div>
+          <h2 class="story-title">Stop Paying 10% Ticket Commissions.</h2>
+          <p class="story-desc" style="max-width: 600px; margin-left: auto; margin-right: auto;">
+            Own your customer database, print custom branded metallic passes, and scan at gate turnstiles for a flat rate of ₹2.00 to ₹3.00 per ticket.
+          </p>
+          <div style="display: flex; gap: 14px; justify-content: center;">
+            <a href="#calculator" class="btn btn-primary" style="padding: 14px 28px;">
+              <span>📊</span> Calculate Your Savings ➔
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- INTERACTIVE ROI PROFIT CALCULATOR                                     -->
+  <!-- ===================================================================== -->
+  <section class="section-standard" id="calculator">
+    <div style="text-align: center; margin-bottom: 48px;">
+      <div class="story-pill" style="color:#34d399;">
+        <span>💰</span> Financial Arbitrage
+      </div>
+      <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 800; letter-spacing: -1px;">
+        How Much Do You Lose to BookMyShow?
+      </h2>
+      <p style="color: var(--text-muted); font-size: 16px; max-width: 600px; margin: 12px auto 0 auto;">
+        Legacy platforms take 8% to 12% of your gross box office. See your savings when switching to TicketScanner Pro's flat fee model.
+      </p>
+    </div>
+
+    <div class="calc-card">
+      <div>
+        <h3 style="font-size: 20px; font-weight: 700;">Event Parameters</h3>
+        
+        <div class="slider-wrap">
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
+            <span style="color: var(--text-muted);">Total Tickets Sold:</span>
+            <strong id="calc-ticket-display" style="font-size: 16px; color: #fff;">5,000 Tickets</strong>
+          </div>
+          <input type="range" id="calc-ticket-slider" class="calc-slider" min="500" max="25000" step="500" value="5000" oninput="updateCalculator()" />
+        </div>
+
+        <div class="slider-wrap">
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
+            <span style="color: var(--text-muted);">Average Ticket Price:</span>
+            <strong id="calc-price-display" style="font-size: 16px; color: #fff;">₹2,000</strong>
+          </div>
+          <input type="range" id="calc-price-slider" class="calc-slider" min="200" max="10000" step="100" value="2000" oninput="updateCalculator()" />
+        </div>
+
+        <div class="telemetry-box" style="margin-top: 24px;">
+          <div class="telemetry-row">
+            <span>Gross Ticket Sales:</span>
+            <strong id="calc-gross" style="color: #fff;">₹1,00,00,000</strong>
+          </div>
+          <div class="telemetry-row">
+            <span style="color: #ef4444;">BookMyShow Commission (10%):</span>
+            <strong id="calc-bms-fee" style="color: #ef4444;">- ₹10,00,000</strong>
+          </div>
+          <div class="telemetry-row">
+            <span style="color: #38bdf8;">TicketScanner Pro (₹2.50 flat):</span>
+            <strong id="calc-tsp-fee" style="color: #38bdf8;">- ₹12,500</strong>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; justify-content: center;">
+        <div class="calc-stat-hero">
+          <div style="font-size: 13px; color: #34d399; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+            Pure Net Profit Saved
+          </div>
+          <div class="calc-number" id="calc-saved-display">₹9,87,500</div>
+          <div style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
+            Money returned directly to your event budget, artists, and production.
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; text-align: center;">
+          <a href="admin.html" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
+            <span>⚡ Start Generating Passes Now</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- AUDIO SYNTHESIZER DEMO STRIP                                          -->
+  <!-- ===================================================================== -->
+  <section class="section-standard" id="audio-demo" style="padding-top: 0;">
+    <div style="text-align: center; margin-bottom: 32px;">
+      <div class="story-pill" style="color: #fbbf24;">
+        <span>🔔</span> Offline Synthesized Audio
+      </div>
+      <h3 style="font-size: 28px; font-weight: 800;">Turnstile Harmonic Chimes</h3>
+      <p style="color: var(--text-muted); font-size: 14px;">
+        Zero audio file downloads. Our Web Audio synthesizer generates distinct physical chords offline at noisy gates.
+      </p>
+    </div>
+
+    <div class="sound-strip">
+      <div class="sound-btn" onclick="playWebAudio('vip')">
+        <span style="font-size: 26px;">👑</span>
+        <div>
+          <strong style="font-size: 14px; color: #fbbf24; display: block;">VIP Fanfare Chord</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Major Triad (587.3Hz)</span>
+        </div>
+      </div>
+
+      <div class="sound-btn" onclick="playWebAudio('gen')">
+        <span style="font-size: 26px;">🎟️</span>
+        <div>
+          <strong style="font-size: 14px; color: #34d399; display: block;">General Chime</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Confirmation Sine (880Hz)</span>
+        </div>
+      </div>
+
+      <div class="sound-btn" onclick="playWebAudio('gst')">
+        <span style="font-size: 26px;">⭐</span>
+        <div>
+          <strong style="font-size: 14px; color: #c084fc; display: block;">Guestlist Melodic</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Arpeggiated Triple (1046Hz)</span>
+        </div>
+      </div>
+
+      <div class="sound-btn" onclick="playWebAudio('dup')">
+        <span style="font-size: 26px;">⚠️</span>
+        <div>
+          <strong style="font-size: 14px; color: #f97316; display: block;">Duplicate Warning</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Sawtooth Dissonant (220Hz)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PRICING TIERS                                                         -->
+  <!-- ===================================================================== -->
+  <section class="section-standard" id="pricing">
+    <div style="text-align: center;">
+      <div class="story-pill" style="color: #38bdf8;">
+        <span>⚡</span> Simple Flat Pricing
+      </div>
+      <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 800; letter-spacing: -1px;">
+        Prepaid Passes. Zero Surprise Fees.
+      </h2>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="pricing-card">
+        <h4 style="font-size: 18px; font-weight: 700;">Starter Pack</h4>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Club nights & college cultural fests</p>
+        <div class="price-rate">₹1,499</div>
+        <div style="font-size: 13px; color: #60a5fa; font-weight: 600; margin-bottom: 24px;">500 Passes (₹3.00 / pass)</div>
+        <ul style="list-style: none; font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; flex: 1;">
+          <li>✓ Visual Pass Studio Compiler</li>
+          <li>✓ Single & Multi-Day Validation</li>
+          <li>✓ High-Velocity Gate Scanner UI</li>
+          <li>✓ CSV Manifest Importer/Exporter</li>
+        </ul>
+        <a href="admin.html" class="btn btn-ghost" style="margin-top: 28px; width: 100%; justify-content: center;">
+          Get Starter Passes
+        </a>
+      </div>
+
+      <!-- Pro (Featured) -->
+      <div class="pricing-card featured">
+        <div style="position: absolute; top: -12px; right: 24px; background: #3b82f6; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px;">
+          MOST POPULAR
+        </div>
+        <h4 style="font-size: 18px; font-weight: 700;">Pro Growth</h4>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Multi-day concerts & festivals</p>
+        <div class="price-rate">₹6,250</div>
+        <div style="font-size: 13px; color: #34d399; font-weight: 600; margin-bottom: 24px;">2,500 Passes (₹2.50 / pass)</div>
+        <ul style="list-style: none; font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; flex: 1;">
+          <li>✓ Everything in Starter</li>
+          <li>✓ Up to 10-Day Multi-Pass Tracking</li>
+          <li>✓ Unlimited Turnstile Scanner Logins</li>
+          <li>✓ 4-Digit Door Volunteer PIN Sharing</li>
+          <li>✓ Cloudflare D1 Edge Caching Included</li>
+        </ul>
+        <a href="admin.html" class="btn btn-primary" style="margin-top: 28px; width: 100%; justify-content: center;">
+          Deploy Pro Event
+        </a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card">
+        <h4 style="font-size: 18px; font-weight: 700;">Enterprise Stadium</h4>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Mega arenas & multi-venue series</p>
+        <div class="price-rate">₹19,999</div>
+        <div style="font-size: 13px; color: #c084fc; font-weight: 600; margin-bottom: 24px;">10,000 Passes (₹2.00 / pass)</div>
+        <ul style="list-style: none; font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; flex: 1;">
+          <li>✓ Custom Branded Domain Setup</li>
+          <li>✓ Dedicated Webhook Dispatch</li>
+          <li>✓ Instant Priority Turnstile Concurrency</li>
+          <li>✓ Direct WhatsApp/Call Gate Support</li>
+        </ul>
+        <a href="admin.html" class="btn btn-ghost" style="margin-top: 28px; width: 100%; justify-content: center;">
+          Contact Enterprise
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 18px;">🎟️</span>
+      <span style="font-weight: 700; color: #fff;">TicketScanner Pro</span>
+      <span>• The Edge Ticketing Engine</span>
+    </div>
+    <div>
+      Operating on Cloudflare Global Edge • Sub-5ms SQLite Turnstile Verification
+    </div>
+    <div>
+      <a href="admin.html" style="color: var(--text-muted); text-decoration: none; margin-right: 16px;">Admin Studio</a>
+      <a href="index.html" style="color: var(--text-muted); text-decoration: none;">Gate Scanner</a>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- HIGH-PERFORMANCE CANVAS SCROLL ANIMATION ENGINE                       -->
+  <!-- ===================================================================== -->
+  <script>
+    const canvas = document.getElementById("pass-canvas");
+    const ctx = canvas.getContext("2d");
+    const container = document.getElementById("scrolly-container");
+
+    let scrollProgress = 0;
+    let targetProgress = 0;
+    let width = 0;
+    let height = 0;
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    // Smooth Scroll Tick with Interpolation
+    window.addEventListener("scroll", () => {
+      const rect = container.getBoundingClientRect();
+      const totalScroll = container.offsetHeight - window.innerHeight;
+      const current = Math.max(0, -rect.top);
+      targetProgress = Math.min(1, Math.max(0, current / totalScroll));
+    });
+
+    // Story Text Visibility Triggers
+    const cards = [
+      { id: "card-1", min: 0.0, max: 0.22 },
+      { id: "card-2", min: 0.25, max: 0.50 },
+      { id: "card-3", min: 0.52, max: 0.76 },
+      { id: "card-4", min: 0.78, max: 1.0 }
+    ];
+
+    function updateStoryCards(p) {
+      document.getElementById("scroll-pct-label").textContent = `${Math.round(p * 100)}% SCROLL`;
+      cards.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        if (p >= c.min && p <= c.max) {
+          el.classList.add("visible");
+        } else {
+          el.classList.remove("visible");
+        }
+      });
+    }
+
+    // =========================================================================
+    // PROCEDURAL 3D DECONSTRUCTING PASS RENDERER (Awwwards Grade)
+    // =========================================================================
+    function drawPass() {
+      // Smooth lerp interpolation
+      scrollProgress += (targetProgress - scrollProgress) * 0.1;
+      updateStoryCards(scrollProgress);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const cx = width / 2;
+      const cy = height / 2;
+
+      // Base dimensions of the pass
+      const isMobile = width < 768;
+      const passW = Math.min(380, width * 0.75);
+      const passH = passW * 1.55;
+
+      // Progress Phasing:
+      // 0.0 - 0.2: Unified floating pass
+      // 0.2 - 0.5: Exploding into 4 separate layers
+      // 0.5 - 0.75: Maximum explosion + electric data pulses
+      // 0.75 - 1.0: Snapping back together
+      let explodeFactor = 0;
+      if (scrollProgress < 0.2) {
+        explodeFactor = 0;
+      } else if (scrollProgress < 0.5) {
+        explodeFactor = (scrollProgress - 0.2) / 0.3;
+      } else if (scrollProgress < 0.75) {
+        explodeFactor = 1.0;
+      } else {
+        explodeFactor = 1.0 - ((scrollProgress - 0.75) / 0.25);
+      }
+
+      // Smooth easing curve
+      explodeFactor = Math.sin(explodeFactor * Math.PI / 2);
+
+      // 3D Perspective Rotation
+      const rotY = (scrollProgress * 1.2 - 0.6) * 0.35;
+      const rotX = Math.sin(scrollProgress * Math.PI) * 0.12;
+
+      // Ambient Cyber Mesh Background Particles
+      drawCyberGrid(cx, cy, scrollProgress);
+
+      // 4 Exploded Layers:
+      // Layer 4 (Back): Cloudflare D1 Edge Node
+      // Layer 3 (Mid-Back): Multi-Day Access Circuit
+      // Layer 2 (Mid-Front): Cryptographic QR Matrix
+      // Layer 1 (Front): Visual Metallic Pass
+
+      const layerOffsets = [
+        { z: -140 * explodeFactor, name: "LAYER 4: CLOUDFLARE D1 EDGE NODE", color: "#a855f7" },
+        { z: -50 * explodeFactor,  name: "LAYER 3: 1-10 DAY TURNSTILE CORE", color: "#f59e0b" },
+        { z: 40 * explodeFactor,   name: "LAYER 2: CRYPTOGRAPHIC QR MATRIX", color: "#34d399" },
+        { z: 130 * explodeFactor,  name: "LAYER 1: VISUAL PASS STUDIO", color: "#60a5fa" }
+      ];
+
+      // Draw connecting holographic lines when exploded
+      if (explodeFactor > 0.1) {
+        drawConnectingLines(cx, cy, passW, passH, layerOffsets, explodeFactor);
+      }
+
+      // Draw each layer back to front
+      layerOffsets.forEach((layer, idx) => {
+        drawLayer(cx, cy + layer.z, passW, passH, idx, explodeFactor, layer);
+      });
+
+      requestAnimationFrame(drawPass);
+    }
+
+    function drawCyberGrid(cx, cy, p) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(59, 130, 246, 0.06)";
+      ctx.lineWidth = 1;
+      const spacing = 60;
+      const offset = (p * 200) % spacing;
+
+      ctx.beginPath();
+      for (let x = -width; x < width * 2; x += spacing) {
+        ctx.moveTo(x + offset, 0);
+        ctx.lineTo(x + offset, height);
+      }
+      for (let y = -height; y < height * 2; y += spacing) {
+        ctx.moveTo(0, y + offset);
+        ctx.lineTo(width, y + offset);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawConnectingLines(cx, cy, w, h, layers, factor) {
+      ctx.save();
+      ctx.strokeStyle = `rgba(59, 130, 246, ${factor * 0.35})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 6]);
+
+      const corners = [
+        [-w / 2, -h / 2],
+        [w / 2, -h / 2],
+        [w / 2, h / 2],
+        [-w / 2, h / 2]
+      ];
+
+      corners.forEach(([ox, oy]) => {
+        ctx.beginPath();
+        layers.forEach((l, i) => {
+          const ly = cy + l.z;
+          if (i === 0) ctx.moveTo(cx + ox, ly + oy);
+          else ctx.lineTo(cx + ox, ly + oy);
+        });
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
+
+    function drawLayer(cx, cy, w, h, index, factor, layerMeta) {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      const cornerR = 20;
+
+      // Layer 4: D1 SQLite Engine Plate (Back)
+      if (index === 0) {
+        ctx.fillStyle = "rgba(18, 14, 28, 0.75)";
+        ctx.strokeStyle = factor > 0.2 ? "rgba(168, 85, 247, 0.6)" : "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, -w / 2, -h / 2, w, h, cornerR);
+        ctx.fill();
+        ctx.stroke();
+
+        if (factor > 0.2) {
+          // Edge SQLite Circuit Tracks
+          ctx.strokeStyle = "rgba(168, 85, 247, 0.4)";
+          ctx.beginPath();
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
+          ctx.moveTo(-w / 3, 0); ctx.lineTo(w / 3, 0);
+          ctx.stroke();
+
+          ctx.fillStyle = "#c084fc";
+          ctx.font = "600 11px 'JetBrains Mono'";
+          ctx.textAlign = "center";
+          ctx.fillText("⚡ D1 NATIVE SQLITE • 3.2ms", 0, -20);
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.fillText("5,000,000 Free Daily Reads", 0, 20);
+        }
+      }
+
+      // Layer 3: Multi-Day Turnstile Core
+      else if (index === 1) {
+        ctx.fillStyle = "rgba(24, 18, 12, 0.65)";
+        ctx.strokeStyle = factor > 0.2 ? "rgba(245, 158, 11, 0.6)" : "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, -w / 2, -h / 2, w, h, cornerR);
+        ctx.fill();
+        ctx.stroke();
+
+        if (factor > 0.2) {
+          // Mini Days Chips
+          const chipW = 28;
+          const startX = -((chipW + 6) * 5) / 2 + 14;
+          for (let d = 1; d <= 5; d++) {
+            const dx = startX + (d - 1) * 34;
+            ctx.fillStyle = d === 1 ? "rgba(245, 158, 11, 0.3)" : "rgba(255,255,255,0.06)";
+            ctx.strokeStyle = d === 1 ? "#f59e0b" : "rgba(255,255,255,0.15)";
+            roundRect(ctx, dx - 14, -15, 28, 30, 6);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = d === 1 ? "#fbbf24" : "rgba(255,255,255,0.4)";
+            ctx.font = "700 10px 'JetBrains Mono'";
+            ctx.textAlign = "center";
+            ctx.fillText(`D${d}`, dx, 4);
+          }
+          ctx.fillStyle = "#f59e0b";
+          ctx.font = "600 11px 'JetBrains Mono'";
+          ctx.fillText("DAYS 1–10 TURNSTILE LOCK", 0, 45);
+        }
+      }
+
+      // Layer 2: Cryptographic QR Matrix
+      else if (index === 2) {
+        ctx.fillStyle = "rgba(10, 24, 18, 0.65)";
+        ctx.strokeStyle = factor > 0.2 ? "rgba(16, 185, 129, 0.6)" : "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, -w / 2, -h / 2, w, h, cornerR);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing QR Grid
+        const qrSize = 90;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(-qrSize / 2, -qrSize / 2, qrSize, qrSize);
+
+        // QR Matrix Pattern
+        ctx.fillStyle = "#000000";
+        // Corners
+        ctx.fillRect(-qrSize / 2 + 6, -qrSize / 2 + 6, 22, 22);
+        ctx.fillRect(qrSize / 2 - 28, -qrSize / 2 + 6, 22, 22);
+        ctx.fillRect(-qrSize / 2 + 6, qrSize / 2 - 28, 22, 22);
+        // Code Text
+        ctx.fillStyle = "#10b981";
+        ctx.font = "700 12px 'JetBrains Mono'";
+        ctx.textAlign = "center";
+        ctx.fillText("VIP-98241A", 0, qrSize / 2 + 25);
+      }
+
+      // Layer 1: Front Visual Metallic Studio Pass
+      else if (index === 3) {
+        // Metallic VIP Glass Background
+        const grad = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+        grad.addColorStop(0, "rgba(35, 30, 22, 0.95)");
+        grad.addColorStop(0.5, "rgba(20, 20, 24, 0.92)");
+        grad.addColorStop(1, "rgba(28, 24, 18, 0.95)");
+
+        ctx.fillStyle = grad;
+        ctx.strokeStyle = "rgba(245, 158, 11, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.shadowColor = "rgba(245, 158, 11, 0.3)";
+        ctx.shadowBlur = 25;
+        roundRect(ctx, -w / 2, -h / 2, w, h, cornerR);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset shadow
+
+        // Header Branding
+        ctx.fillStyle = "#fbbf24";
+        ctx.font = "800 14px 'Outfit'";
+        ctx.textAlign = "left";
+        ctx.fillText("SUNBURN ARENA 2026", -w / 2 + 24, -h / 2 + 38);
+
+        // Tier Metallic Badge
+        ctx.fillStyle = "rgba(245, 158, 11, 0.2)";
+        ctx.strokeStyle = "#f59e0b";
+        ctx.lineWidth = 1;
+        roundRect(ctx, w / 2 - 80, -h / 2 + 22, 58, 22, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#f59e0b";
+        ctx.font = "800 10px 'Outfit'";
+        ctx.textAlign = "center";
+        ctx.fillText("👑 VIP", w / 2 - 51, -h / 2 + 37);
+
+        // Attendee Name
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "800 20px 'Outfit'";
+        ctx.textAlign = "left";
+        ctx.fillText("Kabir Malhotra", -w / 2 + 24, h / 2 - 65);
+
+        // Pass ID & Multi-Day validity
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "500 12px 'JetBrains Mono'";
+        ctx.fillText("3-Day All Access Pass • VIP Gate", -w / 2 + 24, h / 2 - 42);
+
+        // Security Chip Indicator
+        ctx.fillStyle = "#34d399";
+        ctx.beginPath();
+        ctx.arc(w / 2 - 32, h / 2 - 48, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Layer Tag callout when exploded
+      if (factor > 0.4) {
+        ctx.fillStyle = layerMeta.color;
+        ctx.font = "700 10px 'JetBrains Mono'";
+        ctx.textAlign = "left";
+        ctx.fillText(layerMeta.name, -w / 2, -h / 2 - 10);
+      }
+
+      ctx.restore();
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    // Start Animation Loop
+    requestAnimationFrame(drawPass);
+
+    // =========================================================================
+    // ROI CALCULATOR INTERACTION
+    // =========================================================================
+    function updateCalculator() {
+      const tickets = parseInt(document.getElementById("calc-ticket-slider").value, 10);
+      const price = parseInt(document.getElementById("calc-price-slider").value, 10);
+
+      document.getElementById("calc-ticket-display").textContent = `${tickets.toLocaleString()} Tickets`;
+      document.getElementById("calc-price-display").textContent = `₹${price.toLocaleString()}`;
+
+      const gross = tickets * price;
+      const bmsFee = gross * 0.10; // 10% commission
+      const tspFee = tickets * 2.50; // ₹2.50 flat fee
+      const saved = bmsFee - tspFee;
+
+      document.getElementById("calc-gross").textContent = `₹${gross.toLocaleString()}`;
+      document.getElementById("calc-bms-fee").textContent = `- ₹${Math.round(bmsFee).toLocaleString()}`;
+      document.getElementById("calc-tsp-fee").textContent = `- ₹${Math.round(tspFee).toLocaleString()}`;
+      document.getElementById("calc-saved-display").textContent = `₹${Math.round(saved).toLocaleString()}`;
+    }
+    updateCalculator();
+
+    // =========================================================================
+    // WEB AUDIO HARMONIC CHIME DEMO (Zero External Files)
+    // =========================================================================
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playWebAudio(type) {
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+
+      if (type === 'vip') {
+        // VIP Major Triad Fanfare (D5, F#5, A5)
+        [587.33, 739.99, 880.00].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, now + i * 0.08);
+          gain.gain.setValueAtTime(0.2, now + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.08);
+          osc.stop(now + i * 0.08 + 0.45);
+        });
+      } else if (type === 'gen') {
+        // Crisp High Confirmation Sine
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.12);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'gst') {
+        // Ascending Guestlist Arpeggio
+        [659.25, 880.00, 1046.50].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, now + i * 0.06);
+          gain.gain.setValueAtTime(0.2, now + i * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.06);
+          osc.stop(now + i * 0.06 + 0.35);
+        });
+      } else if (type === 'dup') {
+        // Dissonant Duplicate Warning Buzzer
+        [220, 233.08].forEach(freq => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.22, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        });
+      }
+    }
+  </script>
+</body>
+</html>

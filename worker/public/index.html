@@ -2,1532 +2,1272 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>TicketScanner Pro • Gate Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TicketScanner Pro • Next-Gen Edge Event Ticketing & Gate Verification</title>
+  <meta name="description" content="Awwwards-grade event ticketing platform powered by Cloudflare Workers & D1 SQLite. Sub-5ms gate scanning, multi-day turnstile access, and zero commission." />
+
+  <!-- Volunteer Turnstile Auto-Redirect -->
+  <script>
+    if (window.location.search.includes("pin=") || window.location.search.includes("scan=true") || window.location.search.includes("event=")) {
+      window.location.replace("scanner.html" + window.location.search);
+    }
+  </script>
+
+  <!-- Premium Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-dark: #09090b;
-      --card-bg: rgba(24, 24, 27, 0.75);
+      --bg-dark: #050505;
+      --card-bg: rgba(18, 18, 22, 0.7);
       --card-border: rgba(255, 255, 255, 0.08);
-      --text-main: #f4f4f5;
-      --text-muted: #a1a1aa;
-      
-      --color-vip: #f59e0b;
-      --color-vip-glow: rgba(245, 158, 11, 0.25);
-      --color-gen: #10b981;
-      --color-gen-glow: rgba(16, 185, 129, 0.25);
-      --color-gst: #a855f7;
-      --color-gst-glow: rgba(168, 85, 247, 0.25);
-      --color-dup: #f97316;
-      --color-err: #ef4444;
+      --card-border-glow: rgba(59, 130, 246, 0.3);
+      --text-main: rgba(255, 255, 255, 0.92);
+      --text-muted: rgba(255, 255, 255, 0.58);
       --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.35);
+      --vip-gold: #f59e0b;
+      --vip-glow: rgba(245, 158, 11, 0.35);
+      --gen-green: #10b981;
+      --gst-purple: #a855f7;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
     }
 
-    body {
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg-dark);
-      background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+    html, body {
+      background-color: var(--bg-dark);
       color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       overflow-x: hidden;
+      scroll-behavior: smooth;
     }
 
-    /* Top Navigation Bar */
+    /* Ambient Subtle Grid & Noise */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-image: 
+        radial-gradient(circle at 50% 20%, rgba(59, 130, 246, 0.07) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header Nav */
     header {
-      width: 100%;
-      background: rgba(18, 18, 20, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 14px 20px;
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      padding: 18px 40px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
+      background: rgba(5, 5, 5, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--card-border);
-      position: sticky;
-      top: 0;
-      z-index: 50;
+      z-index: 100;
+      transition: all 0.3s ease;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
+      gap: 12px;
+      text-decoration: none;
+      color: #fff;
     }
 
     .brand-icon {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      border-radius: 8px;
+      border-radius: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 15px;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+      font-size: 16px;
+      box-shadow: 0 0 20px var(--primary-glow);
     }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .badge-btn {
-      font-size: 12px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--card-border);
-      padding: 6px 12px;
-      border-radius: 20px;
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
-
-    .badge-btn:hover, .badge-btn:active {
-      background: rgba(255, 255, 255, 0.12);
-      color: #fff;
-    }
-
-    .scan-counter {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    /* Auth & Onboarding Cards */
-    .gate-screen {
-      width: 100%;
-      max-width: 440px;
-      padding: 40px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      text-align: center;
-      margin: auto 0;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .gate-card {
-      width: 100%;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 32px 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .gate-icon {
-      width: 56px;
-      height: 56px;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      margin: 0 auto 6px auto;
-    }
-
-    .gate-card h2 {
-      font-size: 22px;
-      font-weight: 700;
+    .brand-name {
+      font-size: 19px;
+      font-weight: 800;
       letter-spacing: -0.5px;
     }
 
-    .gate-card p {
-      color: var(--text-muted);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .gate-input {
-      width: 100%;
-      padding: 15px 18px;
-      border-radius: 14px;
-      border: 1px solid var(--card-border);
-      background: rgba(10, 10, 12, 0.8);
+    .brand-tag {
+      background: linear-gradient(135deg, #3b82f6, #a855f7);
       color: #fff;
-      font-size: 16px;
-      text-align: center;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    .gate-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-    }
-
-    .gate-input.error {
-      border-color: var(--color-err);
-      animation: shake 0.35s ease;
-    }
-
-    .btn-primary {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      border: none;
-      border-radius: 14px;
-      color: #fff;
-      font-weight: 600;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
-      transition: all 0.2s;
-    }
-
-    .btn-primary:active {
-      transform: scale(0.98);
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
-    }
-
-    /* Scanner Viewport */
-    #scanner-screen {
-      display: none;
-      width: 100%;
-      max-width: 460px;
-      padding: 16px;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .camera-card {
-      width: 100%;
-      position: relative;
-      border-radius: 24px;
-      overflow: hidden;
-      border: 1px solid var(--card-border);
-      background: #000;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
-      aspect-ratio: 1 / 1;
-      max-height: 420px;
-    }
-
-    #reader {
-      width: 100% !important;
-      height: 100% !important;
-      border: none !important;
-    }
-
-    #reader video {
-      object-fit: cover !important;
-      border-radius: 24px !important;
-    }
-
-    /* Reticle Laser Scanner Overlay */
-    .scan-reticle {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .reticle-frame {
-      width: 68%;
-      height: 68%;
-      position: relative;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 20px;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
-    }
-
-    .reticle-corner {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-color: #3b82f6;
-      border-style: solid;
-    }
-
-    .reticle-corner.tl { top: -2px; left: -2px; border-width: 4px 0 0 4px; border-top-left-radius: 18px; }
-    .reticle-corner.tr { top: -2px; right: -2px; border-width: 4px 4px 0 0; border-top-right-radius: 18px; }
-    .reticle-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 4px 4px; border-bottom-left-radius: 18px; }
-    .reticle-corner.br { bottom: -2px; right: -2px; border-width: 0 4px 4px 0; border-bottom-right-radius: 18px; }
-
-    .laser-line {
-      position: absolute;
-      top: 0;
-      left: 5%;
-      width: 90%;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, #3b82f6, #60a5fa, transparent);
-      box-shadow: 0 0 12px #3b82f6;
-      animation: laserMove 2.2s infinite ease-in-out;
-      border-radius: 2px;
-    }
-
-    @keyframes laserMove {
-      0%, 100% { top: 6%; opacity: 0.2; }
-      50% { top: 90%; opacity: 1; }
-    }
-
-    /* Controls Bar below camera */
-    .camera-controls {
-      position: absolute;
-      bottom: 14px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      z-index: 10;
-    }
-
-    .tool-btn {
-      background: rgba(18, 18, 20, 0.75);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #fff;
-      padding: 8px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
-
-    .tool-btn.active {
-      background: #f59e0b;
-      color: #000;
-      border-color: #f59e0b;
-    }
-
-    .camera-status {
-      font-size: 13px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      background: #10b981;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #10b981;
-      animation: pulse 1.6s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
-    }
-
-    /* ==================================================================== */
-    /* PINNED RESULT CARD & SCAN NEXT WORKFLOW                              */
-    /* ==================================================================== */
-    .result-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .result-sheet {
-      width: 100%;
-      max-width: 440px;
-      background: #141416;
-      border-radius: 28px;
-      border: 2px solid var(--card-border);
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 18px;
-      position: relative;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
-    }
-
-    /* Result State Variants */
-    .result-sheet.valid {
-      border-color: var(--color-gen);
-      box-shadow: 0 10px 40px var(--color-gen-glow);
-    }
-
-    .result-sheet.valid.tier-vip {
-      border-color: var(--color-vip);
-      box-shadow: 0 10px 45px var(--color-vip-glow);
-    }
-
-    .result-sheet.valid.tier-guestlist {
-      border-color: var(--color-gst);
-      box-shadow: 0 10px 45px var(--color-gst-glow);
-    }
-
-    .result-sheet.duplicate {
-      border-color: var(--color-dup);
-      box-shadow: 0 10px 40px rgba(249, 115, 22, 0.3);
-    }
-
-    .result-sheet.invalid, .result-sheet.notfound {
-      border-color: var(--color-err);
-      box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
-    }
-
-    .status-badge {
-      padding: 6px 16px;
-      border-radius: 30px;
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
       letter-spacing: 1px;
-      text-transform: uppercase;
+      margin-left: 4px;
+    }
+
+    .nav-links {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 28px;
     }
 
-    .status-badge.valid { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-    .status-badge.duplicate { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid #f97316; }
-    .status-badge.invalid { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
-    .status-badge.wrong_day { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
-
-    .result-sheet.wrong_day {
-      border-color: #f59e0b;
-      box-shadow: 0 10px 40px rgba(245, 158, 11, 0.35);
-    }
-
-    /* Multi-Day Strip & Timeline */
-    .multiday-badge {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(59, 130, 246, 0.12);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #93c5fd;
-    }
-
-    .multiday-pill {
-      background: #2563eb;
-      color: #fff;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .daily-timeline {
-      width: 100%;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 14px;
-      border: 1px solid var(--card-border);
-    }
-
-    .day-chip {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 5px 10px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.2s;
-    }
-
-    .day-chip.scanned {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-    }
-
-    .day-chip.valid {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-
-    .day-chip.not-allowed {
-      background: rgba(255, 255, 255, 0.04);
-      color: #71717a;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      opacity: 0.6;
-    }
-
-    .day-chip.active-day {
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-      border-color: #3b82f6 !important;
-    }
-
-    .btn-reentry {
-      width: 100%;
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid #f97316;
-      background: rgba(249, 115, 22, 0.15);
-      color: #fdba74;
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
       font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
+      font-weight: 500;
+      transition: color 0.2s;
     }
 
-    .btn-reentry:hover {
-      background: rgba(249, 115, 22, 0.25);
+    .nav-link:hover {
       color: #fff;
     }
 
-    /* Event Day Picker Modal */
-    .day-modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      z-index: 100;
+    .nav-actions {
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 20px;
+      gap: 12px;
     }
 
-    .day-modal-card {
-      width: 100%;
-      max-width: 380px;
-      background: #141416;
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-      animation: popIn 0.2s ease;
-    }
-
-    .day-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
+    .btn {
+      display: inline-flex;
+      align-items: center;
       gap: 8px;
-    }
-
-    .day-btn {
-      padding: 12px 4px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--card-border);
+      padding: 10px 20px;
       border-radius: 12px;
-      color: var(--text-main);
-      font-weight: 700;
-      font-size: 13px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
       cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border: none;
+      outline: none;
     }
 
-    .day-btn:hover {
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-ghost:hover {
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.2);
     }
 
-    .day-btn.active {
-      background: #2563eb;
-      border-color: #3b82f6;
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
       color: #fff;
-      box-shadow: 0 0 14px rgba(37, 99, 235, 0.6);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
     }
 
-    .tier-chip {
-      padding: 8px 22px;
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(59, 130, 246, 0.6);
+    }
+
+    /* SCROLLYTELLING CONTAINER */
+    #scrolly-container {
+      position: relative;
+      height: 420vh; /* 4.2x Viewport Height */
+      width: 100%;
+    }
+
+    /* Sticky Canvas Viewport */
+    #canvas-viewport {
+      position: sticky;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #pass-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Story Overlay Cards */
+    .story-overlay {
+      position: absolute;
+      width: 100%;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .story-section {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 0 8vw;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .story-card {
+      pointer-events: auto;
+      max-width: 540px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .story-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .story-card.centered {
+      margin: 0 auto;
+      text-align: center;
+      max-width: 780px;
+    }
+
+    .story-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #60a5fa;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .story-title {
+      font-size: clamp(38px, 5.5vw, 68px);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #ffffff 40%, rgba(255, 255, 255, 0.65) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .story-desc {
+      font-size: clamp(16px, 1.3vw, 19px);
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .tech-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .tech-chip strong {
+      color: #fff;
+    }
+
+    /* Live Telemetry Card */
+    .telemetry-box {
+      background: rgba(10, 10, 14, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 22px;
+      margin-top: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+    .telemetry-row:last-child { border-bottom: none; }
+
+    /* ROI CALCULATOR SECTION */
+    .section-standard {
+      position: relative;
+      padding: 120px 24px;
+      max-width: 1280px;
+      margin: 0 auto;
+      z-index: 30;
+    }
+
+    .calc-card {
+      background: radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+                  rgba(18, 18, 24, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: clamp(28px, 4vw, 54px);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+
+    @media (max-width: 900px) {
+      .calc-card { grid-template-columns: 1fr; }
+      header { padding: 14px 20px; }
+      .nav-links { display: none; }
+    }
+
+    .slider-wrap {
+      margin: 28px 0;
+    }
+
+    .calc-slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+      cursor: pointer;
+      accent-color: #3b82f6;
+    }
+
+    .calc-stat-hero {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+    }
+
+    .calc-number {
+      font-size: clamp(38px, 4.5vw, 56px);
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      color: #34d399;
+      margin: 8px 0;
+    }
+
+    /* Sound Synthesizer Demo Strip */
+    .sound-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .sound-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sound-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Pricing Section */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .pricing-card {
+      background: rgba(18, 18, 24, 0.8);
+      border: 1px solid var(--card-border);
       border-radius: 24px;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
+      padding: 36px 30px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .pricing-card:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-4px);
+    }
+
+    .pricing-card.featured {
+      background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 80%), rgba(20, 20, 28, 0.95);
+      border: 1px solid #3b82f6;
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
+    }
+
+    .price-rate {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: #fff;
+      margin: 16px 0;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 60px 40px;
+      background: #050505;
+      color: var(--text-muted);
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      z-index: 30;
+      position: relative;
+    }
+
+    /* Progress Indicator Pill */
+    #scroll-badge {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      background: rgba(18, 18, 22, 0.85);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      z-index: 100;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .tier-chip.vip {
-      background: linear-gradient(135deg, #78350f, #b45309);
-      color: #fef3c7;
-      border: 1px solid #f59e0b;
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    .dot-live {
+      width: 8px; height: 8px; border-radius: 50%; background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 1.5s infinite;
     }
 
-    .tier-chip.general {
-      background: linear-gradient(135deg, #064e3b, #047857);
-      color: #d1fae5;
-      border: 1px solid #10b981;
-    }
-
-    .tier-chip.guestlist {
-      background: linear-gradient(135deg, #581c87, #7e22ce);
-      color: #f3e8ff;
-      border: 1px solid #a855f7;
-    }
-
-    .ticket-code-display {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      color: #fff;
-      padding: 6px 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      border: 1px solid var(--card-border);
-    }
-
-    .attendee-name {
-      font-size: 20px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .result-meta {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 14px;
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--text-muted);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      text-align: left;
-    }
-
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .meta-row strong {
-      color: var(--text-main);
-    }
-
-    /* THE SCAN NEXT BUTTON */
-    .btn-scan-next {
-      width: 100%;
-      padding: 18px;
-      border-radius: 18px;
-      border: none;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: #fff;
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
-      transition: all 0.2s;
-    }
-
-    .btn-scan-next:active {
-      transform: scale(0.97);
-    }
-
-    .scan-next-hint {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    /* Auto Scan Toggle Switch */
-    .auto-mode-bar {
-      width: 100%;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background-color: #27272a;
-      transition: .2s;
-      border-radius: 24px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .2s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider { background-color: #3b82f6; }
-    input:checked + .slider:before { transform: translateX(20px); }
-
-    /* Manual Section */
-    .manual-card {
-      width: 100%;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 14px 18px;
-    }
-
-    .manual-card summary {
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .manual-form {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.92); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-8px); }
-      75% { transform: translateX(8px); }
-    }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
+  <!-- Top Navbar -->
   <header>
-    <div class="brand">
+    <a href="#" class="brand">
       <div class="brand-icon">🎟️</div>
-      <span>TicketScanner <span style="font-weight: 300; opacity: 0.6; font-size: 13px;">PRO</span></span>
+      <div class="brand-name">TicketScanner<span class="brand-tag">PRO</span></div>
+    </a>
+
+    <div class="nav-links">
+      <a href="#architecture" class="nav-link">Architecture</a>
+      <a href="#deconstructed" class="nav-link">Deconstruction</a>
+      <a href="#calculator" class="nav-link">ROI Calculator</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
     </div>
-    <div class="header-actions">
-      <button id="day-badge-btn" class="badge-btn" onclick="openDayPickerModal()" title="Switch Active Event Day">
-        <span>📅</span> <span id="header-day-label">Day 1</span>
-      </button>
-      <div id="scan-count-badge" class="scan-counter" style="display:none;">0 Scanned</div>
-      <div id="scanner-name-tag" class="badge-btn" style="display:none;" onclick="changeName()">
-        <span>👤</span> <span id="operator-label">Gate</span>
-      </div>
-      <button id="sound-btn" class="badge-btn" onclick="toggleMute()" title="Toggle Audio Chimes">
-        <span id="sound-icon">🔔</span>
-      </button>
+
+    <div class="nav-actions">
+      <a href="scanner.html" class="btn btn-ghost">
+        <span>📷</span> Gate Scanner
+      </a>
+      <a href="admin.html" class="btn btn-primary">
+        <span>⚡</span> Launch Studio
+      </a>
     </div>
   </header>
 
-  <!-- Step 1: Security Access Key Screen -->
-  <div id="key-screen" class="gate-screen">
-    <div class="gate-card">
-      <div class="gate-icon">🔐</div>
-      <h2>Staff Authentication</h2>
-      <p>Enter the gate passkey to unlock the camera scanner for this session.</p>
-      <input id="key-input" class="gate-input" type="password" placeholder="••••••••••" maxlength="30" autocomplete="off"
-        onkeydown="if(event.key==='Enter') verifyKey()" />
-      <p id="key-error" style="color: #ef4444; font-size: 13px; display: none;">Invalid passkey. Please check and retry.</p>
-      <button class="btn-primary" onclick="verifyKey()">
-        <span>Unlock Gate Scanner</span> ➔
-      </button>
-    </div>
+  <!-- Live Telemetry Pill -->
+  <div id="scroll-badge">
+    <div class="dot-live"></div>
+    <span id="scroll-pct-label">0% SCROLL</span> • EDGE READY
   </div>
 
-  <!-- Step 2: Gate / Staff Identity Screen -->
-  <div id="name-screen" class="gate-screen" style="display:none;">
-    <div class="gate-card">
-      <div class="gate-icon">🏷️</div>
-      <h2>Gate Identifier</h2>
-      <p>Assign this terminal a station name and choose the active event day.</p>
-      
-      <div style="text-align: left; width: 100%;">
-        <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: block;">Gate / Operator Name:</label>
-        <input id="name-input" class="gate-input" type="text" placeholder="e.g. VIP Gate 1 / Alex" maxlength="32"
-          autocomplete="off" style="letter-spacing: normal;"
-          onkeydown="if(event.key==='Enter') startScanning()" />
-      </div>
-
-      <div style="text-align: left; width: 100%;">
-        <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: block;">Active Event Day (1 to 10):</label>
-        <select id="login-day-select" class="gate-input" style="cursor: pointer; padding: 12px 14px;">
-          <option value="1">Day 1 (Opening Day)</option>
-          <option value="2">Day 2</option>
-          <option value="3">Day 3</option>
-          <option value="4">Day 4</option>
-          <option value="5">Day 5</option>
-          <option value="6">Day 6</option>
-          <option value="7">Day 7</option>
-          <option value="8">Day 8</option>
-          <option value="9">Day 9</option>
-          <option value="10">Day 10 (Finale)</option>
-        </select>
-      </div>
-
-      <button class="btn-primary" onclick="startScanning()">
-        <span>Begin Scanning</span> ➔
-      </button>
-    </div>
-  </div>
-
-  <!-- Step 3: Main Scanner View -->
-  <div id="scanner-screen">
+  <!-- ===================================================================== -->
+  <!-- 400VH SCROLLYTELLING CONTAINER: EXPLODING 3D PASS SEQUENCE            -->
+  <!-- ===================================================================== -->
+  <div id="scrolly-container">
     
-    <!-- Camera Viewport Card -->
-    <div class="camera-card">
-      <div id="reader"></div>
+    <!-- Sticky Canvas -->
+    <div id="canvas-viewport">
+      <canvas id="pass-canvas"></canvas>
+    </div>
+
+    <!-- Scroll Linked Text Story -->
+    <div class="story-overlay">
       
-      <!-- Reticle & Laser Effect -->
-      <div class="scan-reticle">
-        <div class="reticle-frame">
-          <div class="reticle-corner tl"></div>
-          <div class="reticle-corner tr"></div>
-          <div class="reticle-corner bl"></div>
-          <div class="reticle-corner br"></div>
-          <div class="laser-line"></div>
+      <!-- SCENE 1: 0% - 20% -->
+      <section class="story-section" id="scene-1">
+        <div class="story-card visible" id="card-1">
+          <div class="story-pill">
+            <span>👑</span> Next-Gen Event Infrastructure
+          </div>
+          <h1 class="story-title">TicketScanner Pro.<br/>Pure Edge Speed.</h1>
+          <p class="story-desc">
+            The zero-commission ticketing engine and turnstile scanner. Engineered on Cloudflare Global Edge with native D1 SQLite for sub-5ms admissions and zero gate lockups.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <a href="admin.html" class="btn btn-primary" style="padding: 14px 28px; font-size: 15px;">
+              <span>⚡</span> Open Command Center ➔
+            </a>
+            <a href="scanner.html" class="btn btn-ghost" style="padding: 14px 24px; font-size: 15px;">
+              <span>📷</span> Live Turnstile Scanner
+            </a>
+          </div>
+          <div class="chip-row">
+            <span class="tech-chip">⚡ <strong>3.2ms</strong> Gate Verification</span>
+            <span class="tech-chip">🌐 <strong>100,000</strong> Scans/Day Free</span>
+            <span class="tech-chip">💰 <strong>₹0.00</strong> Platform %</span>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Quick Action Controls -->
-      <div class="camera-controls">
-        <button id="torch-btn" class="tool-btn" onclick="toggleTorch()">
-          <span>🔦</span> <span id="torch-label">Flash</span>
-        </button>
-        <button id="camera-flip-btn" class="tool-btn" onclick="switchCamera()">
-          <span>🔄</span> <span>Flip</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Status Ticker -->
-    <div class="camera-status">
-      <div class="pulse-dot"></div>
-      <span id="scanning-status">Ready. Align QR code inside frame...</span>
-    </div>
-
-    <!-- Auto-Scan Mode Switcher -->
-    <div class="auto-mode-bar">
-      <div>
-        <div style="font-weight: 600; color: #fff;">Continuous Scan Flow</div>
-        <div style="font-size: 11px;">Keeps modal pinned until you tap 'Scan Next'</div>
-      </div>
-      <label class="toggle-switch" title="Auto-resume scanning after 3 seconds">
-        <input id="auto-scan-toggle" type="checkbox" onchange="toggleAutoScanMode()" />
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <!-- Manual Code Fallback -->
-    <details class="manual-card">
-      <summary>
-        <span>⌨️ Manual Code Lookup</span>
-        <span style="font-size: 11px; opacity: 0.7;">Click to expand</span>
-      </summary>
-      <div class="manual-form">
-        <input id="manual-input" class="gate-input" type="text" placeholder="e.g. VIP-8F2A10" maxlength="32" autocomplete="off"
-          style="text-align: left; padding: 10px 14px; font-family: monospace; font-size: 14px;"
-          onkeydown="if(event.key==='Enter') manualCheck()" />
-        <button class="btn-primary" style="width: auto; padding: 10px 18px; font-size: 14px;" onclick="manualCheck()">
-          Check
-        </button>
-      </div>
-    </details>
-  </div>
-
-  <!-- ==================================================================== -->
-  <!-- PINNED SCAN RESULT MODAL (DOES NOT CLOSE UNTIL USER TAPS SCAN NEXT)  -->
-  <!-- ==================================================================== -->
-  <div id="result-overlay" class="result-overlay" onclick="handleOverlayClick(event)">
-    <div id="result-sheet" class="result-sheet">
-      
-      <!-- Status Tag (Approved, Duplicate, Invalid, Wrong Day) -->
-      <div id="res-status-badge" class="status-badge valid">
-        <span id="res-status-icon">✓</span>
-        <span id="res-status-text">ENTRY APPROVED</span>
-      </div>
-
-      <!-- Tier Badge (VIP, General, Guestlist) -->
-      <div id="res-tier-chip" class="tier-chip vip">
-        <span id="res-tier-icon">👑</span>
-        <span id="res-tier-text">VIP ACCESS</span>
-      </div>
-
-      <!-- Multi-Day Pass Badge -->
-      <div id="res-multiday-badge" class="multiday-badge" style="display:none;">
-        <span id="res-multiday-name">2-DAY PASS</span>
-        <span id="res-multiday-progress" class="multiday-pill">Day 1 of 2</span>
-      </div>
-
-      <!-- Ticket ID Monospace -->
-      <div id="res-ticket-id" class="ticket-code-display">VIP-7A2B9C</div>
-
-      <!-- Attendee Name if assigned -->
-      <div id="res-attendee-name" class="attendee-name" style="display:none;"></div>
-
-      <!-- Daily Scan Breakdown Timeline -->
-      <div id="res-daily-timeline" class="daily-timeline" style="display:none;"></div>
-
-      <!-- Audit Metadata Details -->
-      <div class="result-meta">
-        <div class="meta-row">
-          <span>Gate Station:</span>
-          <strong id="res-meta-scanner">—</strong>
+      <!-- SCENE 2: 25% - 48% (Exploded Layers) -->
+      <section class="story-section" id="scene-2" style="justify-content: flex-end;">
+        <div class="story-card" id="card-2">
+          <div class="story-pill" style="color: #c084fc;">
+            <span>🔬</span> Deconstructed Architecture
+          </div>
+          <h2 class="story-title" style="font-size: clamp(34px, 4.5vw, 56px);">Anatomy of Zero-Latency Access.</h2>
+          <p class="story-desc">
+            Legacy ticketing platforms choke on bloated web apps and remote Singapore databases. We disassembled the pass into four independent edge-accelerated layers.
+          </p>
+          <div class="telemetry-box">
+            <div class="telemetry-row">
+              <span style="color:#60a5fa;">Layer 1: Visual Studio</span>
+              <strong style="color:#fff;">In-Browser HTML5 Canvas</strong>
+            </div>
+            <div class="telemetry-row">
+              <span style="color:#34d399;">Layer 2: Cryptographic Matrix</span>
+              <strong style="color:#fff;">HMAC Base32 Collision-Free</strong>
+            </div>
+            <div class="telemetry-row">
+              <span style="color:#f59e0b;">Layer 3: Multi-Day Turnstile</span>
+              <strong style="color:#fff;">Days 1–10 Re-Entry Lock</strong>
+            </div>
+            <div class="telemetry-row">
+              <span style="color:#a855f7;">Layer 4: D1 Edge Engine</span>
+              <strong style="color:#fff;">Distributed SQLite (3ms)</strong>
+            </div>
+          </div>
         </div>
-        <div class="meta-row">
-          <span>Scan Timestamp:</span>
-          <strong id="res-meta-time">—</strong>
+      </section>
+
+      <!-- SCENE 3: 50% - 75% (Edge Concurrency) -->
+      <section class="story-section" id="scene-3">
+        <div class="story-card" id="card-3">
+          <div class="story-pill" style="color: #34d399;">
+            <span>🛡️</span> Turnstiles that Never Stall
+          </div>
+          <h2 class="story-title" style="font-size: clamp(34px, 4.5vw, 56px);">Simultaneous Dual-Scan Prevention.</h2>
+          <p class="story-desc">
+            20 entrance gates scanning thousands of attendees simultaneously. Our atomic SQLite conditional updates prevent double-entry fraud with 100% ACID consistency.
+          </p>
+          <div class="chip-row">
+            <span class="tech-chip">🔄 <strong>HTTP 304 ETag</strong> 0ms Cache</span>
+            <span class="tech-chip">🚫 <strong>Zero</strong> Duplicate Leaks</span>
+            <span class="tech-chip">⚡ <strong>99.7%</strong> Less Bandwidth</span>
+          </div>
         </div>
-        <div id="res-meta-note-row" class="meta-row" style="display:none;">
-          <span>Notice:</span>
-          <strong id="res-meta-notes" style="color: #f97316;">—</strong>
+      </section>
+
+      <!-- SCENE 4: 80% - 100% (Reassembled Re-engagement) -->
+      <section class="story-section" id="scene-4" style="justify-content: center;">
+        <div class="story-card centered" id="card-4">
+          <div class="story-pill" style="color: #f59e0b;">
+            <span>🎟️</span> Unified Pass Reassembly
+          </div>
+          <h2 class="story-title">Stop Paying 10% Ticket Commissions.</h2>
+          <p class="story-desc" style="max-width: 600px; margin-left: auto; margin-right: auto;">
+            Own your customer database, print custom branded metallic passes, and scan at gate turnstiles for a flat rate of ₹2.00 to ₹3.00 per ticket.
+          </p>
+          <div style="display: flex; gap: 14px; justify-content: center;">
+            <a href="#calculator" class="btn btn-primary" style="padding: 14px 28px;">
+              <span>📊</span> Calculate Your Savings ➔
+            </a>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Re-entry Authorization Button (Shown on duplicates / re-entries) -->
-      <button id="res-reentry-btn" class="btn-reentry" style="display:none;" onclick="triggerReEntryScan()">
-        <span>🔄 Authorize Re-Entry for Today</span>
-      </button>
-
-      <!-- PRIMARY 'SCAN NEXT' ACTION BUTTON -->
-      <button id="scan-next-btn" class="btn-scan-next" onclick="scanNextTicket()">
-        <span>📷</span>
-        <span>Scan Next Ticket</span>
-      </button>
-
-      <div class="scan-next-hint">Press <strong>Spacebar</strong> or tap anywhere to scan next</div>
     </div>
   </div>
 
-  <!-- Active Day Picker Modal -->
-  <div id="day-picker-modal" class="day-modal-overlay" style="display:none;" onclick="if(event.target.id==='day-picker-modal') closeDayPickerModal()">
-    <div class="day-modal-card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="font-size:18px; font-weight:700;">Select Active Event Day</h3>
-        <button class="badge-btn" onclick="closeDayPickerModal()">✕</button>
+  <!-- ===================================================================== -->
+  <!-- INTERACTIVE ROI PROFIT CALCULATOR                                     -->
+  <!-- ===================================================================== -->
+  <section class="section-standard" id="calculator">
+    <div style="text-align: center; margin-bottom: 48px;">
+      <div class="story-pill" style="color:#34d399;">
+        <span>💰</span> Financial Arbitrage
       </div>
-      <p style="font-size:13px; color:var(--text-muted); line-height:1.4;">
-        Current scanner check-ins will be recorded for this day.
+      <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 800; letter-spacing: -1px;">
+        How Much Do You Lose to BookMyShow?
+      </h2>
+      <p style="color: var(--text-muted); font-size: 16px; max-width: 600px; margin: 12px auto 0 auto;">
+        Legacy platforms take 8% to 12% of your gross box office. See your savings when switching to TicketScanner Pro's flat fee model.
       </p>
-      <div class="day-grid" id="day-picker-grid"></div>
     </div>
-  </div>
 
+    <div class="calc-card">
+      <div>
+        <h3 style="font-size: 20px; font-weight: 700;">Event Parameters</h3>
+        
+        <div class="slider-wrap">
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
+            <span style="color: var(--text-muted);">Total Tickets Sold:</span>
+            <strong id="calc-ticket-display" style="font-size: 16px; color: #fff;">5,000 Tickets</strong>
+          </div>
+          <input type="range" id="calc-ticket-slider" class="calc-slider" min="500" max="25000" step="500" value="5000" oninput="updateCalculator()" />
+        </div>
+
+        <div class="slider-wrap">
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;">
+            <span style="color: var(--text-muted);">Average Ticket Price:</span>
+            <strong id="calc-price-display" style="font-size: 16px; color: #fff;">₹2,000</strong>
+          </div>
+          <input type="range" id="calc-price-slider" class="calc-slider" min="200" max="10000" step="100" value="2000" oninput="updateCalculator()" />
+        </div>
+
+        <div class="telemetry-box" style="margin-top: 24px;">
+          <div class="telemetry-row">
+            <span>Gross Ticket Sales:</span>
+            <strong id="calc-gross" style="color: #fff;">₹1,00,00,000</strong>
+          </div>
+          <div class="telemetry-row">
+            <span style="color: #ef4444;">BookMyShow Commission (10%):</span>
+            <strong id="calc-bms-fee" style="color: #ef4444;">- ₹10,00,000</strong>
+          </div>
+          <div class="telemetry-row">
+            <span style="color: #38bdf8;">TicketScanner Pro (₹2.50 flat):</span>
+            <strong id="calc-tsp-fee" style="color: #38bdf8;">- ₹12,500</strong>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; justify-content: center;">
+        <div class="calc-stat-hero">
+          <div style="font-size: 13px; color: #34d399; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+            Pure Net Profit Saved
+          </div>
+          <div class="calc-number" id="calc-saved-display">₹9,87,500</div>
+          <div style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">
+            Money returned directly to your event budget, artists, and production.
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; text-align: center;">
+          <a href="admin.html" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
+            <span>⚡ Start Generating Passes Now</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- AUDIO SYNTHESIZER DEMO STRIP                                          -->
+  <!-- ===================================================================== -->
+  <section class="section-standard" id="audio-demo" style="padding-top: 0;">
+    <div style="text-align: center; margin-bottom: 32px;">
+      <div class="story-pill" style="color: #fbbf24;">
+        <span>🔔</span> Offline Synthesized Audio
+      </div>
+      <h3 style="font-size: 28px; font-weight: 800;">Turnstile Harmonic Chimes</h3>
+      <p style="color: var(--text-muted); font-size: 14px;">
+        Zero audio file downloads. Our Web Audio synthesizer generates distinct physical chords offline at noisy gates.
+      </p>
+    </div>
+
+    <div class="sound-strip">
+      <div class="sound-btn" onclick="playWebAudio('vip')">
+        <span style="font-size: 26px;">👑</span>
+        <div>
+          <strong style="font-size: 14px; color: #fbbf24; display: block;">VIP Fanfare Chord</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Major Triad (587.3Hz)</span>
+        </div>
+      </div>
+
+      <div class="sound-btn" onclick="playWebAudio('gen')">
+        <span style="font-size: 26px;">🎟️</span>
+        <div>
+          <strong style="font-size: 14px; color: #34d399; display: block;">General Chime</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Confirmation Sine (880Hz)</span>
+        </div>
+      </div>
+
+      <div class="sound-btn" onclick="playWebAudio('gst')">
+        <span style="font-size: 26px;">⭐</span>
+        <div>
+          <strong style="font-size: 14px; color: #c084fc; display: block;">Guestlist Melodic</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Arpeggiated Triple (1046Hz)</span>
+        </div>
+      </div>
+
+      <div class="sound-btn" onclick="playWebAudio('dup')">
+        <span style="font-size: 26px;">⚠️</span>
+        <div>
+          <strong style="font-size: 14px; color: #f97316; display: block;">Duplicate Warning</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Sawtooth Dissonant (220Hz)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PRICING TIERS                                                         -->
+  <!-- ===================================================================== -->
+  <section class="section-standard" id="pricing">
+    <div style="text-align: center;">
+      <div class="story-pill" style="color: #38bdf8;">
+        <span>⚡</span> Simple Flat Pricing
+      </div>
+      <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 800; letter-spacing: -1px;">
+        Prepaid Passes. Zero Surprise Fees.
+      </h2>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="pricing-card">
+        <h4 style="font-size: 18px; font-weight: 700;">Starter Pack</h4>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Club nights & college cultural fests</p>
+        <div class="price-rate">₹1,499</div>
+        <div style="font-size: 13px; color: #60a5fa; font-weight: 600; margin-bottom: 24px;">500 Passes (₹3.00 / pass)</div>
+        <ul style="list-style: none; font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; flex: 1;">
+          <li>✓ Visual Pass Studio Compiler</li>
+          <li>✓ Single & Multi-Day Validation</li>
+          <li>✓ High-Velocity Gate Scanner UI</li>
+          <li>✓ CSV Manifest Importer/Exporter</li>
+        </ul>
+        <a href="admin.html" class="btn btn-ghost" style="margin-top: 28px; width: 100%; justify-content: center;">
+          Get Starter Passes
+        </a>
+      </div>
+
+      <!-- Pro (Featured) -->
+      <div class="pricing-card featured">
+        <div style="position: absolute; top: -12px; right: 24px; background: #3b82f6; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px;">
+          MOST POPULAR
+        </div>
+        <h4 style="font-size: 18px; font-weight: 700;">Pro Growth</h4>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Multi-day concerts & festivals</p>
+        <div class="price-rate">₹6,250</div>
+        <div style="font-size: 13px; color: #34d399; font-weight: 600; margin-bottom: 24px;">2,500 Passes (₹2.50 / pass)</div>
+        <ul style="list-style: none; font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; flex: 1;">
+          <li>✓ Everything in Starter</li>
+          <li>✓ Up to 10-Day Multi-Pass Tracking</li>
+          <li>✓ Unlimited Turnstile Scanner Logins</li>
+          <li>✓ 4-Digit Door Volunteer PIN Sharing</li>
+          <li>✓ Cloudflare D1 Edge Caching Included</li>
+        </ul>
+        <a href="admin.html" class="btn btn-primary" style="margin-top: 28px; width: 100%; justify-content: center;">
+          Deploy Pro Event
+        </a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card">
+        <h4 style="font-size: 18px; font-weight: 700;">Enterprise Stadium</h4>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Mega arenas & multi-venue series</p>
+        <div class="price-rate">₹19,999</div>
+        <div style="font-size: 13px; color: #c084fc; font-weight: 600; margin-bottom: 24px;">10,000 Passes (₹2.00 / pass)</div>
+        <ul style="list-style: none; font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 12px; flex: 1;">
+          <li>✓ Custom Branded Domain Setup</li>
+          <li>✓ Dedicated Webhook Dispatch</li>
+          <li>✓ Instant Priority Turnstile Concurrency</li>
+          <li>✓ Direct WhatsApp/Call Gate Support</li>
+        </ul>
+        <a href="admin.html" class="btn btn-ghost" style="margin-top: 28px; width: 100%; justify-content: center;">
+          Contact Enterprise
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 18px;">🎟️</span>
+      <span style="font-weight: 700; color: #fff;">TicketScanner Pro</span>
+      <span>• The Edge Ticketing Engine</span>
+    </div>
+    <div>
+      Operating on Cloudflare Global Edge • Sub-5ms SQLite Turnstile Verification
+    </div>
+    <div>
+      <a href="admin.html" style="color: var(--text-muted); text-decoration: none; margin-right: 16px;">Admin Studio</a>
+      <a href="scanner.html" style="color: var(--text-muted); text-decoration: none;">Gate Scanner</a>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- HIGH-PERFORMANCE CANVAS SCROLL ANIMATION ENGINE                       -->
+  <!-- ===================================================================== -->
   <script>
-    // 🌐 Cloudflare Workers API Endpoint Configuration
-    const API_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? "http://localhost:8787" 
-      : window.location.origin;
+    const canvas = document.getElementById("pass-canvas");
+    const ctx = canvas.getContext("2d");
+    const container = document.getElementById("scrolly-container");
 
-    let authToken = localStorage.getItem("scanner_key") || "";
+    let scrollProgress = 0;
+    let targetProgress = 0;
+    let width = 0;
+    let height = 0;
 
-    let scannerName = "";
-    let isProcessing = false;
-    let lastScannedId = "";
-    let html5QrCode = null;
-    let qrStarted = false;
-    let isMuted = false;
-    let isTorchOn = false;
-    let currentFacingMode = "environment";
-    let sessionScannedCount = 0;
-    let autoScanEnabled = false;
-    let autoScanTimeout = null;
-
-    // Active Event Day Tracking (1 to 10)
-    let currentEventDay = parseInt(localStorage.getItem("scanner_event_day"), 10) || 1;
-
-    function updateEventDayUI() {
-      const headerLabel = document.getElementById("header-day-label");
-      if (headerLabel) headerLabel.textContent = `Day ${currentEventDay}`;
-      const loginSelect = document.getElementById("login-day-select");
-      if (loginSelect) loginSelect.value = String(currentEventDay);
-      renderDayPicker();
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
     }
+    window.addEventListener("resize", resize);
+    resize();
 
-    function setEventDay(day) {
-      currentEventDay = Math.max(1, Math.min(10, parseInt(day, 10) || 1));
-      localStorage.setItem("scanner_event_day", currentEventDay);
-      updateEventDayUI();
-      closeDayPickerModal();
-    }
+    // Smooth Scroll Tick with Interpolation
+    window.addEventListener("scroll", () => {
+      const rect = container.getBoundingClientRect();
+      const totalScroll = container.offsetHeight - window.innerHeight;
+      const current = Math.max(0, -rect.top);
+      targetProgress = Math.min(1, Math.max(0, current / totalScroll));
+    });
 
-    function openDayPickerModal() {
-      renderDayPicker();
-      document.getElementById("day-picker-modal").style.display = "flex";
-    }
+    // Story Text Visibility Triggers
+    const cards = [
+      { id: "card-1", min: 0.0, max: 0.22 },
+      { id: "card-2", min: 0.25, max: 0.50 },
+      { id: "card-3", min: 0.52, max: 0.76 },
+      { id: "card-4", min: 0.78, max: 1.0 }
+    ];
 
-    function closeDayPickerModal() {
-      document.getElementById("day-picker-modal").style.display = "none";
-    }
-
-    function renderDayPicker() {
-      const grid = document.getElementById("day-picker-grid");
-      if (!grid) return;
-      grid.innerHTML = "";
-      for (let d = 1; d <= 10; d++) {
-        const btn = document.createElement("button");
-        btn.className = "day-btn" + (d === currentEventDay ? " active" : "");
-        btn.textContent = `Day ${d}`;
-        btn.onclick = () => setEventDay(d);
-        grid.appendChild(btn);
-      }
-    }
-
-    // Web Audio Synthesizer (Zero external audio file dependencies)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    function playTone(freq, type = "sine", duration = 0.15, delay = 0) {
-      if (isMuted) return;
-      try {
-        if (audioCtx.state === "suspended") audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(audioCtx.currentTime + delay);
-        osc.stop(audioCtx.currentTime + delay + duration);
-      } catch (e) {
-        console.warn("Audio play blocked", e);
-      }
-    }
-
-    function playSoundForTier(tier, result) {
-      if (result === "valid") {
-        if (tier === "VIP") {
-          // VIP Fanfare chord (587Hz -> 880Hz)
-          playTone(587.33, "triangle", 0.12, 0);
-          playTone(880.00, "triangle", 0.28, 0.1);
-        } else if (tier === "Guestlist") {
-          // Guestlist melodic chime (440Hz -> 659Hz)
-          playTone(440.00, "sine", 0.14, 0);
-          playTone(659.25, "sine", 0.22, 0.1);
+    function updateStoryCards(p) {
+      document.getElementById("scroll-pct-label").textContent = `${Math.round(p * 100)}% SCROLL`;
+      cards.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        if (p >= c.min && p <= c.max) {
+          el.classList.add("visible");
         } else {
-          // General clean confirmation chime
-          playTone(523.25, "sine", 0.10, 0);
-          playTone(659.25, "sine", 0.18, 0.08);
+          el.classList.remove("visible");
         }
-      } else if (result === "duplicate" || result === "wrong_day") {
-        // Warning buzz (340Hz -> 240Hz)
-        playTone(340, "sawtooth", 0.18, 0);
-        playTone(240, "sawtooth", 0.25, 0.15);
-      } else {
-        // Invalid harsh low buzz (180Hz)
-        playTone(180, "sawtooth", 0.35, 0);
-      }
-    }
-
-    function toggleMute() {
-      isMuted = !isMuted;
-      document.getElementById("sound-icon").textContent = isMuted ? "🔇" : "🔔";
-    }
-
-    // Step 1: Authentication verification via server API (Gate PIN or Master Key)
-    async function verifyKey() {
-      const input = document.getElementById("key-input");
-      const err = document.getElementById("key-error");
-      const enteredKey = input.value.trim();
-
-      if (!enteredKey) return;
-
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const eventId = params.get("event") || "";
-
-        // Try Gate PIN auth first
-        let res = await fetch(`${API_URL}/api/gate/auth`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ event_id: eventId, pin: enteredKey })
-        });
-
-        if (!res.ok) {
-          // Fallback to master passkey check
-          res = await fetch(`${API_URL}/api/auth-verify`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${enteredKey}`
-            }
-          });
-        }
-
-        if (res.ok) {
-          const authData = await res.json();
-          authToken = authData.token || enteredKey;
-          localStorage.setItem("scanner_key", enteredKey);
-          document.getElementById("key-screen").style.display = "none";
-          document.getElementById("name-screen").style.display = "flex";
-          
-          // Auto-fill remembered name if available
-          const savedName = localStorage.getItem("scanner_name") || "Gate Turnstile 1";
-          document.getElementById("name-input").value = savedName;
-          setTimeout(() => document.getElementById("name-input").focus(), 150);
-        } else {
-          input.value = "";
-          input.classList.add("error");
-          err.style.display = "block";
-          setTimeout(() => input.classList.remove("error"), 400);
-        }
-      } catch (e) {
-        alert("Verification server unreachable: " + e.message);
-      }
-    }
-
-    // Step 2: Initialize Scanner Terminal
-    function startScanning() {
-      const nameVal = document.getElementById("name-input").value.trim();
-      if (!nameVal) {
-        alert("Please enter a gate or scanner operator name.");
-        return;
-      }
-
-      scannerName = nameVal;
-      localStorage.setItem("scanner_name", scannerName);
-
-      // Check chosen day from login form
-      const chosenDay = parseInt(document.getElementById("login-day-select").value, 10);
-      if (chosenDay) setEventDay(chosenDay);
-
-      document.getElementById("operator-label").textContent = scannerName;
-      document.getElementById("scanner-name-tag").style.display = "flex";
-      document.getElementById("scan-count-badge").style.display = "block";
-
-      document.getElementById("name-screen").style.display = "none";
-      document.getElementById("scanner-screen").style.display = "flex";
-
-      initCamera();
-    }
-
-    function changeName() {
-      if (html5QrCode && qrStarted) {
-        html5QrCode.stop().then(() => {
-          qrStarted = false;
-        }).catch(() => {});
-      }
-      document.getElementById("scanner-screen").style.display = "none";
-      document.getElementById("name-screen").style.display = "flex";
-    }
-
-    // Step 3: Camera & QR Engine
-    function initCamera() {
-      if (qrStarted) return;
-      
-      html5QrCode = new Html5Qrcode("reader");
-      const config = {
-        fps: 20,
-        qrbox: (viewfinderWidth, viewfinderHeight) => {
-          const edge = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72);
-          return { width: edge, height: edge };
-        },
-        aspectRatio: 1.0
-      };
-
-      html5QrCode.start(
-        { facingMode: currentFacingMode },
-        config,
-        (decodedText) => {
-          handleDetectedCode(decodedText);
-        },
-        () => {}
-      ).then(() => {
-        qrStarted = true;
-        document.getElementById("scanning-status").textContent = `Camera active (Day ${currentEventDay}). Ready for QR codes...`;
-      }).catch((err) => {
-        console.error("Camera start error:", err);
-        document.getElementById("scanning-status").textContent = "Camera error: " + err;
       });
     }
 
-    function switchCamera() {
-      if (!html5QrCode || !qrStarted) return;
-      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-      html5QrCode.stop().then(() => {
-        qrStarted = false;
-        initCamera();
+    // =========================================================================
+    // PROCEDURAL 3D DECONSTRUCTING PASS RENDERER (Awwwards Grade)
+    // =========================================================================
+    function drawPass() {
+      // Smooth lerp interpolation
+      scrollProgress += (targetProgress - scrollProgress) * 0.1;
+      updateStoryCards(scrollProgress);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const cx = width / 2;
+      const cy = height / 2;
+
+      // Base dimensions of the pass
+      const isMobile = width < 768;
+      const passW = Math.min(380, width * 0.75);
+      const passH = passW * 1.55;
+
+      // Progress Phasing:
+      // 0.0 - 0.2: Unified floating pass
+      // 0.2 - 0.5: Exploding into 4 separate layers
+      // 0.5 - 0.75: Maximum explosion + electric data pulses
+      // 0.75 - 1.0: Snapping back together
+      let explodeFactor = 0;
+      if (scrollProgress < 0.2) {
+        explodeFactor = 0;
+      } else if (scrollProgress < 0.5) {
+        explodeFactor = (scrollProgress - 0.2) / 0.3;
+      } else if (scrollProgress < 0.75) {
+        explodeFactor = 1.0;
+      } else {
+        explodeFactor = 1.0 - ((scrollProgress - 0.75) / 0.25);
+      }
+
+      // Smooth easing curve
+      explodeFactor = Math.sin(explodeFactor * Math.PI / 2);
+
+      // 3D Perspective Rotation
+      const rotY = (scrollProgress * 1.2 - 0.6) * 0.35;
+      const rotX = Math.sin(scrollProgress * Math.PI) * 0.12;
+
+      // Ambient Cyber Mesh Background Particles
+      drawCyberGrid(cx, cy, scrollProgress);
+
+      // 4 Exploded Layers:
+      // Layer 4 (Back): Cloudflare D1 Edge Node
+      // Layer 3 (Mid-Back): Multi-Day Access Circuit
+      // Layer 2 (Mid-Front): Cryptographic QR Matrix
+      // Layer 1 (Front): Visual Metallic Pass
+
+      const layerOffsets = [
+        { z: -140 * explodeFactor, name: "LAYER 4: CLOUDFLARE D1 EDGE NODE", color: "#a855f7" },
+        { z: -50 * explodeFactor,  name: "LAYER 3: 1-10 DAY TURNSTILE CORE", color: "#f59e0b" },
+        { z: 40 * explodeFactor,   name: "LAYER 2: CRYPTOGRAPHIC QR MATRIX", color: "#34d399" },
+        { z: 130 * explodeFactor,  name: "LAYER 1: VISUAL PASS STUDIO", color: "#60a5fa" }
+      ];
+
+      // Draw connecting holographic lines when exploded
+      if (explodeFactor > 0.1) {
+        drawConnectingLines(cx, cy, passW, passH, layerOffsets, explodeFactor);
+      }
+
+      // Draw each layer back to front
+      layerOffsets.forEach((layer, idx) => {
+        drawLayer(cx, cy + layer.z, passW, passH, idx, explodeFactor, layer);
       });
+
+      requestAnimationFrame(drawPass);
     }
 
-    async function toggleTorch() {
-      if (!html5QrCode) return;
-      try {
-        isTorchOn = !isTorchOn;
-        await html5QrCode.applyVideoConstraints({
-          advanced: [{ torch: isTorchOn }]
+    function drawCyberGrid(cx, cy, p) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(59, 130, 246, 0.06)";
+      ctx.lineWidth = 1;
+      const spacing = 60;
+      const offset = (p * 200) % spacing;
+
+      ctx.beginPath();
+      for (let x = -width; x < width * 2; x += spacing) {
+        ctx.moveTo(x + offset, 0);
+        ctx.lineTo(x + offset, height);
+      }
+      for (let y = -height; y < height * 2; y += spacing) {
+        ctx.moveTo(0, y + offset);
+        ctx.lineTo(width, y + offset);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawConnectingLines(cx, cy, w, h, layers, factor) {
+      ctx.save();
+      ctx.strokeStyle = `rgba(59, 130, 246, ${factor * 0.35})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 6]);
+
+      const corners = [
+        [-w / 2, -h / 2],
+        [w / 2, -h / 2],
+        [w / 2, h / 2],
+        [-w / 2, h / 2]
+      ];
+
+      corners.forEach(([ox, oy]) => {
+        ctx.beginPath();
+        layers.forEach((l, i) => {
+          const ly = cy + l.z;
+          if (i === 0) ctx.moveTo(cx + ox, ly + oy);
+          else ctx.lineTo(cx + ox, ly + oy);
         });
-        const btn = document.getElementById("torch-btn");
-        if (isTorchOn) {
-          btn.classList.add("active");
-          document.getElementById("torch-label").textContent = "On";
-        } else {
-          btn.classList.remove("active");
-          document.getElementById("torch-label").textContent = "Flash";
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
+
+    function drawLayer(cx, cy, w, h, index, factor, layerMeta) {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      const cornerR = 20;
+
+      // Layer 4: D1 SQLite Engine Plate (Back)
+      if (index === 0) {
+        ctx.fillStyle = "rgba(18, 14, 28, 0.75)";
+        ctx.strokeStyle = factor > 0.2 ? "rgba(168, 85, 247, 0.6)" : "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, -w / 2, -h / 2, w, h, cornerR);
+        ctx.fill();
+        ctx.stroke();
+
+        if (factor > 0.2) {
+          // Edge SQLite Circuit Tracks
+          ctx.strokeStyle = "rgba(168, 85, 247, 0.4)";
+          ctx.beginPath();
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
+          ctx.moveTo(-w / 3, 0); ctx.lineTo(w / 3, 0);
+          ctx.stroke();
+
+          ctx.fillStyle = "#c084fc";
+          ctx.font = "600 11px 'JetBrains Mono'";
+          ctx.textAlign = "center";
+          ctx.fillText("⚡ D1 NATIVE SQLITE • 3.2ms", 0, -20);
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.fillText("5,000,000 Free Daily Reads", 0, 20);
         }
-      } catch (err) {
-        alert("Torch not supported on this device/camera.");
-      }
-    }
-
-    // Step 4: Verification API Call
-    async function handleDetectedCode(rawText, isReEntry = false) {
-      const code = (rawText || "").trim();
-      if (!code || isProcessing || (code === lastScannedId && !isReEntry)) return;
-
-      isProcessing = true;
-      lastScannedId = code;
-      document.getElementById("scanning-status").textContent = isReEntry 
-        ? `Authorizing Day ${currentEventDay} re-entry for ${code}...` 
-        : `Verifying ${code} for Day ${currentEventDay}...`;
-
-      // Pause QR scanner processing while showing result
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.pause(true);
       }
 
-      try {
-        const res = await fetch(`${API_URL}/api/check`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${authToken}`
-          },
-          body: JSON.stringify({
-            ticketId: code,
-            scannerName: scannerName,
-            eventDay: currentEventDay,
-            allowReEntry: !!isReEntry
-          })
-        });
+      // Layer 3: Multi-Day Turnstile Core
+      else if (index === 1) {
+        ctx.fillStyle = "rgba(24, 18, 12, 0.65)";
+        ctx.strokeStyle = factor > 0.2 ? "rgba(245, 158, 11, 0.6)" : "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, -w / 2, -h / 2, w, h, cornerR);
+        ctx.fill();
+        ctx.stroke();
 
-        const data = await res.json();
-        showScanResult(data, code);
-
-      } catch (err) {
-        showScanResult({
-          result: "invalid",
-          message: "Network Error: Could not reach verification server.",
-          ticket: { id: code }
-        }, code);
-      }
-    }
-
-    // Step 5: Render Result & Workflow
-    function showScanResult(data, fallbackId) {
-      const result = data.result || "invalid";
-      const ticket = data.ticket || { id: fallbackId };
-      const tier = ticket.tier || "General";
-      const sheet = document.getElementById("result-sheet");
-      const overlay = document.getElementById("result-overlay");
-
-      // Reset classes
-      sheet.className = "result-sheet " + result;
-      sheet.classList.add("tier-" + tier.toLowerCase());
-
-      const statusBadge = document.getElementById("res-status-badge");
-      statusBadge.className = "status-badge " + result;
-
-      const tierChip = document.getElementById("res-tier-chip");
-      tierChip.className = "tier-chip " + tier.toLowerCase();
-
-      // Configure badge text & icon
-      if (result === "valid") {
-        document.getElementById("res-status-text").textContent = data.isReEntry ? "RE-ENTRY APPROVED" : "ENTRY APPROVED";
-        document.getElementById("res-status-icon").textContent = "✓";
-        sessionScannedCount++;
-        document.getElementById("scan-count-badge").textContent = `${sessionScannedCount} Scanned`;
-      } else if (result === "duplicate") {
-        document.getElementById("res-status-text").textContent = `ALREADY SCANNED TODAY (Day ${currentEventDay})`;
-        document.getElementById("res-status-icon").textContent = "⚠️";
-      } else if (result === "wrong_day") {
-        document.getElementById("res-status-text").textContent = "WRONG EVENT DAY";
-        document.getElementById("res-status-icon").textContent = "⛔";
-      } else if (result === "notfound") {
-        document.getElementById("res-status-text").textContent = "NOT FOUND IN SYSTEM";
-        document.getElementById("res-status-icon").textContent = "✕";
-      } else {
-        document.getElementById("res-status-text").textContent = "INVALID PASS";
-        document.getElementById("res-status-icon").textContent = "✕";
-      }
-
-      // Configure Tier
-      if (tier === "VIP") {
-        document.getElementById("res-tier-text").textContent = "VIP PASS";
-        document.getElementById("res-tier-icon").textContent = "👑";
-      } else if (tier === "Guestlist") {
-        document.getElementById("res-tier-text").textContent = "GUESTLIST PASS";
-        document.getElementById("res-tier-icon").textContent = "⭐";
-      } else {
-        document.getElementById("res-tier-text").textContent = "GENERAL ADMISSION";
-        document.getElementById("res-tier-icon").textContent = "🎟️";
-      }
-
-      // Configure Multi-Day Pass Strip & Timeline
-      const totalDays = ticket.total_days || 1;
-      const allowedDays = Array.isArray(ticket.allowed_days) && ticket.allowed_days.length > 0
-        ? ticket.allowed_days
-        : [1];
-      const dailyScans = data.daily_scans || ticket.daily_scans || {};
-      const daysUsed = ticket.days_used || (data.daysUsed || (ticket.status === 'Scanned' ? 1 : 0));
-
-      const multiBadge = document.getElementById("res-multiday-badge");
-      const timelineEl = document.getElementById("res-daily-timeline");
-
-      if (totalDays > 1 || allowedDays.length > 1) {
-        multiBadge.style.display = "flex";
-        const passTypeName = ticket.pass_type_name || `${totalDays}-Day Event Pass`;
-        document.getElementById("res-multiday-name").textContent = passTypeName;
-        document.getElementById("res-multiday-progress").textContent = `${daysUsed}/${allowedDays.length} Days Used`;
-
-        // Render day timeline chips
-        timelineEl.innerHTML = "";
-        for (let d = 1; d <= totalDays; d++) {
-          const isAllowed = allowedDays.includes(d);
-          const dayRecord = dailyScans[`day_${d}`];
-          const isScanned = !!(dayRecord && dayRecord.scanned);
-          const isCurrentDay = d === currentEventDay;
-
-          const chip = document.createElement("span");
-          chip.className = "day-chip " + (isScanned ? "scanned" : isAllowed ? "valid" : "not-allowed");
-          if (isCurrentDay) chip.classList.add("active-day");
-
-          let label = `Day ${d}: `;
-          if (isScanned) {
-            label += "✓ Scanned";
-            if (dayRecord.scan_time) {
-              const timePart = dayRecord.scan_time.split(",")[1] || dayRecord.scan_time;
-              label += ` (${timePart.trim()})`;
-            }
-          } else if (isAllowed) {
-            label += isCurrentDay ? "○ Ready to Admit" : "○ Valid";
-          } else {
-            label += "✕ Not Included";
+        if (factor > 0.2) {
+          // Mini Days Chips
+          const chipW = 28;
+          const startX = -((chipW + 6) * 5) / 2 + 14;
+          for (let d = 1; d <= 5; d++) {
+            const dx = startX + (d - 1) * 34;
+            ctx.fillStyle = d === 1 ? "rgba(245, 158, 11, 0.3)" : "rgba(255,255,255,0.06)";
+            ctx.strokeStyle = d === 1 ? "#f59e0b" : "rgba(255,255,255,0.15)";
+            roundRect(ctx, dx - 14, -15, 28, 30, 6);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = d === 1 ? "#fbbf24" : "rgba(255,255,255,0.4)";
+            ctx.font = "700 10px 'JetBrains Mono'";
+            ctx.textAlign = "center";
+            ctx.fillText(`D${d}`, dx, 4);
           }
-          chip.textContent = label;
-          timelineEl.appendChild(chip);
-        }
-        timelineEl.style.display = "flex";
-      } else {
-        multiBadge.style.display = "none";
-        timelineEl.style.display = "none";
-      }
-
-      // Ticket ID
-      document.getElementById("res-ticket-id").textContent = ticket.id || fallbackId;
-
-      // Attendee Name
-      const attendeeEl = document.getElementById("res-attendee-name");
-      if (ticket.attendee_name) {
-        attendeeEl.textContent = ticket.attendee_name;
-        attendeeEl.style.display = "block";
-      } else {
-        attendeeEl.style.display = "none";
-      }
-
-      // Audit meta
-      document.getElementById("res-meta-scanner").textContent = ticket.scanned_by || scannerName;
-      document.getElementById("res-meta-time").textContent = ticket.scan_time || new Date().toLocaleTimeString();
-
-      const noteRow = document.getElementById("res-meta-note-row");
-      const notesEl = document.getElementById("res-meta-notes");
-      if (result === "wrong_day") {
-        noteRow.style.display = "flex";
-        notesEl.style.color = "#fbbf24";
-        notesEl.textContent = `Valid on Day(s): ${allowedDays.join(', ')} • Current scanner set to Day ${currentEventDay}`;
-      } else if (result === "duplicate") {
-        noteRow.style.display = "flex";
-        notesEl.style.color = "#f97316";
-        notesEl.textContent = `Already verified today by ${ticket.scanned_by || "another gate"}`;
-      } else if (data.isReEntry) {
-        noteRow.style.display = "flex";
-        notesEl.style.color = "#34d399";
-        notesEl.textContent = `Re-Entry logged at ${ticket.scan_time} by ${scannerName}`;
-      } else {
-        noteRow.style.display = "none";
-      }
-
-      // Re-entry Action button
-      const reEntryBtn = document.getElementById("res-reentry-btn");
-      if (result === "duplicate") {
-        reEntryBtn.style.display = "flex";
-        reEntryBtn.innerHTML = `<span>🔄</span> <span>Authorize Re-Entry for Day ${currentEventDay}</span>`;
-      } else {
-        reEntryBtn.style.display = "none";
-      }
-
-      // Audio & Vibration Feedback
-      playSoundForTier(tier, result);
-      if (navigator.vibrate) {
-        if (result === "valid") navigator.vibrate([100, 60, 100]);
-        else navigator.vibrate([300, 100, 300]);
-      }
-
-      // DISPLAY RESULT MODAL (PINNED UNTIL USER CLICKS 'SCAN NEXT')
-      overlay.style.display = "flex";
-
-      // Optional Auto-Scan timeout (if user opted into hands-free mode)
-      clearTimeout(autoScanTimeout);
-      if (autoScanEnabled && result === "valid") {
-        autoScanTimeout = setTimeout(() => {
-          scanNextTicket();
-        }, 2800);
-      }
-    }
-
-    function triggerReEntryScan() {
-      if (!lastScannedId) return;
-      isProcessing = false;
-      handleDetectedCode(lastScannedId, true);
-    }
-
-    // THE SCAN NEXT HANDLER (Closes modal and resets camera)
-    function scanNextTicket() {
-      clearTimeout(autoScanTimeout);
-      document.getElementById("result-overlay").style.display = "none";
-      
-      isProcessing = false;
-      lastScannedId = "";
-      document.getElementById("scanning-status").textContent = `Ready (Day ${currentEventDay}). Point camera at next ticket...`;
-
-      // Resume camera scanning
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.resume();
-      }
-    }
-
-    function handleOverlayClick(event) {
-      // If clicked on backdrop outside the card, also scan next
-      if (event.target.id === "result-overlay") {
-        scanNextTicket();
-      }
-    }
-
-    function toggleAutoScanMode() {
-      autoScanEnabled = document.getElementById("auto-scan-toggle").checked;
-    }
-
-    function manualCheck() {
-      const val = document.getElementById("manual-input").value.trim();
-      if (!val) return;
-      isProcessing = false;
-      lastScannedId = "";
-      handleDetectedCode(val);
-      document.getElementById("manual-input").value = "";
-    }
-
-    // Keyboard Shortcuts: Spacebar or Enter triggers "Scan Next"
-    document.addEventListener("keydown", (e) => {
-      const overlay = document.getElementById("result-overlay");
-      if (overlay.style.display === "flex") {
-        if (e.code === "Space" || e.key === "Enter" || e.key === "Escape") {
-          e.preventDefault();
-          scanNextTicket();
+          ctx.fillStyle = "#f59e0b";
+          ctx.font = "600 11px 'JetBrains Mono'";
+          ctx.fillText("DAYS 1–10 TURNSTILE LOCK", 0, 45);
         }
       }
-    });
 
-    // Auto-login with URL pin parameter or saved key
-    window.addEventListener("DOMContentLoaded", () => {
-      updateEventDayUI();
-      const params = new URLSearchParams(window.location.search);
-      const urlPin = params.get("pin");
-      const urlDay = params.get("day");
-      if (urlDay) setEventDay(parseInt(urlDay, 10));
+      // Layer 2: Cryptographic QR Matrix
+      else if (index === 2) {
+        ctx.fillStyle = "rgba(10, 24, 18, 0.65)";
+        ctx.strokeStyle = factor > 0.2 ? "rgba(16, 185, 129, 0.6)" : "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, -w / 2, -h / 2, w, h, cornerR);
+        ctx.fill();
+        ctx.stroke();
 
-      if (urlPin) {
-        document.getElementById("key-input").value = urlPin;
-        verifyKey();
-        return;
+        // Glowing QR Grid
+        const qrSize = 90;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(-qrSize / 2, -qrSize / 2, qrSize, qrSize);
+
+        // QR Matrix Pattern
+        ctx.fillStyle = "#000000";
+        // Corners
+        ctx.fillRect(-qrSize / 2 + 6, -qrSize / 2 + 6, 22, 22);
+        ctx.fillRect(qrSize / 2 - 28, -qrSize / 2 + 6, 22, 22);
+        ctx.fillRect(-qrSize / 2 + 6, qrSize / 2 - 28, 22, 22);
+        // Code Text
+        ctx.fillStyle = "#10b981";
+        ctx.font = "700 12px 'JetBrains Mono'";
+        ctx.textAlign = "center";
+        ctx.fillText("VIP-98241A", 0, qrSize / 2 + 25);
       }
 
-      const savedKey = localStorage.getItem("scanner_key");
-      if (savedKey) {
-        document.getElementById("key-input").value = savedKey;
-        verifyKey();
+      // Layer 1: Front Visual Metallic Studio Pass
+      else if (index === 3) {
+        // Metallic VIP Glass Background
+        const grad = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+        grad.addColorStop(0, "rgba(35, 30, 22, 0.95)");
+        grad.addColorStop(0.5, "rgba(20, 20, 24, 0.92)");
+        grad.addColorStop(1, "rgba(28, 24, 18, 0.95)");
+
+        ctx.fillStyle = grad;
+        ctx.strokeStyle = "rgba(245, 158, 11, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.shadowColor = "rgba(245, 158, 11, 0.3)";
+        ctx.shadowBlur = 25;
+        roundRect(ctx, -w / 2, -h / 2, w, h, cornerR);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset shadow
+
+        // Header Branding
+        ctx.fillStyle = "#fbbf24";
+        ctx.font = "800 14px 'Outfit'";
+        ctx.textAlign = "left";
+        ctx.fillText("SUNBURN ARENA 2026", -w / 2 + 24, -h / 2 + 38);
+
+        // Tier Metallic Badge
+        ctx.fillStyle = "rgba(245, 158, 11, 0.2)";
+        ctx.strokeStyle = "#f59e0b";
+        ctx.lineWidth = 1;
+        roundRect(ctx, w / 2 - 80, -h / 2 + 22, 58, 22, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#f59e0b";
+        ctx.font = "800 10px 'Outfit'";
+        ctx.textAlign = "center";
+        ctx.fillText("👑 VIP", w / 2 - 51, -h / 2 + 37);
+
+        // Attendee Name
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "800 20px 'Outfit'";
+        ctx.textAlign = "left";
+        ctx.fillText("Kabir Malhotra", -w / 2 + 24, h / 2 - 65);
+
+        // Pass ID & Multi-Day validity
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "500 12px 'JetBrains Mono'";
+        ctx.fillText("3-Day All Access Pass • VIP Gate", -w / 2 + 24, h / 2 - 42);
+
+        // Security Chip Indicator
+        ctx.fillStyle = "#34d399";
+        ctx.beginPath();
+        ctx.arc(w / 2 - 32, h / 2 - 48, 5, 0, Math.PI * 2);
+        ctx.fill();
       }
-    });
+
+      // Layer Tag callout when exploded
+      if (factor > 0.4) {
+        ctx.fillStyle = layerMeta.color;
+        ctx.font = "700 10px 'JetBrains Mono'";
+        ctx.textAlign = "left";
+        ctx.fillText(layerMeta.name, -w / 2, -h / 2 - 10);
+      }
+
+      ctx.restore();
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    // Start Animation Loop
+    requestAnimationFrame(drawPass);
+
+    // =========================================================================
+    // ROI CALCULATOR INTERACTION
+    // =========================================================================
+    function updateCalculator() {
+      const tickets = parseInt(document.getElementById("calc-ticket-slider").value, 10);
+      const price = parseInt(document.getElementById("calc-price-slider").value, 10);
+
+      document.getElementById("calc-ticket-display").textContent = `${tickets.toLocaleString()} Tickets`;
+      document.getElementById("calc-price-display").textContent = `₹${price.toLocaleString()}`;
+
+      const gross = tickets * price;
+      const bmsFee = gross * 0.10; // 10% commission
+      const tspFee = tickets * 2.50; // ₹2.50 flat fee
+      const saved = bmsFee - tspFee;
+
+      document.getElementById("calc-gross").textContent = `₹${gross.toLocaleString()}`;
+      document.getElementById("calc-bms-fee").textContent = `- ₹${Math.round(bmsFee).toLocaleString()}`;
+      document.getElementById("calc-tsp-fee").textContent = `- ₹${Math.round(tspFee).toLocaleString()}`;
+      document.getElementById("calc-saved-display").textContent = `₹${Math.round(saved).toLocaleString()}`;
+    }
+    updateCalculator();
+
+    // =========================================================================
+    // WEB AUDIO HARMONIC CHIME DEMO (Zero External Files)
+    // =========================================================================
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playWebAudio(type) {
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+
+      if (type === 'vip') {
+        // VIP Major Triad Fanfare (D5, F#5, A5)
+        [587.33, 739.99, 880.00].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, now + i * 0.08);
+          gain.gain.setValueAtTime(0.2, now + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.08);
+          osc.stop(now + i * 0.08 + 0.45);
+        });
+      } else if (type === 'gen') {
+        // Crisp High Confirmation Sine
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.12);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'gst') {
+        // Ascending Guestlist Arpeggio
+        [659.25, 880.00, 1046.50].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, now + i * 0.06);
+          gain.gain.setValueAtTime(0.2, now + i * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.06);
+          osc.stop(now + i * 0.06 + 0.35);
+        });
+      } else if (type === 'dup') {
+        // Dissonant Duplicate Warning Buzzer
+        [220, 233.08].forEach(freq => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.22, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        });
+      }
+    }
   </script>
 </body>
 </html>

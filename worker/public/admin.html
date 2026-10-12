@@ -739,7 +739,7 @@
         <button class="btn btn-ghost" onclick="loadAllTickets(currentPage)">
           <span>↻</span> Refresh
         </button>
-        <a href="index.html" target="_blank" class="btn btn-blue">
+        <a href="scanner.html" target="_blank" class="btn btn-blue">
           <span>📷</span> Open Scanner UI ↗
         </a>
       </div>
@@ -1699,7 +1699,7 @@
     function copyGateLink() {
       const ev = currentEventsList.find(e => e.id === currentEventId);
       const pin = ev ? ev.gate_pin : "8421";
-      const link = `${window.location.origin}/index.html?event=${encodeURIComponent(currentEventId)}&pin=${pin}`;
+      const link = `${window.location.origin}/scanner.html?event=${encodeURIComponent(currentEventId)}&pin=${pin}`;
       navigator.clipboard.writeText(link).then(() => {
         alert(`✓ Turnstile Gate Link Copied!\n\nLink: ${link}\nPIN: ${pin}\n\nShare this link with volunteer bouncers. They can scan without admin access!`);
       }).catch(() => {

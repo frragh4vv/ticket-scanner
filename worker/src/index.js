@@ -49,6 +49,22 @@ export default {
       // Serve static assets if not an /api/ route
       if (!url.pathname.startsWith("/api/")) {
         if (env.ASSETS) {
+          // Smart Routing for SaaS Portal & Gate Scanner:
+          // 1. Root '/' -> serve /landing (unless bouncer enters via ?pin= or ?token=)
+          if (url.pathname === "/" && !url.searchParams.has("pin") && !url.searchParams.has("token")) {
+            const landingUrl = new URL("/landing", request.url);
+            return env.ASSETS.fetch(new Request(landingUrl, request));
+          }
+          // 2. '/scan' -> serve index.html (the Gate Camera Scanner)
+          if (url.pathname === "/scan") {
+            const scanUrl = new URL(`/index.html${url.search}`, request.url);
+            return env.ASSETS.fetch(new Request(scanUrl, request));
+          }
+          // 3. '/admin' -> serve admin.html (Organizer Command Center)
+          if (url.pathname === "/admin") {
+            const adminUrl = new URL(`/admin.html${url.search}`, request.url);
+            return env.ASSETS.fetch(new Request(adminUrl, request));
+          }
           return env.ASSETS.fetch(request);
         }
       }
