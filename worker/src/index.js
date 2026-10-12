@@ -50,14 +50,14 @@ export default {
       if (!url.pathname.startsWith("/api/")) {
         if (env.ASSETS) {
           // Smart Routing for SaaS Portal & Gate Scanner:
-          // 1. Root '/' -> serve /landing (unless bouncer enters via ?pin= or ?token=)
-          if (url.pathname === "/" && !url.searchParams.has("pin") && !url.searchParams.has("token")) {
-            const landingUrl = new URL("/landing", request.url);
+          // 1. Root '/' or '/login' or '/signup' -> serve /landing.html (unless bouncer enters via ?pin= or ?token=)
+          if ((url.pathname === "/" || url.pathname === "/login" || url.pathname === "/signup" || url.pathname === "/landing") && !url.searchParams.has("pin") && !url.searchParams.has("token")) {
+            const landingUrl = new URL("/landing.html", request.url);
             return env.ASSETS.fetch(new Request(landingUrl, request));
           }
-          // 2. '/scan' -> serve index.html (the Gate Camera Scanner)
-          if (url.pathname === "/scan") {
-            const scanUrl = new URL(`/index.html${url.search}`, request.url);
+          // 2. '/scan' or '/scanner' -> serve scanner.html (the Gate Camera Scanner)
+          if (url.pathname === "/scan" || url.pathname === "/scanner") {
+            const scanUrl = new URL(`/scanner.html${url.search}`, request.url);
             return env.ASSETS.fetch(new Request(scanUrl, request));
           }
           // 3. '/admin' -> serve admin.html (Organizer Command Center)
@@ -108,6 +108,56 @@ export default {
       // MULTI-TENANT ORGANIZER AUTH & EVENT APIS
       // =========================================================================
 
+      // POST /api/auth/register -> Organizer Sign Up (with 100 Starter Credits)
+      if (url.pathname === "/api/auth/register" && request.method === "POST") {
+        const { email, password, company_name } = await request.json();
+        const cleanEmail = (email || "").trim().toLowerCase();
+        const company = (company_name || "").trim() || "New Organizer";
+
+        if (!cleanEmail || !cleanEmail.includes("@")) {
+          return new Response(JSON.stringify({ ok: false, error: "Please enter a valid email address." }), {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...getCorsHeaders(origin) },
+          });
+        }
+
+        const orgId = `org_${generateRandomCode(8).toLowerCase()}`;
+        if (env.DB) {
+          const existing = await env.DB.prepare("SELECT id FROM organizers WHERE LOWER(email) = ?").bind(cleanEmail).first();
+          if (existing) {
+            return new Response(JSON.stringify({ ok: false, error: "An account with this email already exists. Please sign in." }), {
+              status: 400,
+              headers: { "Content-Type": "application/json", ...getCorsHeaders(origin) },
+            });
+          }
+
+          await env.DB.prepare(`
+            INSERT INTO organizers (id, email, company_name, password_hash, ticket_credits)
+            VALUES (?, ?, ?, ?, 100)
+          `).bind(orgId, cleanEmail, company, password || "pass123").run();
+
+          // Create default starter event workspace
+          await env.DB.prepare(`
+            INSERT INTO events (id, organizer_id, title, total_days, start_date, gate_pin)
+            VALUES (?, ?, 'My First Event', 1, DATE('now'), '1234')
+          `).bind(`evt_${Date.now()}`, orgId).run();
+        }
+
+        return new Response(JSON.stringify({
+          ok: true,
+          token: orgId,
+          organizer: {
+            id: orgId,
+            email: cleanEmail,
+            company_name: company,
+            ticket_credits: 100
+          }
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...getCorsHeaders(origin) },
+        });
+      }
+
       // POST /api/auth/login -> Organizer Login
       if (url.pathname === "/api/auth/login" && request.method === "POST") {
         const { email, password } = await request.json();
@@ -127,7 +177,7 @@ export default {
           if (org) {
             return new Response(JSON.stringify({
               ok: true,
-              token: `org_${org.id}`,
+              token: org.id,
               organizer: {
                 id: org.id,
                 email: org.email,
