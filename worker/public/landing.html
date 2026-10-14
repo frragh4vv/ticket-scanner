@@ -307,17 +307,15 @@
       font-weight: 600;
     }
 
-    /* 3D INTERACTIVE TICKET PASS (CAD-Grade Exploded Architecture) */
+    /* PASS STAGE: LUXURY 4-LAYER STUDIO */
     .pass-stage {
-      perspective: 1600px;
-      perspective-origin: center center;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
       width: 100%;
-      min-height: 560px;
+      min-height: 590px;
     }
 
     .pass-controls-panel {
@@ -325,8 +323,10 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       z-index: 25;
+      width: 100%;
+      max-width: 440px;
     }
 
     .pass-tier-selector {
@@ -390,34 +390,17 @@
       box-shadow: 0 0 14px rgba(59, 130, 246, 0.2);
     }
 
-    /* 3D Depth Slider & Inspector */
-    .depth-slider-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border);
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 11.5px;
-      color: var(--text-secondary);
-      transition: all 0.3s;
-    }
-
-    .depth-slider-box input[type=range] {
-      width: 90px;
-      height: 4px;
-    }
-
     .layer-inspector-bar {
       display: flex;
-      gap: 6px;
-      background: rgba(14, 14, 19, 0.85);
+      gap: 5px;
+      background: rgba(14, 14, 19, 0.9);
       border: 1px solid var(--border);
       padding: 4px;
       border-radius: 10px;
       backdrop-filter: blur(12px);
       transition: all 0.3s;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .layer-pill-btn {
@@ -426,251 +409,265 @@
       color: var(--text-secondary);
       font-size: 11px;
       font-weight: 600;
-      padding: 4px 10px;
+      padding: 5px 10px;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     .layer-pill-btn:hover { color: #fff; }
     .layer-pill-btn.active {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.12);
       color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
 
-    /* 3D Stage & Wrap */
-    .pass-3d-wrap {
-      width: 320px;
-      height: 470px;
+    /* PASS DECK CONTAINER (Fixed 340x510, Zero giant scaling!) */
+    .pass-deck-wrap {
+      width: 340px;
+      height: 510px;
       position: relative;
-      transform-style: preserve-3d;
-      --base-rot-x: 0deg;
-      --base-rot-y: 0deg;
-      --base-rot-z: 0deg;
-      --mouse-rot-x: 0deg;
-      --mouse-rot-y: 0deg;
-      --sep: 0;
-      transform: rotateX(calc(var(--base-rot-x) + var(--mouse-rot-x)))
-                 rotateY(calc(var(--base-rot-y) + var(--mouse-rot-y)))
-                 rotateZ(var(--base-rot-z));
-      transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-      margin: 10px auto 30px auto;
+      margin: 10px auto 20px auto;
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .pass-3d-wrap.exploded {
-      --base-rot-x: 24deg;
-      --base-rot-y: -24deg;
-      --base-rot-z: 3deg;
-      --sep: 1;
-    }
-
-    /* Common Layer Base */
+    /* Common Card Layer Style */
     .ticket-layer {
       position: absolute;
       inset: 0;
       border-radius: 20px;
-      transform-style: preserve-3d;
-      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-                  box-shadow 0.7s,
-                  opacity 0.4s,
-                  filter 0.4s,
-                  border-color 0.3s;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.35s ease,
+                  box-shadow 0.35s ease,
+                  filter 0.35s ease,
+                  border-color 0.3s ease;
       cursor: pointer;
       user-select: none;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      overflow: hidden;
     }
 
-    .ticket-layer:hover {
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 255, 255, 0.1);
+    /* ASSEMBLED MODE:
+       Front card is center stage. Layers 2, 3, 4 rest neatly behind */
+    .pass-deck-wrap.mode-assembled .layer-front {
+      transform: translate3d(0, 0, 0);
+      z-index: 10;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .pass-deck-wrap.mode-assembled .layer-crypto {
+      transform: translate3d(0, 8px, 0) scale(0.96);
+      z-index: 3;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .pass-deck-wrap.mode-assembled .layer-turnstile {
+      transform: translate3d(0, 16px, 0) scale(0.92);
+      z-index: 2;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .pass-deck-wrap.mode-assembled .layer-d1 {
+      transform: translate3d(0, 24px, 0) scale(0.88);
+      z-index: 1;
+      opacity: 0;
+      pointer-events: none;
     }
 
-    /* Layer Tags / Badges visible in Exploded Mode */
-    .layer-tag {
-      position: absolute;
-      top: -12px;
-      left: 18px;
+    /* DECONSTRUCTED MODE (FAN VIEW):
+       All 4 layers fan out with graceful lateral and slight vertical offsets so EVERY layer header is visible.
+       Uniform scale! No translateZ magnification! */
+    .pass-deck-wrap.mode-deconstructed .layer-front {
+      transform: translate3d(-54px, -20px, 0) scale(0.94);
+      z-index: 4;
+      opacity: 0.95;
+    }
+    .pass-deck-wrap.mode-deconstructed .layer-crypto {
+      transform: translate3d(-18px, -7px, 0) scale(0.94);
+      z-index: 3;
+      opacity: 0.95;
+      pointer-events: auto;
+    }
+    .pass-deck-wrap.mode-deconstructed .layer-turnstile {
+      transform: translate3d(18px, 7px, 0) scale(0.94);
+      z-index: 2;
+      opacity: 0.95;
+      pointer-events: auto;
+    }
+    .pass-deck-wrap.mode-deconstructed .layer-d1 {
+      transform: translate3d(54px, 20px, 0) scale(0.94);
+      z-index: 1;
+      opacity: 0.95;
+      pointer-events: auto;
+    }
+
+    /* WHEN A LAYER IS FOCUSED:
+       It smoothly glides right to front center with 100% full view,
+       while the others tuck into an organized background shelf */
+    .pass-deck-wrap .ticket-layer.is-focused {
+      transform: translate3d(0, 0, 0) scale(1.02) !important;
+      z-index: 40 !important;
+      opacity: 1 !important;
+      filter: none !important;
+      pointer-events: auto !important;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.95), 0 0 35px var(--layer-glow, rgba(59, 130, 246, 0.25)) !important;
+    }
+
+    .pass-deck-wrap.has-focus .ticket-layer:not(.is-focused) {
+      opacity: 0.35 !important;
+      filter: blur(0.8px) grayscale(20%);
+    }
+    .pass-deck-wrap.has-focus .ticket-layer:not(.is-focused):hover {
+      opacity: 0.8 !important;
+      filter: none;
+      transform: translateY(-4px) scale(0.96) !important;
+    }
+
+    /* Layer Top Header Banner */
+    .layer-card-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .layer-card-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+    }
+    .layer-card-pill {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9.5px;
       font-weight: 700;
-      letter-spacing: 0.6px;
-      padding: 3px 9px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      opacity: 0;
-      transform: translateY(6px);
-      transition: all 0.4s ease;
-      pointer-events: none;
-      z-index: 10;
+      padding: 2px 7px;
+      border-radius: 4px;
     }
 
-    .pass-3d-wrap.exploded .layer-tag {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Layer 1: Front Visual Metallic Card */
+    /* Layer 1: Visual Holographic Pass */
     .layer-front {
-      background: linear-gradient(145deg, #16161c 0%, #0e0e13 50%, #1a1622 100%);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.1);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transform: translate3d(
-        calc(-95px * var(--sep)),
-        calc(-65px * var(--sep)),
-        calc(130px * var(--sep))
-      );
-      z-index: 4;
-      overflow: hidden;
+      background: linear-gradient(150deg, #171822 0%, #0d0e14 55%, #181524 100%);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      --layer-glow: rgba(245, 158, 11, 0.3);
     }
-
-    .layer-front .layer-tag {
-      background: rgba(245, 158, 11, 0.2);
-      border: 1px solid #f59e0b;
-      color: #fbbf24;
-    }
-
-    /* Holographic Specular Reflection */
     .layer-front::before {
       content: "";
       position: absolute;
-      top: -60%; left: -60%; width: 220%; height: 220%;
-      background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.05) 50%, transparent 60%);
-      transform: rotate(25deg);
+      top: -50%; left: -50%; width: 200%; height: 200%;
+      background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.04) 50%, transparent 60%);
       pointer-events: none;
     }
 
-    /* Layer 2: Cryptographic HMAC Engine */
+    /* Layer 2: Crypto HMAC Engine */
     .layer-crypto {
-      background: rgba(8, 22, 18, 0.88);
-      border: 1px solid rgba(16, 185, 129, 0.5);
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85), 0 0 30px rgba(16, 185, 129, 0.18);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transform: translate3d(
-        calc(95px * var(--sep)),
-        calc(-40px * var(--sep)),
-        calc(50px * var(--sep))
-      );
-      opacity: calc(0.08 + (0.92 * var(--sep)));
-      z-index: 3;
-      overflow: hidden;
+      background: linear-gradient(150deg, #0a1f18 0%, #06130f 55%, #071a14 100%);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      --layer-glow: rgba(16, 185, 129, 0.3);
     }
-
-    .layer-crypto .layer-tag {
-      background: rgba(16, 185, 129, 0.2);
-      border: 1px solid #10b981;
-      color: #34d399;
-    }
-
-    .crypto-laser-beam {
+    .crypto-laser-line {
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 2px;
       background: linear-gradient(90deg, transparent, #10b981, #6ee7b7, #10b981, transparent);
       box-shadow: 0 0 14px #10b981, 0 0 4px #fff;
-      animation: sweepLaser 3s ease-in-out infinite alternate;
+      display: none;
       pointer-events: none;
+      z-index: 15;
+    }
+    @keyframes sweepLaserOnce {
+      0% { top: 0%; opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { top: 98%; opacity: 0; }
     }
 
-    @keyframes sweepLaser {
-      0% { top: 0%; opacity: 0.3; }
-      50% { opacity: 1; }
-      100% { top: 98%; opacity: 0.3; }
-    }
-
-    /* Layer 3: Multi-Day Turnstile Core */
+    /* Layer 3: Turnstile Matrix */
     .layer-turnstile {
-      background: rgba(24, 18, 8, 0.88);
-      border: 1px solid rgba(245, 158, 11, 0.5);
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85), 0 0 30px rgba(245, 158, 11, 0.18);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transform: translate3d(
-        calc(-80px * var(--sep)),
-        calc(65px * var(--sep)),
-        calc(-30px * var(--sep))
-      );
-      opacity: calc(0.08 + (0.92 * var(--sep)));
-      z-index: 2;
-      overflow: hidden;
+      background: linear-gradient(150deg, #0e1a2b 0%, #09101d 55%, #161c28 100%);
+      border: 1px solid rgba(59, 130, 246, 0.45);
+      --layer-glow: rgba(59, 130, 246, 0.3);
     }
 
-    .layer-turnstile .layer-tag {
-      background: rgba(245, 158, 11, 0.2);
-      border: 1px solid #f59e0b;
-      color: #fbbf24;
-    }
-
-    /* Layer 4: Cloudflare D1 Edge Node */
+    /* Layer 4: D1 Edge Node */
     .layer-d1 {
-      background: rgba(18, 12, 28, 0.88);
-      border: 1px solid rgba(139, 92, 246, 0.5);
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85), 0 0 30px rgba(139, 92, 246, 0.18);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      padding: 24px;
+      background: linear-gradient(150deg, #1a122e 0%, #0d0918 55%, #161026 100%);
+      border: 1px solid rgba(139, 92, 246, 0.45);
+      --layer-glow: rgba(139, 92, 246, 0.3);
+    }
+
+    /* Action bar inside each card */
+    .layer-action-bar {
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transform: translate3d(
-        calc(85px * var(--sep)),
-        calc(85px * var(--sep)),
-        calc(-110px * var(--sep))
-      );
-      opacity: calc(0.08 + (0.92 * var(--sep)));
-      z-index: 1;
-      overflow: hidden;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .layer-btn-action {
+      flex: 1;
+      height: 32px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .layer-btn-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-1px);
+    }
+    .layer-btn-action.btn-accent {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.5);
+      color: #93c5fd;
+    }
+    .layer-btn-action.btn-emerald {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #6ee7b7;
+    }
+    .layer-btn-action.btn-crimson {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
     }
 
-    .layer-d1 .layer-tag {
-      background: rgba(139, 92, 246, 0.2);
-      border: 1px solid #8b5cf6;
-      color: #a78bfa;
-    }
-
-    /* Focused Layer Zoom Highlight */
-    .ticket-layer.focused-layer {
-      transform: translate3d(0px, 0px, 170px) scale(1.05) !important;
-      z-index: 30 !important;
-      opacity: 1 !important;
-      box-shadow: 0 35px 80px rgba(0,0,0,0.95), 0 0 50px rgba(59, 130, 246, 0.45) !important;
-    }
-
-    .pass-3d-wrap.has-focused .ticket-layer:not(.focused-layer) {
-      opacity: 0.3 !important;
-      filter: blur(1.5px);
-    }
-
-    /* Pass Details inside Front Card */
+    /* Front Card Pass Elements */
     .pass-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
     }
-
     .pass-event-title {
       font-size: 15px;
       font-weight: 800;
       letter-spacing: -0.3px;
       color: #fff;
     }
-
     .pass-event-date {
       font-size: 11px;
       color: var(--text-secondary);
       margin-top: 2px;
     }
-
     .pass-tier-badge {
       display: inline-flex;
       align-items: center;
@@ -686,47 +683,115 @@
       text-transform: uppercase;
       font-family: 'JetBrains Mono', monospace;
     }
-
     .pass-qr-box {
       background: #ffffff;
-      padding: 12px;
+      padding: 10px;
       border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 170px;
-      height: 170px;
-      margin: 12px auto;
+      width: 155px;
+      height: 155px;
+      margin: 10px auto;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
-
     .pass-code-label {
       text-align: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       letter-spacing: 2px;
       color: #fff;
     }
-
     .pass-footer {
       border-top: 1px dashed rgba(255, 255, 255, 0.12);
-      padding-top: 14px;
+      padding-top: 12px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
     }
-
     .attendee-name {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       color: #fff;
     }
-
     .attendee-sub {
       font-size: 11px;
       color: var(--text-secondary);
       margin-top: 2px;
+    }
+
+    /* 4-LAYER PANORAMIC BLUEPRINT GRID */
+    .arch-pipeline-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-top: 36px;
+    }
+    @media (max-width: 990px) {
+      .arch-pipeline-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .arch-connector {
+        transform: rotate(90deg);
+        margin: 4px auto;
+      }
+    }
+    .arch-node-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.25s;
+    }
+    .arch-node-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+    }
+    .arch-node-badge {
+      display: inline-flex;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid;
+    }
+    .arch-node-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .arch-node-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+    .arch-node-meta {
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      padding-top: 12px;
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    .arch-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-size: 18px;
+      opacity: 0.6;
     }
 
     /* SECTION STANDARDS */
@@ -1212,7 +1277,7 @@
       </div>
     </div>
 
-    <!-- 3D INTERACTIVE TICKET PASS (CAD-Grade Exploded Architecture) -->
+    <!-- 4-LAYER INTERACTIVE TICKET PASS STUDIO -->
     <div class="pass-stage" id="pass">
       
       <!-- Interactive Controls Panel -->
@@ -1234,7 +1299,7 @@
             <span>Assembled Pass</span>
           </button>
           
-          <button id="btn-view-exploded" class="pass-control-btn" onclick="togglePassView('exploded')">
+          <button id="btn-view-deconstructed" class="pass-control-btn" onclick="togglePassView('deconstructed')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
               <polyline points="2 17 12 22 22 17"></polyline>
@@ -1242,209 +1307,380 @@
             </svg>
             <span>Deconstruct 4 Layers</span>
           </button>
-
-          <!-- Interactive 3D Depth Slider -->
-          <div class="depth-slider-box" id="depth-slider-box" style="opacity: 0.4;">
-            <span style="font-weight: 600;">Separation:</span>
-            <input type="range" id="explode-slider" min="0" max="100" value="0" oninput="setExplosionDepth(this.value)" />
-            <span id="explode-depth-val" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #fff;">0%</span>
-          </div>
         </div>
 
-        <!-- Layer Inspector Pills -->
-        <div class="layer-inspector-bar" id="layer-inspector-bar" style="opacity: 0.4;">
-          <button class="layer-pill-btn active" id="pill-all" onclick="focusLayer('all')">All 4 Layers</button>
-          <button class="layer-pill-btn" id="pill-front" onclick="focusLayer('front')">01 Visual Pass</button>
-          <button class="layer-pill-btn" id="pill-crypto" onclick="focusLayer('crypto')">02 Crypto HMAC</button>
-          <button class="layer-pill-btn" id="pill-turnstile" onclick="focusLayer('turnstile')">03 Turnstile</button>
-          <button class="layer-pill-btn" id="pill-d1" onclick="focusLayer('d1')">04 D1 SQLite</button>
+        <!-- Layer Inspector Pills (Brings any layer into 100% full view) -->
+        <div class="layer-inspector-bar" id="layer-inspector-bar">
+          <button class="layer-pill-btn active" id="pill-front" onclick="focusLayer('front')">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #fbbf24;"></span>
+            <span>01 Pass</span>
+          </button>
+          <button class="layer-pill-btn" id="pill-crypto" onclick="focusLayer('crypto')">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399;"></span>
+            <span>02 Crypto HMAC</span>
+          </button>
+          <button class="layer-pill-btn" id="pill-turnstile" onclick="focusLayer('turnstile')">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #60a5fa;"></span>
+            <span>03 Turnstile</span>
+          </button>
+          <button class="layer-pill-btn" id="pill-d1" onclick="focusLayer('d1')">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #a78bfa;"></span>
+            <span>04 D1 SQLite</span>
+          </button>
         </div>
 
       </div>
 
-      <!-- 3D Card Stack -->
-      <div class="pass-3d-wrap" id="pass-3d-card">
+      <!-- Pass Deck Stack -->
+      <div class="pass-deck-wrap mode-assembled has-focus" id="pass-deck-wrap">
         
         <!-- LAYER 1: FRONT VISUAL METALLIC CARD -->
-        <div class="ticket-layer layer-front" id="layer-front" onclick="focusLayer('front')">
-          <div class="layer-tag">01 • VISUAL PASS</div>
+        <div class="ticket-layer layer-front is-focused" id="layer-front" onclick="focusLayer('front')">
+          
+          <!-- Inner Front Face -->
+          <div id="pass-card-front-content" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+            <!-- Card Banner -->
+            <div class="layer-card-banner">
+              <div class="layer-card-title" style="color: #fbbf24;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
+                <span>01 • Visual Hologram Pass</span>
+              </div>
+              <span class="layer-card-pill" style="background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4);">CLIENT UI</span>
+            </div>
 
-          <div class="pass-header">
+            <div class="pass-header">
+              <div>
+                <div class="pass-event-title" id="pass-title-display">SUNBURN GOA 2026</div>
+                <div class="pass-event-date">Dec 27–30 • Vagator Beach</div>
+              </div>
+              <div class="pass-tier-badge" id="pass-tier-badge-display">VIP • 4-DAY</div>
+            </div>
+
+            <!-- Dynamic Crisp SVG QR Code -->
+            <div class="pass-qr-box">
+              <svg id="pass-qr-svg" width="135" height="135" viewBox="0 0 29 29" shape-rendering="crispEdges">
+                <rect x="0" y="0" width="29" height="29" fill="#ffffff"/>
+                <rect x="2" y="2" width="7" height="7" fill="#111827"/>
+                <rect x="3" y="3" width="5" height="5" fill="#ffffff"/>
+                <rect x="4" y="4" width="3" height="3" fill="#111827"/>
+                <rect x="20" y="2" width="7" height="7" fill="#111827"/>
+                <rect x="21" y="3" width="5" height="5" fill="#ffffff"/>
+                <rect x="22" y="4" width="3" height="3" fill="#111827"/>
+                <rect x="2" y="20" width="7" height="7" fill="#111827"/>
+                <rect x="3" y="21" width="5" height="5" fill="#ffffff"/>
+                <rect x="4" y="22" width="3" height="3" fill="#111827"/>
+                <rect x="11" y="2" width="2" height="2" fill="#111827"/>
+                <rect x="15" y="2" width="3" height="2" fill="#111827"/>
+                <rect x="10" y="5" width="2" height="3" fill="#111827"/>
+                <rect x="14" y="6" width="3" height="2" fill="#111827"/>
+                <rect x="11" y="10" width="3" height="3" fill="#111827"/>
+                <rect x="16" y="11" width="2" height="4" fill="#111827"/>
+                <rect x="4" y="11" width="3" height="2" fill="#111827"/>
+                <rect x="2" y="15" width="2" height="3" fill="#111827"/>
+                <rect x="6" y="14" width="3" height="2" fill="#111827"/>
+                <rect x="11" y="16" width="4" height="2" fill="#111827"/>
+                <rect x="18" y="16" width="3" height="3" fill="#111827"/>
+                <rect x="23" y="11" width="4" height="2" fill="#111827"/>
+                <rect x="21" y="15" width="3" height="3" fill="#111827"/>
+                <rect x="11" y="21" width="2" height="3" fill="#111827"/>
+                <rect x="15" y="22" width="3" height="2" fill="#111827"/>
+                <rect x="20" y="22" width="2" height="4" fill="#111827"/>
+                <rect x="24" y="20" width="3" height="3" fill="#111827"/>
+              </svg>
+            </div>
+
             <div>
-              <div class="pass-event-title" id="pass-title-display">SUNBURN GOA 2026</div>
-              <div class="pass-event-date">Dec 27–30 • Vagator Beach</div>
+              <div class="pass-code-label" id="pass-code-display">VIP-884920</div>
+              <div style="text-align: center; font-size: 10px; color: var(--text-tertiary); margin-top: 2px; font-family: 'JetBrains Mono', monospace;">
+                TAP CARD OR PILL TO INSPECT LOWER LAYERS
+              </div>
             </div>
-            <div class="pass-tier-badge" id="pass-tier-badge-display">VIP • 4-DAY</div>
-          </div>
 
-          <!-- Dynamic High-DPI Crisp SVG QR Code -->
-          <div class="pass-qr-box">
-            <svg id="pass-qr-svg" width="146" height="146" viewBox="0 0 29 29" shape-rendering="crispEdges">
-              <rect x="0" y="0" width="29" height="29" fill="#ffffff"/>
-              <rect x="2" y="2" width="7" height="7" fill="#111827"/>
-              <rect x="3" y="3" width="5" height="5" fill="#ffffff"/>
-              <rect x="4" y="4" width="3" height="3" fill="#111827"/>
-              <rect x="20" y="2" width="7" height="7" fill="#111827"/>
-              <rect x="21" y="3" width="5" height="5" fill="#ffffff"/>
-              <rect x="22" y="4" width="3" height="3" fill="#111827"/>
-              <rect x="2" y="20" width="7" height="7" fill="#111827"/>
-              <rect x="3" y="21" width="5" height="5" fill="#ffffff"/>
-              <rect x="4" y="22" width="3" height="3" fill="#111827"/>
-              <rect x="11" y="2" width="2" height="2" fill="#111827"/>
-              <rect x="15" y="2" width="3" height="2" fill="#111827"/>
-              <rect x="10" y="5" width="2" height="3" fill="#111827"/>
-              <rect x="14" y="6" width="3" height="2" fill="#111827"/>
-              <rect x="11" y="10" width="3" height="3" fill="#111827"/>
-              <rect x="16" y="11" width="2" height="4" fill="#111827"/>
-              <rect x="4" y="11" width="3" height="2" fill="#111827"/>
-              <rect x="2" y="15" width="2" height="3" fill="#111827"/>
-              <rect x="6" y="14" width="3" height="2" fill="#111827"/>
-              <rect x="11" y="16" width="4" height="2" fill="#111827"/>
-              <rect x="18" y="16" width="3" height="3" fill="#111827"/>
-              <rect x="23" y="11" width="4" height="2" fill="#111827"/>
-              <rect x="21" y="15" width="3" height="3" fill="#111827"/>
-              <rect x="11" y="21" width="2" height="3" fill="#111827"/>
-              <rect x="15" y="22" width="3" height="2" fill="#111827"/>
-              <rect x="20" y="22" width="2" height="4" fill="#111827"/>
-              <rect x="24" y="20" width="3" height="3" fill="#111827"/>
-            </svg>
-          </div>
+            <div class="pass-footer">
+              <div>
+                <div class="attendee-name" id="pass-attendee-name">Raghav Sharma</div>
+                <div class="attendee-sub" id="pass-attendee-sub">Zone A • Turnstiles 1–4</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">GATE STATUS</div>
+                <div style="font-size: 12px; font-weight: 700; color: #10b981; font-family: 'JetBrains Mono', monospace;">ACTIVE</div>
+              </div>
+            </div>
 
-          <div>
-            <div class="pass-code-label" id="pass-code-display">VIP-884920</div>
-            <div style="text-align: center; font-size: 10.5px; color: var(--text-tertiary); margin-top: 3px; font-family: 'JetBrains Mono', monospace;">
-              HMAC-SHA256 • SECURE GATE ENCRYPTED
+            <!-- Interactive Layer Action Bar -->
+            <div class="layer-action-bar">
+              <button class="layer-btn-action btn-accent" onclick="event.stopPropagation(); randomizePass();">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                <span>Re-Issue / Randomize</span>
+              </button>
+              <button class="layer-btn-action" id="btn-flip-pass" onclick="event.stopPropagation(); flipPassCard();">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+                <span>Flip Card</span>
+              </button>
             </div>
           </div>
 
-          <div class="pass-footer">
-            <div>
-              <div class="attendee-name" id="pass-attendee-name">Raghav Sharma</div>
-              <div class="attendee-sub" id="pass-attendee-sub">Zone A • Turnstile Turn 1–4</div>
+          <!-- Inner Back Face (Shown when flipped) -->
+          <div id="pass-card-back-content" style="display: none; flex-direction: column; justify-content: space-between; height: 100%;">
+            <div class="layer-card-banner">
+              <div class="layer-card-title" style="color: #fbbf24;">
+                <span>SECURITY & TURNSTILE RULES</span>
+              </div>
+              <span class="layer-card-pill" style="background: rgba(245,158,11,0.2); color: #fbbf24;">REVERSE</span>
             </div>
-            <div style="text-align: right;">
-              <div style="font-size: 11px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">GATE SCAN</div>
-              <div style="font-size: 13px; font-weight: 700; color: #10b981; font-family: 'JetBrains Mono', monospace;">READY</div>
+
+            <!-- Barcode Graphic -->
+            <div style="background: #ffffff; padding: 12px; border-radius: 10px; margin: 10px 0;">
+              <div style="height: 50px; background: repeating-linear-gradient(90deg, #000 0px, #000 2px, transparent 2px, transparent 5px, #000 5px, #000 9px, transparent 9px, transparent 11px, #000 11px, #000 15px); width: 100%;"></div>
+              <div style="text-align: center; color: #000; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; margin-top: 4px;">*884920-FESTIVAL-PASS*</div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; font-size: 11px; color: var(--text-secondary); line-height: 1.5;">
+              <div style="color: #fff; font-weight: 700; margin-bottom: 4px;">Gate Entry Guidelines:</div>
+              • Valid for 1 check-in per day at designated turnstiles.<br/>
+              • Re-entry requires security wristband scan.<br/>
+              • Dynamic HMAC QR prevents screenshots & scalping.
+            </div>
+
+            <div class="layer-action-bar">
+              <button class="layer-btn-action btn-accent" style="width: 100%;" onclick="event.stopPropagation(); flipPassCard();">
+                <span>↺ Return to Pass Front</span>
+              </button>
             </div>
           </div>
+
         </div>
 
         <!-- LAYER 2: CRYPTOGRAPHIC HMAC ENGINE -->
         <div class="ticket-layer layer-crypto" id="layer-crypto" onclick="focusLayer('crypto')">
-          <div class="layer-tag">02 • HMAC SHA-256 ENGINE</div>
-          
-          <div class="crypto-laser-beam"></div>
+          <div class="crypto-laser-line" id="crypto-laser"></div>
 
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; color:#34d399; display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-              CRYPTO INTEGRITY
+          <div>
+            <div class="layer-card-banner">
+              <div class="layer-card-title" style="color: #34d399;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>02 • Cryptographic HMAC Engine</span>
+              </div>
+              <span class="layer-card-pill" style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4);">SHA-256</span>
             </div>
-            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:rgba(16,185,129,0.18); color:#6ee7b7; padding:2px 7px; border-radius:4px;">0.8ms MATCH</span>
+
+            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 12px;">
+              Every ticket is sealed with a salted HMAC-SHA256 digest. Scanners authenticate passes offline or online in under 0.5ms.
+            </p>
+
+            <!-- Dynamic Hash Box -->
+            <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+              <div style="color: #6ee7b7; font-size: 10px; margin-bottom: 4px;">// ACTIVE TICKET PAYLOAD</div>
+              <div id="crypto-input-val" style="color: #fff; font-size: 11px; word-break: break-all;">VIP-884920:cf_edge_turnstile_v1</div>
+              <div style="color: #6ee7b7; font-size: 10px; margin-top: 8px; margin-bottom: 4px;">// HMAC SHA-256 DIGEST</div>
+              <div id="crypto-hash-val" style="color: #34d399; font-size: 10.5px; word-break: break-all;">9f8a4e21c83b702f9a14d5e890b714f3c2...</div>
+            </div>
+
+            <!-- Dynamic Verification Result -->
+            <div id="crypto-result-box" style="margin-top: 10px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 9px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+              <div style="color: #34d399; font-weight: 700;">✓ GATE SCAN READY</div>
+              <div style="font-size: 10.5px; color: var(--text-secondary); margin-top: 2px;">
+                Click below to simulate real-time edge cryptographic verification.
+              </div>
+            </div>
           </div>
 
-          <div style="background:rgba(0,0,0,0.5); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:12px; font-family:'JetBrains Mono', monospace; font-size:11px; color:#d1fae5; line-height:1.7;">
-            <div style="color:#6ee7b7; font-size:10px; margin-bottom:4px;">// HMAC SHA-256 DIGEST</div>
-            <div style="word-break:break-all; color:#a7f3d0; font-size:10.5px;">9f8a4e21c83b702f9a14d5e890b714f3c2...</div>
-            <div style="margin-top:6px; display:flex; justify-content:space-between; font-size:10px; color:#9ca3af;">
-              <span>SALT: cf_workers_entropy</span>
-              <span style="color:#34d399;">✓ SIGNATURE VERIFIED</span>
+          <!-- Interactive Action Buttons -->
+          <div>
+            <div class="layer-action-bar">
+              <button class="layer-btn-action btn-emerald" onclick="event.stopPropagation(); testValidCryptoScan();">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>⚡ Simulate Valid Scan</span>
+              </button>
+              <button class="layer-btn-action btn-crimson" onclick="event.stopPropagation(); testTamperedCryptoScan();">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                <span>⚠️ Test Fraud Pass</span>
+              </button>
             </div>
-          </div>
-
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:8px 10px;">
-              <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase;">Replay Guard</div>
-              <div style="font-size:12px; font-weight:700; color:#fff; font-family:'JetBrains Mono', monospace;">Anti-Copy 100%</div>
-            </div>
-            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:8px 10px;">
-              <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase;">Time Drift</div>
-              <div style="font-size:12px; font-weight:700; color:#34d399; font-family:'JetBrains Mono', monospace;">&lt; 500ms</div>
-            </div>
-          </div>
-
-          <div style="border-top:1px dashed rgba(16,185,129,0.25); padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-secondary);">
-            <span>HMAC Hash Authentication</span>
-            <span style="color:#34d399; font-weight:700; font-family:'JetBrains Mono', monospace;">EDGE VALIDATED</span>
           </div>
         </div>
 
-        <!-- LAYER 3: MULTI-DAY TURNSTILE CORE -->
+        <!-- LAYER 3: MULTI-DAY TURNSTILE CONTROLLER -->
         <div class="ticket-layer layer-turnstile" id="layer-turnstile" onclick="focusLayer('turnstile')">
-          <div class="layer-tag">03 • TURNSTILE ACCESS MATRIX</div>
-
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; color:#fbbf24; display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              TURNSTILE CONTROLLER
+          <div>
+            <div class="layer-card-banner">
+              <div class="layer-card-title" style="color: #60a5fa;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>03 • Multi-Day Turnstile Core</span>
+              </div>
+              <span class="layer-card-pill" style="background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4);">GATE LOGIC</span>
             </div>
-            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:rgba(245,158,11,0.18); color:#fde68a; padding:2px 7px; border-radius:4px;">ANTI-PASSBACK</span>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="font-size: 11.5px; color: var(--text-secondary);">Turnstile Gate A-04</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fff;">
+                Admitted: <strong id="turnstile-counter-val" style="color: #60a5fa;">8,421</strong>
+              </span>
+            </div>
+
+            <!-- Multi-Day Clearance Slots -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 11px;">
+                <span style="font-weight: 700; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">DAY 1 (DEC 27)</span>
+                <span style="color: #34d399; font-weight: 700; font-family: 'JetBrains Mono', monospace;">✓ ADMITTED 20:14</span>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 11px;">
+                <span style="font-weight: 700; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">DAY 2 (DEC 28)</span>
+                <span style="color: #34d399; font-weight: 700; font-family: 'JetBrains Mono', monospace;">✓ ADMITTED 19:42</span>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(59,130,246,0.15); border: 1px solid #3b82f6; border-radius: 8px; font-size: 11px;">
+                <span style="font-weight: 700; color: #60a5fa; font-family: 'JetBrains Mono', monospace;">DAY 3 (DEC 29)</span>
+                <span id="turnstile-day3-status" style="color: #60a5fa; font-weight: 700; font-family: 'JetBrains Mono', monospace;">● TODAY • READY FOR SCAN</span>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; font-size: 11px;">
+                <span style="font-weight: 600; color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace;">DAY 4 (DEC 30)</span>
+                <span style="color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace;">🔒 LOCKED (TOMORROW)</span>
+              </div>
+            </div>
+
+            <!-- Dynamic Alert Box -->
+            <div id="turnstile-alert-box" style="display: none; margin-top: 10px; padding: 9px 12px; border-radius: 8px; font-size: 10.5px; font-family: 'JetBrains Mono', monospace; line-height: 1.45;"></div>
           </div>
 
-          <!-- Multi-Day Clearance Grid -->
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 10px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); border-radius:8px; font-size:11px;">
-              <span style="font-weight:700; color:#fbbf24; font-family:'JetBrains Mono', monospace;">DAY 1 (DEC 27)</span>
-              <span style="color:#34d399; font-weight:700; font-family:'JetBrains Mono', monospace;">✓ ADMITTED 20:14</span>
+          <!-- Interactive Action Buttons -->
+          <div>
+            <div class="layer-action-bar">
+              <button class="layer-btn-action btn-accent" id="btn-turnstile-admit" onclick="event.stopPropagation(); testTurnstileScan();">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Check-in Day 3 (Gate 04)</span>
+              </button>
+              <button class="layer-btn-action" onclick="event.stopPropagation(); resetTurnstileState();">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                <span>Reset Gate</span>
+              </button>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 10px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); border-radius:8px; font-size:11px;">
-              <span style="font-weight:700; color:#fbbf24; font-family:'JetBrains Mono', monospace;">DAY 2 (DEC 28)</span>
-              <span style="color:#34d399; font-weight:700; font-family:'JetBrains Mono', monospace;">✓ ADMITTED 19:42</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 10px; background:rgba(59,130,246,0.15); border:1px solid #3b82f6; border-radius:8px; font-size:11px;">
-              <span style="font-weight:700; color:#60a5fa; font-family:'JetBrains Mono', monospace;">DAY 3 (DEC 29)</span>
-              <span style="color:#fff; font-weight:700; font-family:'JetBrains Mono', monospace;">● TODAY • READY</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 10px; background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.15); border-radius:8px; font-size:11px;">
-              <span style="font-weight:600; color:var(--text-tertiary); font-family:'JetBrains Mono', monospace;">DAY 4 (DEC 30)</span>
-              <span style="color:var(--text-tertiary); font-family:'JetBrains Mono', monospace;">🔒 LOCKED (TOMORROW)</span>
-            </div>
-          </div>
-
-          <div style="border-top:1px dashed rgba(245,158,11,0.25); padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-secondary);">
-            <span>Gate Re-Arm Policy</span>
-            <span style="color:#fbbf24; font-weight:700; font-family:'JetBrains Mono', monospace;">DAILY MIDNIGHT</span>
           </div>
         </div>
 
         <!-- LAYER 4: CLOUDFLARE D1 SQLITE EDGE NODE -->
         <div class="ticket-layer layer-d1" id="layer-d1" onclick="focusLayer('d1')">
-          <div class="layer-tag">04 • CLOUDFLARE D1 SQLITE</div>
-
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; color:#a78bfa; display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-              EDGE SQLITE ENGINE
+          <div>
+            <div class="layer-card-banner">
+              <div class="layer-card-title" style="color: #a78bfa;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                <span>04 • Cloudflare D1 Edge Node</span>
+              </div>
+              <span class="layer-card-pill" style="background: rgba(139,92,246,0.2); color: #a78bfa; border: 1px solid rgba(139,92,246,0.4);">EDGE SQLITE</span>
             </div>
-            <span style="font-size:10px; font-family:'JetBrains Mono', monospace; background:rgba(139,92,246,0.18); color:#c4b5fd; padding:2px 7px; border-radius:4px;">1.8ms LATENCY</span>
+
+            <!-- Terminal Output Window -->
+            <div id="d1-terminal-out" style="background: #090710; border: 1px solid rgba(139,92,246,0.3); border-radius: 10px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #e9d5ff; line-height: 1.55; min-height: 125px;">
+              <div style="color: #a78bfa;">// D1 PREPARED STATEMENT</div>
+              <span style="color: #f472b6;">SELECT</span> id, tier, attendee_name, day3_admitted<br/>
+              <span style="color: #f472b6;">FROM</span> passes <span style="color: #f472b6;">WHERE</span> id = <span style="color: #67e8f9;">'VIP-884920'</span>;<br/>
+              <span style="color: #34d399; margin-top: 5px; display: inline-block;">↳ 1 ROW RETURNED (0.0012s)</span><br/>
+              <span style="color: #cbd5e1;">{"id":"VIP-884920","tier":"VIP","status":"ACTIVE"}</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+              <div style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 8px 10px;">
+                <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Edge Replicas</div>
+                <div style="font-size: 12px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;">310 Cities</div>
+              </div>
+              <div style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 8px 10px;">
+                <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Cold Starts</div>
+                <div style="font-size: 12px; font-weight: 700; color: #a78bfa; font-family: 'JetBrains Mono', monospace;">0.00ms</div>
+              </div>
+            </div>
           </div>
 
-          <!-- Terminal Style Query Preview -->
-          <div style="background:#09070f; border:1px solid rgba(139,92,246,0.3); border-radius:10px; padding:12px; font-family:'JetBrains Mono', monospace; font-size:10.5px; color:#e9d5ff; line-height:1.6;">
-            <div style="color:#a78bfa; font-size:9.5px; margin-bottom:4px;">// D1 PREPARED STATEMENT</div>
-            <span style="color:#f472b6;">SELECT</span> status, allowed_days<br/>
-            <span style="color:#f472b6;">FROM</span> tickets<br/>
-            <span style="color:#f472b6;">WHERE</span> id = <span style="color:#67e8f9;">'VIP-884920'</span><br/>
-            <span style="color:#34d399; margin-top:4px; display:inline-block;">↳ 1 ROW RETURNED (0.0018s)</span>
-          </div>
-
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <div style="background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:8px 10px;">
-              <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase;">Edge Replicas</div>
-              <div style="font-size:12px; font-weight:700; color:#fff; font-family:'JetBrains Mono', monospace;">310 Cities</div>
+          <!-- Interactive Query Runner Buttons -->
+          <div>
+            <div style="font-size: 10.5px; color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; margin-bottom: 5px;">
+              TEST LIVE PREPARED STATEMENTS:
             </div>
-            <div style="background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:8px 10px;">
-              <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase;">Cold Starts</div>
-              <div style="font-size:12px; font-weight:700; color:#a78bfa; font-family:'JetBrains Mono', monospace;">0.00ms</div>
+            <div class="layer-action-bar">
+              <button class="layer-btn-action btn-accent" onclick="event.stopPropagation(); runD1Query('select');">
+                <span>SELECT</span>
+              </button>
+              <button class="layer-btn-action" onclick="event.stopPropagation(); runD1Query('update');">
+                <span>UPDATE</span>
+              </button>
+              <button class="layer-btn-action" onclick="event.stopPropagation(); runD1Query('ping');">
+                <span>BENCHMARK</span>
+              </button>
             </div>
-          </div>
-
-          <div style="border-top:1px dashed rgba(139,92,246,0.25); padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-secondary);">
-            <span>Serverless Edge Replica</span>
-            <span style="color:#a78bfa; font-weight:700; font-family:'JetBrains Mono', monospace;">D1 ACTIVE</span>
           </div>
         </div>
 
+      </div>
+    </div>
+  </section>
+
+  <!-- 4-LAYER PANORAMIC ARCHITECTURE MATRIX -->
+  <section class="section-wrap" id="architecture" style="padding-top: 50px;">
+    <div class="section-header">
+      <div class="section-pill">4-Layer Security Pipeline</div>
+      <h2 class="section-title">From Mobile Screen to Global SQLite</h2>
+      <p class="section-desc">Every festival pass operates on an unbreachable 4-layer stack. Inspect the entire data flow side-by-side with zero bottlenecks.</p>
+    </div>
+
+    <div class="arch-pipeline-grid">
+      <!-- Col 1: Visual Hologram Pass -->
+      <div class="arch-node-card">
+        <div class="arch-node-badge" style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.1);">LAYER 01</div>
+        <div class="arch-node-title">Visual Holographic Pass</div>
+        <div class="arch-node-desc">Client-side dynamic render. High-contrast vector QR code, micro-animating holographic shimmer, and offline Apple Wallet & Google Wallet pass payload.</div>
+        <div class="arch-node-meta">
+          <span>Payload Format</span>
+          <strong style="color: #fbbf24;">Dynamic SVG QR</strong>
+        </div>
+      </div>
+
+      <!-- Connector Arrow -->
+      <div class="arch-connector">
+        <div>➔</div>
+      </div>
+
+      <!-- Col 2: HMAC SHA-256 Engine -->
+      <div class="arch-node-card">
+        <div class="arch-node-badge" style="color: #34d399; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.1);">LAYER 02</div>
+        <div class="arch-node-title">HMAC-SHA256 Cryptography</div>
+        <div class="arch-node-desc">Gate scanner executes sub-1ms cryptographic verification against the edge secret salt. Anti-tamper digest prevents screenshots, photocopies, and replay attacks.</div>
+        <div class="arch-node-meta">
+          <span>Verify Latency</span>
+          <strong style="color: #34d399;">&lt; 0.5ms Match</strong>
+        </div>
+      </div>
+
+      <!-- Connector Arrow -->
+      <div class="arch-connector">
+        <div>➔</div>
+      </div>
+
+      <!-- Col 3: Multi-Day Turnstile Controller -->
+      <div class="arch-node-card">
+        <div class="arch-node-badge" style="color: #60a5fa; border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.1);">LAYER 03</div>
+        <div class="arch-node-title">Multi-Day Turnstile Matrix</div>
+        <div class="arch-node-desc">Enforces discrete Day 1, Day 2, Day 3 check-in rights with strict anti-passback guard. Automatic midnight re-arm prevents unauthorized repeat entries.</div>
+        <div class="arch-node-meta">
+          <span>Passback Lock</span>
+          <strong style="color: #60a5fa;">Strict 1-Min Cooldown</strong>
+        </div>
+      </div>
+
+      <!-- Connector Arrow -->
+      <div class="arch-connector">
+        <div>➔</div>
+      </div>
+
+      <!-- Col 4: Cloudflare D1 Edge Node -->
+      <div class="arch-node-card">
+        <div class="arch-node-badge" style="color: #a78bfa; border-color: rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.1);">LAYER 04</div>
+        <div class="arch-node-title">Cloudflare D1 Serverless SQLite</div>
+        <div class="arch-node-desc">Scans are committed to serverless SQLite across 310 global edge cities. Zero cold starts, zero connection pools, and automatic replication.</div>
+        <div class="arch-node-meta">
+          <span>Global PoPs</span>
+          <strong style="color: #a78bfa;">310 Edge Cities</strong>
+        </div>
       </div>
     </div>
   </section>
@@ -1708,113 +1944,60 @@
       }
     }
 
-    // 3D Pass Tilt, Separation & Layer Inspection
-    let currentFocusedLayer = null;
+    // ACTIVE PASS INTERACTIVE ENGINE
+    let currentPassId = "VIP-884920";
+    let currentAttendee = "Raghav Sharma";
+    let currentTier = "vip";
+    let isFlipped = false;
+    let day3Admitted = false;
+    let turnstileCounter = 8421;
+    let currentMode = "assembled";
+    let currentFocusedLayer = "front";
 
     function togglePassView(mode) {
-      const card = document.getElementById("pass-3d-card");
+      currentMode = mode;
+      const wrap = document.getElementById("pass-deck-wrap");
       const btnAss = document.getElementById("btn-view-assembled");
-      const btnExp = document.getElementById("btn-view-exploded");
-      const sliderBox = document.getElementById("depth-slider-box");
-      const inspectorBar = document.getElementById("layer-inspector-bar");
-      const slider = document.getElementById("explode-slider");
-      const depthVal = document.getElementById("explode-depth-val");
+      const btnDec = document.getElementById("btn-view-deconstructed");
 
-      clearLayerFocus();
-
-      if (mode === 'exploded') {
-        card.classList.add("exploded");
-        card.style.setProperty('--sep', '1');
-        if (slider) slider.value = "100";
-        if (depthVal) depthVal.textContent = "100%";
-        btnExp.classList.add("active");
+      if (mode === 'deconstructed') {
+        wrap.classList.add("mode-deconstructed");
+        wrap.classList.remove("mode-assembled");
+        btnDec.classList.add("active");
         btnAss.classList.remove("active");
-        if (sliderBox) sliderBox.style.opacity = "1";
-        if (inspectorBar) inspectorBar.style.opacity = "1";
+        focusLayer(currentFocusedLayer || 'front');
       } else {
-        card.classList.remove("exploded");
-        card.style.setProperty('--sep', '0');
-        if (slider) slider.value = "0";
-        if (depthVal) depthVal.textContent = "0%";
+        wrap.classList.remove("mode-deconstructed");
+        wrap.classList.add("mode-assembled");
         btnAss.classList.add("active");
-        btnExp.classList.remove("active");
-        if (sliderBox) sliderBox.style.opacity = "0.4";
-        if (inspectorBar) inspectorBar.style.opacity = "0.4";
-      }
-    }
-
-    function setExplosionDepth(val) {
-      const card = document.getElementById("pass-3d-card");
-      const btnAss = document.getElementById("btn-view-assembled");
-      const btnExp = document.getElementById("btn-view-exploded");
-      const sliderBox = document.getElementById("depth-slider-box");
-      const inspectorBar = document.getElementById("layer-inspector-bar");
-      const depthVal = document.getElementById("explode-depth-val");
-      
-      const pct = parseInt(val, 10);
-      const sep = pct / 100;
-
-      card.style.setProperty('--sep', sep.toString());
-      if (depthVal) depthVal.textContent = `${pct}%`;
-
-      if (pct > 10) {
-        card.classList.add("exploded");
-        btnExp.classList.add("active");
-        btnAss.classList.remove("active");
-        if (sliderBox) sliderBox.style.opacity = "1";
-        if (inspectorBar) inspectorBar.style.opacity = "1";
-      } else {
-        card.classList.remove("exploded");
-        btnAss.classList.add("active");
-        btnExp.classList.remove("active");
-        if (sliderBox) sliderBox.style.opacity = "0.4";
-        if (inspectorBar) inspectorBar.style.opacity = "0.4";
-        clearLayerFocus();
+        btnDec.classList.remove("active");
+        focusLayer('front');
       }
     }
 
     function focusLayer(layerId) {
-      const card = document.getElementById("pass-3d-card");
-      if (!card.classList.contains("exploded")) {
-        togglePassView('exploded');
-      }
+      currentFocusedLayer = layerId;
+      const wrap = document.getElementById("pass-deck-wrap");
 
-      document.querySelectorAll('.layer-pill-btn').forEach(btn => btn.classList.remove('active'));
-      const activePill = document.getElementById(`pill-${layerId}`);
-      if (activePill) activePill.classList.add('active');
+      document.querySelectorAll(".layer-pill-btn").forEach(btn => btn.classList.remove("active"));
+      const pill = document.getElementById(`pill-${layerId}`);
+      if (pill) pill.classList.add("active");
 
-      if (layerId === 'all') {
-        clearLayerFocus();
-        return;
-      }
-
-      const allLayers = document.querySelectorAll('.ticket-layer');
-      allLayers.forEach(l => l.classList.remove('focused-layer'));
-      card.classList.add('has-focused');
-
+      document.querySelectorAll(".ticket-layer").forEach(layer => layer.classList.remove("is-focused"));
       const target = document.getElementById(`layer-${layerId}`);
       if (target) {
-        target.classList.add('focused-layer');
-        currentFocusedLayer = layerId;
+        target.classList.add("is-focused");
+        wrap.classList.add("has-focus");
       }
-    }
-
-    function clearLayerFocus() {
-      const card = document.getElementById("pass-3d-card");
-      if (card) card.classList.remove('has-focused');
-      document.querySelectorAll('.ticket-layer').forEach(l => l.classList.remove('focused-layer'));
-      document.querySelectorAll('.layer-pill-btn').forEach(btn => btn.classList.remove('active'));
-      const allPill = document.getElementById('pill-all');
-      if (allPill) allPill.classList.add('active');
-      currentFocusedLayer = null;
     }
 
     // Pass Tier Switcher
     function switchTicketTier(tier) {
+      currentTier = tier;
       const tabVip = document.getElementById("tab-vip");
       const tabGen = document.getElementById("tab-gen");
       const tabGst = document.getElementById("tab-gst");
-      const front = document.getElementById("layer-front") || document.getElementById("pass-front-layer");
+      const front = document.getElementById("layer-front");
       const badge = document.getElementById("pass-tier-badge-display");
       const code = document.getElementById("pass-code-display");
       const name = document.getElementById("pass-attendee-name");
@@ -1831,9 +2014,9 @@
           badge.style.color = "#fbbf24";
           badge.textContent = "VIP • 4-DAY";
         }
-        if (code) code.textContent = "VIP-884920";
-        if (name) name.textContent = "Raghav Sharma";
-        if (sub) sub.textContent = "Zone A • Turnstile Turn 1–4";
+        currentPassId = "VIP-884920";
+        currentAttendee = "Raghav Sharma";
+        if (sub) sub.textContent = "Zone A • Turnstiles 1–4";
       } else if (tier === 'gen') {
         tabGen.classList.add("active");
         if (front) front.style.borderColor = "rgba(16, 185, 129, 0.4)";
@@ -1843,8 +2026,8 @@
           badge.style.color = "#34d399";
           badge.textContent = "GENERAL • DAY 2";
         }
-        if (code) code.textContent = "GEN-441092";
-        if (name) name.textContent = "Aarav Kapoor";
+        currentPassId = "GEN-441092";
+        currentAttendee = "Aarav Kapoor";
         if (sub) sub.textContent = "General Lawn • Gate B Turnstiles";
       } else {
         tabGst.classList.add("active");
@@ -1855,27 +2038,234 @@
           badge.style.color = "#a78bfa";
           badge.textContent = "ARTIST GUEST";
         }
-        if (code) code.textContent = "GST-002148";
-        if (name) name.textContent = "Elena Rostova";
+        currentPassId = "GST-002148";
+        currentAttendee = "Elena Rostova";
         if (sub) sub.textContent = "Stage Left Access • VIP Turnstiles";
+      }
+
+      if (code) code.textContent = currentPassId;
+      if (name) name.textContent = currentAttendee;
+      updateCryptoLayerPreview();
+      synthesizeSound(tier === 'vip' ? 'vip' : 'gen');
+    }
+
+    const sampleAttendees = [
+      "Raghav Sharma", "Aarav Kapoor", "Elena Rostova", "Devansh Patel", 
+      "Meera Singhania", "Lucas Moreau", "Zara Chen", "Rohan Verma"
+    ];
+
+    function randomizePass() {
+      const randNum = Math.floor(100000 + Math.random() * 900000);
+      const prefix = currentTier.toUpperCase();
+      currentPassId = `${prefix}-${randNum}`;
+      currentAttendee = sampleAttendees[Math.floor(Math.random() * sampleAttendees.length)];
+
+      const code = document.getElementById("pass-code-display");
+      const name = document.getElementById("pass-attendee-name");
+      if (code) code.textContent = currentPassId;
+      if (name) name.textContent = currentAttendee;
+
+      updateCryptoLayerPreview();
+      synthesizeSound(currentTier === 'vip' ? 'vip' : 'gen');
+    }
+
+    function flipPassCard() {
+      const front = document.getElementById("pass-card-front-content");
+      const back = document.getElementById("pass-card-back-content");
+      const btn = document.getElementById("btn-flip-pass");
+      isFlipped = !isFlipped;
+
+      if (isFlipped) {
+        front.style.display = "none";
+        back.style.display = "flex";
+        if (btn) btn.innerHTML = `<span>↺ Pass Front</span>`;
+      } else {
+        back.style.display = "none";
+        front.style.display = "flex";
+        if (btn) btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          <span>Flip Card</span>
+        `;
       }
     }
 
-    // Smooth Mouse Parallax on Desktop (Using CSS variables)
-    const stage = document.querySelector(".pass-stage");
-    const passCard = document.getElementById("pass-3d-card");
-    if (stage && passCard) {
-      stage.addEventListener("mousemove", (e) => {
-        const rect = stage.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        passCard.style.setProperty('--mouse-rot-y', `${(x * 16).toFixed(2)}deg`);
-        passCard.style.setProperty('--mouse-rot-x', `${(-y * 16).toFixed(2)}deg`);
-      });
-      stage.addEventListener("mouseleave", () => {
-        passCard.style.setProperty('--mouse-rot-x', '0deg');
-        passCard.style.setProperty('--mouse-rot-y', '0deg');
-      });
+    async function computeSHA256(text) {
+      if (!window.crypto || !window.crypto.subtle) {
+        return "9f8a4e21c83b702f9a14d5e890b714f3c2e17a4b9012cd34";
+      }
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function updateCryptoLayerPreview() {
+      const inputEl = document.getElementById("crypto-input-val");
+      const hashEl = document.getElementById("crypto-hash-val");
+      if (inputEl) inputEl.textContent = `${currentPassId}:cf_edge_turnstile_v1`;
+      if (hashEl) {
+        const fullHash = await computeSHA256(`${currentPassId}:cf_edge_turnstile_v1`);
+        hashEl.textContent = fullHash.substring(0, 36) + '...';
+      }
+    }
+
+    async function testValidCryptoScan() {
+      const laser = document.getElementById("crypto-laser");
+      const statusBox = document.getElementById("crypto-result-box");
+      const hashEl = document.getElementById("crypto-hash-val");
+
+      if (laser) {
+        laser.style.display = "block";
+        laser.style.background = "linear-gradient(90deg, transparent, #10b981, #6ee7b7, #10b981, transparent)";
+        laser.style.boxShadow = "0 0 14px #10b981";
+        laser.style.animation = "none";
+        void laser.offsetWidth;
+        laser.style.animation = "sweepLaserOnce 1.2s ease-in-out forwards";
+      }
+
+      const hash = await computeSHA256(`${currentPassId}:cf_edge_turnstile_v1`);
+      if (hashEl) hashEl.textContent = hash.substring(0, 36) + '...';
+
+      if (statusBox) {
+        statusBox.style.borderColor = "rgba(16, 185, 129, 0.6)";
+        statusBox.style.background = "rgba(16, 185, 129, 0.15)";
+        statusBox.innerHTML = `
+          <div style="color: #34d399; font-weight: 700;">✓ HMAC SIGNATURE VERIFIED</div>
+          <div style="font-size: 10px; color: #a7f3d0; margin-top: 3px;">
+            Payload: <span style="color:#fff;">${currentPassId}</span> • Edge Match: <span style="color:#34d399;">0.38ms</span><br/>
+            Result: <span style="color:#34d399; font-weight: 700;">GATE ADMISSION UNLOCKED</span>
+          </div>
+        `;
+      }
+      synthesizeSound('vip');
+    }
+
+    async function testTamperedCryptoScan() {
+      const laser = document.getElementById("crypto-laser");
+      const statusBox = document.getElementById("crypto-result-box");
+      const hashEl = document.getElementById("crypto-hash-val");
+
+      if (laser) {
+        laser.style.display = "block";
+        laser.style.background = "linear-gradient(90deg, transparent, #ef4444, #f87171, #ef4444, transparent)";
+        laser.style.boxShadow = "0 0 14px #ef4444";
+        laser.style.animation = "none";
+        void laser.offsetWidth;
+        laser.style.animation = "sweepLaserOnce 1.2s ease-in-out forwards";
+      }
+
+      const fakeHash = await computeSHA256(`${currentPassId}:TAMPERED_FRAUD_PAYLOAD`);
+      if (hashEl) hashEl.textContent = fakeHash.substring(0, 36) + '...';
+
+      if (statusBox) {
+        statusBox.style.borderColor = "rgba(239, 68, 68, 0.6)";
+        statusBox.style.background = "rgba(239, 68, 68, 0.15)";
+        statusBox.innerHTML = `
+          <div style="color: #f87171; font-weight: 700;">❌ SIGNATURE MISMATCH (403 FORBIDDEN)</div>
+          <div style="font-size: 10px; color: #fca5a5; margin-top: 3px;">
+            Tamper detected: Digest mismatch with edge salt.<br/>
+            Result: <span style="color:#f87171; font-weight: 700;">PASS FORGERY FLAGGED • GATE LOCKED</span>
+          </div>
+        `;
+      }
+      synthesizeSound('dup');
+    }
+
+    function testTurnstileScan() {
+      const day3Badge = document.getElementById("turnstile-day3-status");
+      const btn = document.getElementById("btn-turnstile-admit");
+      const alertBox = document.getElementById("turnstile-alert-box");
+      const counterEl = document.getElementById("turnstile-counter-val");
+
+      if (!day3Admitted) {
+        day3Admitted = true;
+        turnstileCounter++;
+        if (counterEl) counterEl.textContent = turnstileCounter.toLocaleString();
+        if (day3Badge) {
+          day3Badge.style.color = "#34d399";
+          day3Badge.textContent = "✓ ADMITTED (Today at 15:14:02)";
+        }
+        if (alertBox) {
+          alertBox.style.display = "block";
+          alertBox.style.borderColor = "rgba(16, 185, 129, 0.5)";
+          alertBox.style.background = "rgba(16, 185, 129, 0.12)";
+          alertBox.innerHTML = `
+            <span style="color: #34d399; font-weight: 700;">GATE 04 TURNSTILE ROTATING:</span>
+            Attendee admitted. Anti-passback armed for this ticket.
+          `;
+        }
+        if (btn) {
+          btn.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <span>Test Anti-Passback Violation</span>
+          `;
+          btn.className = "layer-btn-action btn-crimson";
+        }
+        synthesizeSound('gen');
+      } else {
+        if (alertBox) {
+          alertBox.style.display = "block";
+          alertBox.style.borderColor = "rgba(239, 68, 68, 0.5)";
+          alertBox.style.background = "rgba(239, 68, 68, 0.15)";
+          alertBox.innerHTML = `
+            <span style="color: #f87171; font-weight: 700;">⚠️ ANTI-PASSBACK TRIGGERED:</span>
+            Pass ${currentPassId} was already scanned 12 seconds ago at Turnstile 04. Entry blocked.
+          `;
+        }
+        synthesizeSound('dup');
+      }
+    }
+
+    function resetTurnstileState() {
+      day3Admitted = false;
+      const day3Badge = document.getElementById("turnstile-day3-status");
+      const btn = document.getElementById("btn-turnstile-admit");
+      const alertBox = document.getElementById("turnstile-alert-box");
+
+      if (day3Badge) {
+        day3Badge.style.color = "#60a5fa";
+        day3Badge.textContent = "● TODAY • READY FOR SCAN";
+      }
+      if (alertBox) alertBox.style.display = "none";
+      if (btn) {
+        btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span>Check-in Day 3 (Gate 04)</span>
+        `;
+        btn.className = "layer-btn-action btn-accent";
+      }
+    }
+
+    function runD1Query(type) {
+      const termEl = document.getElementById("d1-terminal-out");
+      if (!termEl) return;
+
+      if (type === 'select') {
+        termEl.innerHTML = `
+          <div style="color: #a78bfa;">// D1 PREPARED STATEMENT</div>
+          <span style="color: #f472b6;">SELECT</span> id, tier, attendee_name, day3_admitted<br/>
+          <span style="color: #f472b6;">FROM</span> passes <span style="color: #f472b6;">WHERE</span> id = <span style="color: #67e8f9;">'${currentPassId}'</span>;<br/>
+          <span style="color: #34d399; margin-top: 5px; display: inline-block;">↳ 1 ROW RETURNED (0.0012s)</span><br/>
+          <span style="color: #cbd5e1;">{"id":"${currentPassId}","tier":"${currentTier.toUpperCase()}","status":"ACTIVE"}</span>
+        `;
+      } else if (type === 'update') {
+        termEl.innerHTML = `
+          <div style="color: #a78bfa;">// D1 ATOMIC WRITE TRANSACTION</div>
+          <span style="color: #f472b6;">UPDATE</span> passes<br/>
+          <span style="color: #f472b6;">SET</span> day3_admitted = 1, last_gate = <span style="color: #67e8f9;">'Turnstile-04'</span><br/>
+          <span style="color: #f472b6;">WHERE</span> id = <span style="color: #67e8f9;">'${currentPassId}'</span>;<br/>
+          <span style="color: #34d399; margin-top: 5px; display: inline-block;">↳ 1 ROW COMMITTED ACROSS 310 REPLICAS (0.0018s)</span>
+        `;
+      } else {
+        termEl.innerHTML = `
+          <div style="color: #a78bfa;">// D1 GLOBAL REPLICA LATENCY PROBE</div>
+          <span style="color: #67e8f9;">BOM (Mumbai)</span>: 1.14ms | <span style="color: #67e8f9;">DEL (Delhi)</span>: 1.28ms<br/>
+          <span style="color: #67e8f9;">SIN (Singapore)</span>: 2.12ms | <span style="color: #67e8f9;">LHR (London)</span>: 2.45ms<br/>
+          <span style="color: #34d399; margin-top: 5px; display: inline-block;">↳ ALL NODES HEALTHY • 0.00ms COLD START</span>
+        `;
+      }
+      synthesizeSound('gen');
     }
 
     // ROI Calculator Logic
@@ -1897,6 +2287,7 @@
       document.getElementById("calc-saved-out").textContent = `₹${Math.round(saved).toLocaleString()}`;
     }
     runCalculator();
+    updateCryptoLayerPreview();
 
     // Web Audio Synthesizer (Instant playback without external mp3s)
     let audioCtx = null;
