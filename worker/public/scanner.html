@@ -6,26 +6,29 @@
   <title>TicketScanner Pro • Gate Scanner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
   <style>
     :root {
-      --bg-dark: #09090b;
-      --card-bg: rgba(24, 24, 27, 0.75);
+      --bg-dark: #0A0A0C;
+      --card-bg: #121215;
       --card-border: rgba(255, 255, 255, 0.08);
-      --text-main: #f4f4f5;
-      --text-muted: #a1a1aa;
+      --card-border-strong: rgba(255, 255, 255, 0.18);
+      --text-main: #F5F5F0;
+      --text-muted: #8A8A93;
       
-      --color-vip: #f59e0b;
-      --color-vip-glow: rgba(245, 158, 11, 0.25);
-      --color-gen: #10b981;
-      --color-gen-glow: rgba(16, 185, 129, 0.25);
-      --color-gst: #a855f7;
-      --color-gst-glow: rgba(168, 85, 247, 0.25);
-      --color-dup: #f97316;
-      --color-err: #ef4444;
-      --primary: #3b82f6;
+      --volt: #D4FF00;
+      --volt-glow: rgba(212, 255, 0, 0.3);
+      --color-vip: #D4FF00;
+      --color-vip-glow: rgba(212, 255, 0, 0.25);
+      --color-gen: #34D399;
+      --color-gen-glow: rgba(52, 211, 153, 0.25);
+      --color-gst: #C084FC;
+      --color-gst-glow: rgba(192, 132, 252, 0.25);
+      --color-dup: #FB923C;
+      --color-err: #F87171;
+      --primary: #D4FF00;
     }
 
     * {
@@ -33,27 +36,43 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg-dark);
-      background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+      background-image: radial-gradient(circle at 50% 0%, rgba(212, 255, 0, 0.04) 0%, transparent 70%);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       overflow-x: hidden;
+      letter-spacing: -0.015em;
+    }
+
+    /* Section Numbering & Tags */
+    .section-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--volt);
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     /* Top Navigation Bar */
     header {
       width: 100%;
-      background: rgba(18, 18, 20, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 14px 20px;
+      background: rgba(10, 10, 12, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 14px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -67,21 +86,22 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
     }
 
     .brand-icon {
       width: 28px;
       height: 28px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      border-radius: 8px;
+      background: var(--volt);
+      color: #0A0A0C;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 15px;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+      font-size: 14px;
+      font-weight: 800;
     }
 
     .header-actions {
@@ -92,31 +112,33 @@
 
     .badge-btn {
       font-size: 12px;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--card-border);
       padding: 6px 12px;
-      border-radius: 20px;
+      border-radius: 6px;
       color: var(--text-muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
+      font-family: inherit;
     }
 
     .badge-btn:hover, .badge-btn:active {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
       color: #fff;
     }
 
     .scan-counter {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(212, 255, 0, 0.12);
+      color: var(--volt);
+      border: 1px solid rgba(212, 255, 0, 0.3);
       padding: 4px 10px;
-      border-radius: 20px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     /* Auth & Onboarding Cards */
@@ -136,21 +158,32 @@
     .gate-card {
       width: 100%;
       background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 32px 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border-strong);
+      border-radius: 18px;
+      padding: 36px 28px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
       display: flex;
       flex-direction: column;
       gap: 18px;
+      position: relative;
+    }
+
+    .gate-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 24px;
+      right: 24px;
+      height: 2px;
+      background: var(--volt);
     }
 
     .gate-icon {
       width: 56px;
       height: 56px;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      border-radius: 16px;
+      background: rgba(212, 255, 0, 0.1);
+      border: 1px solid rgba(212, 255, 0, 0.25);
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -160,8 +193,8 @@
 
     .gate-card h2 {
       font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
     }
 
     .gate-card p {
@@ -173,19 +206,21 @@
     .gate-input {
       width: 100%;
       padding: 15px 18px;
-      border-radius: 14px;
-      border: 1px solid var(--card-border);
-      background: rgba(10, 10, 12, 0.8);
+      border-radius: 8px;
+      border: 1px solid var(--card-border-strong);
+      background: #08080A;
       color: #fff;
-      font-size: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
       text-align: center;
+      letter-spacing: 4px;
       outline: none;
       transition: all 0.2s;
     }
 
     .gate-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      border-color: var(--volt);
+      box-shadow: 0 0 0 2px var(--volt-glow);
     }
 
     .gate-input.error {
@@ -196,24 +231,27 @@
     .btn-primary {
       width: 100%;
       padding: 15px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      border: none;
-      border-radius: 14px;
-      color: #fff;
-      font-weight: 600;
-      font-size: 16px;
+      background: var(--volt);
+      border: 1px solid var(--volt);
+      border-radius: 8px;
+      color: #0A0A0C;
+      font-weight: 700;
+      font-size: 15px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
-      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(212, 255, 0, 0.25);
+      transition: all 0.15s ease;
+      font-family: inherit;
     }
 
     .btn-primary:active {
       transform: scale(0.98);
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+    .btn-primary:hover {
+      background: #C2EB00;
     }
 
     /* Scanner Viewport */
@@ -231,11 +269,11 @@
     .camera-card {
       width: 100%;
       position: relative;
-      border-radius: 24px;
+      border-radius: 18px;
       overflow: hidden;
       border: 1px solid var(--card-border);
       background: #000;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
       aspect-ratio: 1 / 1;
       max-height: 420px;
     }
@@ -248,7 +286,7 @@
 
     #reader video {
       object-fit: cover !important;
-      border-radius: 24px !important;
+      border-radius: 18px !important;
     }
 
     /* Reticle Laser Scanner Overlay */
@@ -266,32 +304,32 @@
       width: 68%;
       height: 68%;
       position: relative;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 20px;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 14px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
     }
 
     .reticle-corner {
       position: absolute;
       width: 20px;
       height: 20px;
-      border-color: #3b82f6;
+      border-color: var(--volt);
       border-style: solid;
     }
 
-    .reticle-corner.tl { top: -2px; left: -2px; border-width: 4px 0 0 4px; border-top-left-radius: 18px; }
-    .reticle-corner.tr { top: -2px; right: -2px; border-width: 4px 4px 0 0; border-top-right-radius: 18px; }
-    .reticle-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 4px 4px; border-bottom-left-radius: 18px; }
-    .reticle-corner.br { bottom: -2px; right: -2px; border-width: 0 4px 4px 0; border-bottom-right-radius: 18px; }
+    .reticle-corner.tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-top-left-radius: 12px; }
+    .reticle-corner.tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; border-top-right-radius: 12px; }
+    .reticle-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; border-bottom-left-radius: 12px; }
+    .reticle-corner.br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-bottom-right-radius: 12px; }
 
     .laser-line {
       position: absolute;
       top: 0;
       left: 5%;
       width: 90%;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, #3b82f6, #60a5fa, transparent);
-      box-shadow: 0 0 12px #3b82f6;
+      height: 2.5px;
+      background: linear-gradient(90deg, transparent, #D4FF00, #FFFFFF, transparent);
+      box-shadow: 0 0 14px var(--volt);
       animation: laserMove 2.2s infinite ease-in-out;
       border-radius: 2px;
     }

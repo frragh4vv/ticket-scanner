@@ -7,7 +7,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Client-side ZIP & QR Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -15,65 +15,107 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
+    /* ==========================================================================
+       SWISS-EDITORIAL EVENT COMMAND & TICKET STUDIO DESIGN SYSTEM
+       ========================================================================== */
     :root {
-      --bg-dark: #09090b;
-      --card-bg: rgba(24, 24, 27, 0.7);
+      --bg-dark: #0A0A0C;
+      --bg-dark-card: #121215;
+      --bg-dark-elevated: #18181D;
+      --card-bg: #121215;
       --card-border: rgba(255, 255, 255, 0.08);
-      --card-hover: rgba(39, 39, 42, 0.8);
-      --text-main: #f4f4f5;
-      --text-muted: #a1a1aa;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
+      --card-border-strong: rgba(255, 255, 255, 0.18);
+      --card-hover: #18181D;
+      --text-main: #F5F5F0;
+      --text-muted: #8A8A93;
+      --text-dim: #575760;
       
-      --vip-gold: #f59e0b;
-      --vip-bg: rgba(245, 158, 11, 0.15);
-      --gen-green: #10b981;
-      --gen-bg: rgba(16, 185, 129, 0.15);
-      --gst-purple: #a855f7;
-      --gst-bg: rgba(168, 85, 247, 0.15);
-      --scanned-orange: #f97316;
-      --err-red: #ef4444;
+      /* Signature Electric Acid Volt Lime Accent */
+      --volt: #D4FF00;
+      --volt-glow: rgba(212, 255, 0, 0.28);
+      --volt-text: #0A0A0C;
+      --primary: #D4FF00;
+      --primary-hover: #C2EB00;
+      
+      --vip-gold: #D4FF00;
+      --vip-bg: rgba(212, 255, 0, 0.12);
+      --gen-green: #34D399;
+      --gen-bg: rgba(52, 211, 153, 0.12);
+      --gst-purple: #C084FC;
+      --gst-bg: rgba(192, 132, 252, 0.12);
+      --scanned-orange: #FB923C;
+      --err-red: #F87171;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
     body {
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.07) 0%, transparent 50%),
-        radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+        radial-gradient(circle at 15% 0%, rgba(212, 255, 0, 0.04) 0%, transparent 45%),
+        radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      letter-spacing: -0.015em;
+    }
+
+    /* Section Numbering & Tags (* 01 / THE PLATFORM) */
+    .section-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--volt);
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
     }
 
     /* Auth Screen */
     #key-screen {
-      max-width: 420px;
+      max-width: 440px;
       margin: 100px auto 40px auto;
-      padding: 36px 28px;
+      padding: 40px 32px;
       background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 24px;
-      border: 1px solid var(--card-border);
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      border-radius: 20px;
+      border: 1px solid var(--card-border-strong);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 20px;
       text-align: center;
       animation: fadeIn 0.3s ease;
+      position: relative;
+    }
+
+    #key-screen::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 30px;
+      right: 30px;
+      height: 2px;
+      background: var(--volt);
     }
 
     .key-icon {
-      width: 54px;
-      height: 54px;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.25);
-      border-radius: 16px;
+      width: 56px;
+      height: 56px;
+      background: rgba(212, 255, 0, 0.1);
+      border: 1px solid rgba(212, 255, 0, 0.25);
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -83,29 +125,30 @@
     .key-input {
       width: 100%;
       padding: 14px 18px;
-      border-radius: 14px;
-      border: 1px solid var(--card-border);
-      background: rgba(10, 10, 12, 0.8);
+      border-radius: 10px;
+      border: 1px solid var(--card-border-strong);
+      background: #08080A;
       color: #fff;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 17px;
       text-align: center;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       outline: none;
       transition: all 0.2s;
     }
 
     .key-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      border-color: var(--volt);
+      box-shadow: 0 0 0 2px var(--volt-glow);
     }
 
     /* Navigation Header */
     header {
-      background: rgba(18, 18, 20, 0.8);
+      background: rgba(10, 10, 12, 0.92);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--card-border);
-      padding: 14px 30px;
+      padding: 14px 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -120,33 +163,34 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.4px;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
     }
 
     .brand-tag {
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      color: #fff;
-      font-size: 11px;
+      background: var(--volt);
+      color: #0A0A0C;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
       font-weight: 800;
-      padding: 2px 8px;
-      border-radius: 6px;
+      padding: 3px 8px;
+      border-radius: 4px;
       letter-spacing: 1px;
     }
 
     .nav-tabs {
       display: flex;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.04);
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.03);
       padding: 4px;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid var(--card-border);
     }
 
     .tab-btn {
       padding: 8px 16px;
-      border-radius: 9px;
+      border-radius: 8px;
       border: none;
       background: transparent;
       color: var(--text-muted);
@@ -156,13 +200,19 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
     }
 
     .tab-btn.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      background: var(--volt);
+      color: #0A0A0C;
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(212, 255, 0, 0.25);
     }
 
     .header-right {
@@ -185,33 +235,34 @@
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+      gap: 14px;
+      margin-bottom: 28px;
     }
 
     .kpi-card {
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--card-border);
-      border-radius: 18px;
+      border-radius: 14px;
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 8px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.2s;
+      transition: all 0.2s;
     }
 
     .kpi-card:hover {
+      border-color: var(--card-border-strong);
       transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.15);
     }
 
     .kpi-title {
-      font-size: 13px;
-      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
       color: var(--text-muted);
       display: flex;
       justify-content: space-between;
@@ -221,7 +272,7 @@
     .kpi-value {
       font-size: 32px;
       font-weight: 800;
-      letter-spacing: -1px;
+      letter-spacing: -0.04em;
     }
 
     .kpi-sub {
@@ -233,7 +284,7 @@
     }
 
     .progress-bar {
-      height: 6px;
+      height: 5px;
       width: 100%;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 10px;
@@ -243,7 +294,7 @@
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #10b981, #34d399);
+      background: var(--volt);
       border-radius: 10px;
       width: 0%;
       transition: width 0.6s ease;
@@ -251,46 +302,60 @@
 
     /* Buttons */
     .btn {
-      padding: 10px 18px;
-      border-radius: 10px;
+      padding: 9px 16px;
+      border-radius: 8px;
       border: 1px solid transparent;
+      font-family: inherit;
       font-weight: 600;
       font-size: 13px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
     }
 
     .btn:active { transform: scale(0.98); }
 
-    .btn-blue {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    .btn-blue, .btn-volt {
+      background: var(--volt);
+      color: #0A0A0C;
+      font-weight: 700;
+      border: 1px solid var(--volt);
+      box-shadow: 0 2px 10px rgba(212, 255, 0, 0.2);
     }
-    .btn-blue:hover { opacity: 0.92; }
+    .btn-blue:hover, .btn-volt:hover {
+      background: #C2EB00;
+      border-color: #C2EB00;
+      color: #000;
+    }
 
-    .btn-green {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    .btn-green, .btn-stone {
+      background: #F5F5F0;
+      color: #0A0A0C;
+      font-weight: 700;
+      border: 1px solid #FFFFFF;
+    }
+    .btn-green:hover, .btn-stone:hover {
+      background: #FFFFFF;
     }
 
     .btn-red {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #f87171;
+      background: rgba(248, 113, 113, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      color: #F87171;
     }
-    .btn-red:hover { background: rgba(239, 68, 68, 0.25); }
+    .btn-red:hover { background: rgba(248, 113, 113, 0.22); }
 
     .btn-ghost {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--card-border);
       color: var(--text-main);
     }
-    .btn-ghost:hover { background: rgba(255, 255, 255, 0.1); }
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--card-border-strong);
+    }
 
     /* Tab Sections */
     .tab-content { display: none; }
@@ -316,16 +381,20 @@
 
     .search-input {
       padding: 10px 16px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: 1px solid var(--card-border);
-      background: rgba(24, 24, 27, 0.8);
+      background: #08080A;
       color: #fff;
       font-size: 13px;
-      min-width: 260px;
+      min-width: 280px;
       outline: none;
       transition: all 0.2s;
+      font-family: inherit;
     }
-    .search-input:focus { border-color: var(--primary); }
+    .search-input:focus {
+      border-color: var(--volt);
+      box-shadow: 0 0 0 2px var(--volt-glow);
+    }
 
     .filter-pills {
       display: flex;
@@ -334,32 +403,32 @@
     }
 
     .pill {
-      padding: 6px 14px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 13px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--card-border);
       color: var(--text-muted);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
+      font-family: inherit;
     }
 
     .pill.active {
-      background: #fff;
-      color: #000;
-      border-color: #fff;
+      background: #F5F5F0;
+      color: #0A0A0C;
+      border-color: #F5F5F0;
+      font-weight: 700;
     }
 
     /* Table */
     .table-card {
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--card-border);
-      border-radius: 20px;
+      border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
 
     .table-wrap { overflow-x: auto; }
@@ -372,10 +441,14 @@
     }
 
     th {
-      background: rgba(18, 18, 20, 0.6);
+      background: rgba(18, 18, 22, 0.95);
       padding: 14px 16px;
       color: var(--text-muted);
-      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
       border-bottom: 1px solid var(--card-border);
       white-space: nowrap;
     }
@@ -394,7 +467,8 @@
       align-items: center;
       gap: 5px;
       padding: 4px 10px;
-      border-radius: 20px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -404,19 +478,19 @@
     .badge-vip {
       background: var(--vip-bg);
       color: var(--vip-gold);
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      border: 1px solid rgba(212, 255, 0, 0.3);
     }
 
     .badge-general {
       background: var(--gen-bg);
       color: var(--gen-green);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      border: 1px solid rgba(52, 211, 153, 0.3);
     }
 
     .badge-guestlist {
       background: var(--gst-bg);
       color: var(--gst-purple);
-      border: 1px solid rgba(168, 85, 247, 0.3);
+      border: 1px solid rgba(192, 132, 252, 0.3);
     }
 
     .status-dot {
@@ -426,12 +500,12 @@
       display: inline-block;
     }
 
-    .status-valid { background: #10b981; box-shadow: 0 0 6px #10b981; }
-    .status-scanned { background: #f97316; }
+    .status-valid { background: var(--volt); box-shadow: 0 0 6px var(--volt); }
+    .status-scanned { background: #FB923C; }
 
     .cell-input {
       padding: 6px 10px;
-      border-radius: 8px;
+      border-radius: 6px;
       border: 1px solid transparent;
       background: transparent;
       color: #fff;
@@ -442,14 +516,14 @@
     }
 
     .cell-input:focus, .cell-input:hover {
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.5);
       border-color: var(--card-border);
     }
 
     /* Ticket Studio Visual Canvas Builder */
     .studio-grid {
       display: grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: 380px 1fr;
       gap: 24px;
       align-items: start;
     }
@@ -461,7 +535,7 @@
     .studio-panel {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 20px;
+      border-radius: 14px;
       padding: 24px;
       display: flex;
       flex-direction: column;
@@ -469,9 +543,9 @@
     }
 
     .studio-preview-box {
-      background: #000;
+      background: #08080A;
       border: 1px solid var(--card-border);
-      border-radius: 24px;
+      border-radius: 16px;
       padding: 30px;
       display: flex;
       flex-direction: column;
@@ -484,8 +558,8 @@
     #pass-canvas {
       max-width: 100%;
       height: auto;
-      border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      border-radius: 14px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
@@ -505,34 +579,38 @@
 
     .control-input {
       padding: 10px 14px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: 1px solid var(--card-border);
-      background: rgba(10, 10, 12, 0.8);
+      background: #08080A;
       color: #fff;
       font-size: 13px;
       outline: none;
+      font-family: inherit;
     }
 
-    .control-input:focus { border-color: var(--primary); }
+    .control-input:focus {
+      border-color: var(--volt);
+      box-shadow: 0 0 0 2px var(--volt-glow);
+    }
 
     /* Multi-Day Table Badges */
     .mini-day-pill {
       font-size: 10px;
       font-weight: 700;
-      padding: 2px 5px;
-      border-radius: 6px;
-      font-family: monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
       display: inline-block;
     }
     .mini-day-pill.scanned {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      background: rgba(52, 211, 153, 0.15);
+      color: #34D399;
+      border: 1px solid rgba(52, 211, 153, 0.35);
     }
     .mini-day-pill.valid {
-      background: rgba(59, 130, 246, 0.2);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.4);
+      background: rgba(212, 255, 0, 0.12);
+      color: var(--volt);
+      border: 1px solid rgba(212, 255, 0, 0.3);
     }
     .mini-day-pill.disabled {
       background: rgba(255, 255, 255, 0.04);
@@ -545,7 +623,7 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.82);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 100;
@@ -558,13 +636,15 @@
     .modal-card {
       max-width: 440px;
       width: 100%;
-      background: #141416;
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
+      background: #121215;
+      border: 1px solid var(--card-border-strong);
+      border-radius: 16px;
       padding: 28px;
       display: flex;
       flex-direction: column;
       gap: 16px;
+    }
+
     /* Multi-Element Studio Selector Tabs */
     .elem-selector-grid {
       display: grid;
@@ -575,7 +655,7 @@
 
     .elem-tab {
       padding: 9px 8px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: 1px solid var(--card-border);
       background: rgba(255, 255, 255, 0.03);
       color: var(--text-muted);
@@ -586,7 +666,8 @@
       align-items: center;
       gap: 6px;
       justify-content: center;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
+      font-family: inherit;
     }
 
     .elem-tab:hover {
@@ -595,44 +676,44 @@
     }
 
     .elem-tab.active {
-      background: rgba(59, 130, 246, 0.16);
-      border-color: #3b82f6;
-      color: #60a5fa;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+      background: rgba(212, 255, 0, 0.12);
+      border-color: var(--volt);
+      color: var(--volt);
+      box-shadow: 0 0 10px rgba(212, 255, 0, 0.15);
     }
 
     .color-picker-wrap {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(10, 10, 12, 0.8);
+      background: #08080A;
       border: 1px solid var(--card-border);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 6px 12px;
     }
 
     .color-picker-wrap input[type="color"] {
       border: none;
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
       background: transparent;
       cursor: pointer;
     }
 
     .color-picker-wrap span {
-      font-family: monospace;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
-      color: #a1a1aa;
+      color: #8A8A93;
     }
 
     /* Batch Compiler Modal */
     .batch-modal-card {
       max-width: 580px;
       width: 100%;
-      background: #141416;
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
+      background: #121215;
+      border: 1px solid var(--card-border-strong);
+      border-radius: 16px;
       padding: 28px;
       display: flex;
       flex-direction: column;
@@ -646,11 +727,11 @@
       align-items: center;
       gap: 12px;
       padding: 12px 14px;
-      border-radius: 12px;
+      border-radius: 8px;
       border: 1px solid var(--card-border);
       background: rgba(255, 255, 255, 0.02);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s ease;
     }
 
     .scope-radio-card:hover {
@@ -659,13 +740,13 @@
     }
 
     .batch-limit-btn.active {
-      background: rgba(59, 130, 246, 0.2) !important;
-      border-color: #3b82f6 !important;
-      color: #60a5fa !important;
+      background: rgba(212, 255, 0, 0.15) !important;
+      border-color: var(--volt) !important;
+      color: var(--volt) !important;
     }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes popIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
   </style>
 </head>
 <body>
@@ -747,6 +828,7 @@
 
     <div style="padding-top: 24px;">
       
+      <div class="section-tag">* 01 / LIVE TELEMETRY</div>
       <!-- Top Live KPI Analytics Grid -->
       <div class="kpi-grid">
         <div class="kpi-card">
@@ -765,7 +847,7 @@
             <span>Check-in Attendance</span>
             <span>✓</span>
           </div>
-          <div id="kpi-scanned" class="kpi-value" style="color: #34d399;">0</div>
+          <div id="kpi-scanned" class="kpi-value" style="color: var(--volt);">0</div>
           <div class="kpi-sub">
             <span id="kpi-scanned-pct">0%</span> checked in
           </div>
@@ -788,7 +870,7 @@
             <span>General & Guestlist</span>
             <span style="color: var(--gst-purple);">⭐</span>
           </div>
-          <div id="kpi-gen-sub" class="kpi-value" style="font-size: 24px; padding-top: 6px;">0 Gen • 0 Guest</div>
+          <div id="kpi-gen-sub" class="kpi-value" style="font-size: 22px; padding-top: 6px;">0 Gen • 0 Guest</div>
           <div class="kpi-sub">Breakdown of entry passes</div>
         </div>
 
@@ -806,6 +888,7 @@
       <!-- TAB 1: ATTENDEES & TICKETS DIRECTORY                              -->
       <!-- ================================================================= -->
       <div id="tab-directory" class="tab-content active">
+        <div class="section-tag">* 03 / GUESTLIST DIRECTORY</div>
         <div class="toolbar">
           <div class="toolbar-left">
             <input id="search-box" class="search-input" type="text" placeholder="Search by Ticket ID, Attendee, or Email..." oninput="filterTable()" />
@@ -880,10 +963,30 @@
           
           <!-- Studio Configuration Controls -->
           <div class="studio-panel">
-            <h3 style="font-size: 18px; font-weight: 700;">🎨 Ticket Pass Designer</h3>
+            <div class="section-tag">* 02 / PASS DESIGNER STUDIO</div>
+            <h3 style="font-size: 18px; font-weight: 800; letter-spacing: -0.02em;">Ticket Pass Designer</h3>
             <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-              Upload your event flyer or blank ticket template graphic. The studio dynamically burns the QR code, attendee name, and tier badge into finished printable/email passes.
+              Design bespoke collectible passes with live QR codes, attendee names, and tier badges. Works with custom flyers or the signature Swiss perforated pass template.
             </p>
+
+            <!-- Quick Theme Presets -->
+            <div class="control-group">
+              <label><span>⚡ Quick Designer Presets</span></label>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+                <button type="button" class="btn btn-ghost" style="padding: 7px 10px; font-size: 11.5px; justify-content: flex-start; gap: 8px;" onclick="applyStudioPreset('volt')">
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #D4FF00;"></span> ⚡ Acid Volt
+                </button>
+                <button type="button" class="btn btn-ghost" style="padding: 7px 10px; font-size: 11.5px; justify-content: flex-start; gap: 8px;" onclick="applyStudioPreset('obsidian')">
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #FFFFFF;"></span> 🌑 Stealth Obsidian
+                </button>
+                <button type="button" class="btn btn-ghost" style="padding: 7px 10px; font-size: 11.5px; justify-content: flex-start; gap: 8px;" onclick="applyStudioPreset('stone')">
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ECECE6;"></span> 🏛️ Chalk Stone
+                </button>
+                <button type="button" class="btn btn-ghost" style="padding: 7px 10px; font-size: 11.5px; justify-content: flex-start; gap: 8px;" onclick="applyStudioPreset('cyber')">
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #C084FC;"></span> 🟣 Cyber Neon
+                </button>
+              </div>
+            </div>
 
             <!-- Template Image Upload -->
             <div class="control-group">
@@ -1146,14 +1249,15 @@
       <!-- TAB 3: MULTI-TIER BATCH TICKET GENERATOR                          -->
       <!-- ================================================================= -->
       <div id="tab-generator" class="tab-content">
-        <div style="max-width: 620px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="max-width: 620px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 20px;">
           <div>
-            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">⚡ Multi-Tier & Multi-Day Ticket Creator</h3>
+            <div class="section-tag">* 04 / BATCH TICKET ENGINE</div>
+            <h3 style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px;">Multi-Tier & Multi-Day Ticket Creator</h3>
             <p style="font-size: 14px; color: var(--text-muted);">Generate cryptographic tickets for single-day or multi-day events (up to 10 days) categorized into VIP, General, and Guestlist tiers.</p>
           </div>
 
           <!-- Multi-Day Event Settings Card -->
-          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <strong style="font-size: 14px; color: #fff;">📅 Event Duration & Scan Validity</strong>
@@ -1200,7 +1304,7 @@
               <input id="gen-pass-name" class="control-input" type="text" placeholder="e.g. 2-Day VIP Festival Pass" oninput="this.dataset.userEdited='true'" />
             </div>
 
-            <div id="gen-plan-summary" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #93c5fd;">
+            <div id="gen-plan-summary" style="background: rgba(212, 255, 0, 0.08); border: 1px solid rgba(212, 255, 0, 0.25); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--volt);">
               Passes will be valid for multiple check-ins: Day 1 and Day 2 (1 admission per day).
             </div>
           </div>
@@ -1240,6 +1344,7 @@
       <!-- ================================================================= -->
       <div id="tab-settings" class="tab-content">
         <div style="max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
+          <div class="section-tag">* 05 / D1 EDGE DATABASE</div>
           
           <!-- Wipe Database Card -->
           <div style="background: var(--card-bg); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 16px;">
@@ -2579,10 +2684,10 @@
       const canvas = document.getElementById("pass-canvas");
       const ctx = canvas.getContext("2d");
 
-      const eventName = document.getElementById("studio-event-name").value || "EVENT TITLE";
-      const eventSub = document.getElementById("studio-event-sub").value || "VENUE & DATE";
+      const eventName = document.getElementById("studio-event-name").value || "AFTER HOURS 2026";
+      const eventSub = document.getElementById("studio-event-sub").value || "OCT 24 • MAIN ARENA • DOORS 8 PM";
       const tier = sampleTier || document.getElementById("studio-preview-tier").value || "General";
-      const attendee = sampleName || document.getElementById("studio-preview-name").value || "Attendee Name";
+      const attendee = sampleName || document.getElementById("studio-preview-name").value || "Alexander Wright";
 
       // Match canvas resolution to template or standard flyer ratio
       let w = 600;
@@ -2597,54 +2702,122 @@
       if (customTemplateImg) {
         ctx.drawImage(customTemplateImg, 0, 0, w, h);
       } else {
-        // Built-in Luxury Event Pass Gradient
-        const bgGrad = ctx.createLinearGradient(0, 0, w, h);
-        bgGrad.addColorStop(0, "#0c0d12");
-        bgGrad.addColorStop(0.5, "#14151e");
-        bgGrad.addColorStop(1, "#08090d");
-        ctx.fillStyle = bgGrad;
+        // Authentic Swiss-Editorial Perforated Ticket Stub Pass
+        ctx.fillStyle = "#0A0A0C";
         ctx.fillRect(0, 0, w, h);
 
-        // Subtle geometric ring
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
-        ctx.lineWidth = 1;
+        const padX = 24;
+        const padY = 24;
+        const cardW = w - (padX * 2);
+        const cardH = h - (padY * 2);
+        const tearY = 620; // Perforated division line
+        const notchR = 18; // Side notch cutout radius
+
+        // Card background
+        ctx.fillStyle = "#131317";
         ctx.beginPath();
-        ctx.arc(w / 2, 220, 200, 0, Math.PI * 2);
+        ctx.roundRect(padX, padY, cardW, cardH, 18);
+        ctx.fill();
+
+        // Card crisp border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Pass Border
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+        // Top Header Brand Banner (Volt Lime accent bar)
+        ctx.fillStyle = "#D4FF00";
+        ctx.beginPath();
+        ctx.roundRect(padX, padY, cardW, 8, [18, 18, 0, 0]);
+        ctx.fill();
+
+        // Micro Monospace Header Text
+        ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+        ctx.font = "700 11px 'JetBrains Mono', monospace";
+        ctx.textAlign = "left";
+        ctx.fillText("STUB // VERIFIED SECURE ADMISSION PASS", padX + 24, padY + 34);
+        ctx.textAlign = "right";
+        ctx.fillText("CF EDGE D1 • 5MS", padX + cardW - 24, padY + 34);
+
+        // Perforated Circular Notches on Left and Right sides
+        ctx.fillStyle = "#0A0A0C";
+        ctx.beginPath();
+        ctx.arc(padX, tearY, notchR, -Math.PI / 2, Math.PI / 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+        ctx.stroke();
+
+        ctx.fillStyle = "#0A0A0C";
+        ctx.beginPath();
+        ctx.arc(padX + cardW, tearY, notchR, Math.PI / 2, -Math.PI / 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+        ctx.stroke();
+
+        // Perforated Dashed Tear Line across the pass
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
         ctx.lineWidth = 2;
-        ctx.strokeRect(20, 20, w - 40, h - 40);
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.moveTo(padX + notchR + 8, tearY);
+        ctx.lineTo(padX + cardW - notchR - 8, tearY);
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset dash
+
+        // Lower Stub Content (Barcode & Gate Inspection Details)
+        // Draw vertical barcode pattern
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        const barStartX = padX + 36;
+        const barY = tearY + 120;
+        const barH = 36;
+        const barPattern = [3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 1, 4, 2, 3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 1, 2, 4, 2, 1, 3, 2, 1, 4];
+        let curBarX = barStartX;
+        for (let i = 0; i < barPattern.length && curBarX < padX + cardW - 36; i++) {
+          const bw = barPattern[i] * 1.6;
+          if (i % 2 === 0) {
+            ctx.fillRect(curBarX, barY, bw, barH);
+          }
+          curBarX += bw + 2;
+        }
+
+        // Sub text under barcode
+        ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+        ctx.font = "600 10.5px 'JetBrains Mono', monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("DO NOT TEAR UNTIL INSPECTED BY GATE OFFICIAL • SINGLE ADMISSION", w / 2, barY + barH + 24);
       }
 
       // 1. Header Section (Event Title & Date)
       if (showHeader) {
         ctx.fillStyle = headerColor;
-        ctx.font = `bold ${headerFontSize}px 'Outfit', sans-serif`;
+        ctx.font = `800 ${headerFontSize}px 'Plus Jakarta Sans', sans-serif`;
+        ctx.letterSpacing = "-0.03em";
         ctx.textAlign = "center";
         ctx.fillText(eventName, headerX, headerY);
 
         ctx.fillStyle = subColor;
-        ctx.font = `600 ${subFontSize}px 'Outfit', sans-serif`;
-        ctx.letterSpacing = "2px";
-        ctx.fillText(eventSub, headerX, headerY + headerFontSize + 6);
+        ctx.font = `600 ${subFontSize}px 'JetBrains Mono', monospace`;
+        ctx.letterSpacing = "1.5px";
+        ctx.fillText(eventSub, headerX, headerY + headerFontSize + 8);
       }
 
       // 2. Tier Badge Banner
       if (showTierBadge) {
         let badgeBg = tierCustomBgColor;
         let badgeLabel = "GENERAL ADMISSION";
+        let badgeTextColor = tierTextColor;
 
         if (tierAutoColor) {
           if (tier === "VIP") {
-            badgeBg = "#f59e0b";
+            badgeBg = "#D4FF00";
+            badgeTextColor = "#0A0A0C";
             badgeLabel = "👑 OFFICIAL VIP PASS";
           } else if (tier === "Guestlist") {
-            badgeBg = "#a855f7";
+            badgeBg = "#C084FC";
+            badgeTextColor = "#0A0A0C";
             badgeLabel = "⭐ HONORARY GUESTLIST";
           } else {
-            badgeBg = "#10b981";
+            badgeBg = "#F5F5F0";
+            badgeTextColor = "#0A0A0C";
             badgeLabel = "🎟️ GENERAL ADMISSION";
           }
         } else {
@@ -2653,11 +2826,12 @@
 
         ctx.fillStyle = badgeBg;
         ctx.beginPath();
-        ctx.roundRect(tierX, tierY, tierBadgeWidth, tierBadgeHeight, Math.round(tierBadgeHeight / 2));
+        ctx.roundRect(tierX, tierY, tierBadgeWidth, tierBadgeHeight, 6);
         ctx.fill();
 
-        ctx.fillStyle = tierTextColor;
-        ctx.font = `bold ${tierFontSize}px 'Outfit', sans-serif`;
+        ctx.fillStyle = badgeTextColor;
+        ctx.font = `800 ${tierFontSize}px 'JetBrains Mono', monospace`;
+        ctx.letterSpacing = "0.5px";
         ctx.textAlign = "center";
         ctx.fillText(badgeLabel, tierX + (tierBadgeWidth / 2), tierY + (tierBadgeHeight * 0.65));
       }
@@ -2665,7 +2839,8 @@
       // 3. Attendee Name
       if (showAttendeeName) {
         ctx.fillStyle = nameColor;
-        ctx.font = `${nameFontWeight} ${nameFontSize}px 'Outfit', sans-serif`;
+        ctx.font = `${nameFontWeight} ${nameFontSize}px 'Plus Jakarta Sans', sans-serif`;
+        ctx.letterSpacing = "-0.02em";
         ctx.textAlign = "center";
         ctx.fillText(attendee, nameX, nameY);
       }
@@ -2675,7 +2850,7 @@
       if (showQrBg) {
         ctx.fillStyle = "#ffffff";
         ctx.beginPath();
-        ctx.roundRect(qrX - pad, qrY - pad, qrSize + (pad * 2), qrSize + (pad * 2), 16);
+        ctx.roundRect(qrX - pad, qrY - pad, qrSize + (pad * 2), qrSize + (pad * 2), 12);
         ctx.fill();
       }
 
@@ -2687,19 +2862,10 @@
       // Ticket ID Code Text (under QR)
       if (showCode) {
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 22px 'JetBrains Mono', monospace";
+        ctx.font = "bold 20px 'JetBrains Mono', monospace";
         ctx.letterSpacing = "2px";
         ctx.textAlign = "center";
-        ctx.fillText(sampleTicketId, qrX + qrSize / 2, qrY + qrSize + 36);
-      }
-
-      // Security Notice Footer (Default luxury template only)
-      if (!customTemplateImg && showHeader) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-        ctx.font = "500 11px 'Outfit', sans-serif";
-        ctx.letterSpacing = "1px";
-        ctx.textAlign = "center";
-        ctx.fillText("VALID FOR SINGLE GATE SCAN • PRESENT ON MOBILE DEVICE", w / 2, h - 50);
+        ctx.fillText(sampleTicketId, qrX + qrSize / 2, qrY + qrSize + 34);
       }
 
       // SELECTION / HOVER OUTLINES (Only in live interactive preview, NOT in exported passes)
@@ -2708,14 +2874,14 @@
         if (targetHighlight) {
           const b = getElementBounds(targetHighlight);
           ctx.save();
-          ctx.strokeStyle = isDragging ? "#38bdf8" : "rgba(56, 189, 248, 0.85)";
+          ctx.strokeStyle = "#D4FF00";
           ctx.lineWidth = 2;
           ctx.setLineDash([6, 4]);
           ctx.strokeRect(b.x, b.y, b.width, b.height);
 
           // 4 Corner anchors
           ctx.setLineDash([]);
-          ctx.fillStyle = "#38bdf8";
+          ctx.fillStyle = "#D4FF00";
           const hs = 8;
           ctx.fillRect(b.x - hs/2, b.y - hs/2, hs, hs);
           ctx.fillRect(b.x + b.width - hs/2, b.y - hs/2, hs, hs);
@@ -2724,12 +2890,12 @@
 
           // Floating Tag Pill
           const tagW = Math.max(130, b.label.length * 8 + 36);
-          ctx.fillStyle = "rgba(14, 165, 233, 0.95)";
+          ctx.fillStyle = "#D4FF00";
           ctx.beginPath();
-          ctx.roundRect(b.x, b.y - 25, tagW, 20, 5);
+          ctx.roundRect(b.x, b.y - 25, tagW, 20, 4);
           ctx.fill();
 
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = "#0A0A0C";
           ctx.font = "bold 11px 'JetBrains Mono', monospace";
           ctx.textAlign = "left";
           ctx.fillText(`🎯 ${b.label}`, b.x + 8, b.y - 11);
@@ -2738,6 +2904,42 @@
       }
 
       return canvas.toDataURL("image/png");
+    }
+
+    // Quick Studio Presets
+    function applyStudioPreset(preset) {
+      if (preset === 'volt') {
+        nameColor = '#FFFFFF';
+        headerColor = '#D4FF00';
+        subColor = '#8A8A93';
+        tierCustomBgColor = '#D4FF00';
+        tierTextColor = '#0A0A0C';
+        tierAutoColor = false;
+      } else if (preset === 'obsidian') {
+        nameColor = '#F5F5F0';
+        headerColor = '#FFFFFF';
+        subColor = '#71717A';
+        tierCustomBgColor = '#27272A';
+        tierTextColor = '#FFFFFF';
+        tierAutoColor = false;
+      } else if (preset === 'stone') {
+        nameColor = '#0A0A0C';
+        headerColor = '#0A0A0C';
+        subColor = '#52525B';
+        tierCustomBgColor = '#0A0A0C';
+        tierTextColor = '#F5F5F0';
+        tierAutoColor = false;
+      } else if (preset === 'cyber') {
+        nameColor = '#E9D5FF';
+        headerColor = '#C084FC';
+        subColor = '#94A3B8';
+        tierCustomBgColor = '#A855F7';
+        tierTextColor = '#000000';
+        tierAutoColor = false;
+      }
+      syncCurrentElementInputs();
+      renderStudioCanvas(undefined, undefined, undefined, false);
+      saveStudioLayout();
     }
 
     // Save and load customized layout in localStorage
