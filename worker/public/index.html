@@ -307,421 +307,552 @@
       font-weight: 600;
     }
 
-    /* PASS STAGE: LUXURY 4-LAYER STUDIO */
-    .pass-stage {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      width: 100%;
-      min-height: 590px;
-    }
-
-    .pass-controls-panel {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-      z-index: 25;
+    /* HERO PASS STUDIO (Interactive Visual Designer) */
+    .hero-pass-designer {
       width: 100%;
       max-width: 440px;
-    }
-
-    .pass-tier-selector {
-      display: flex;
-      gap: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 4px;
-      border-radius: 12px;
-    }
-
-    .tier-tab {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 11.5px;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .tier-tab.active {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-    }
-
-    .pass-mode-bar {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .pass-control-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .pass-control-btn:hover {
-      color: #fff;
-      border-color: var(--border-hover);
-    }
-
-    .pass-control-btn.active {
-      background: rgba(59, 130, 246, 0.15);
-      border-color: rgba(59, 130, 246, 0.45);
-      color: #60a5fa;
-      box-shadow: 0 0 14px rgba(59, 130, 246, 0.2);
-    }
-
-    .layer-inspector-bar {
-      display: flex;
-      gap: 5px;
-      background: rgba(14, 14, 19, 0.9);
-      border: 1px solid var(--border);
-      padding: 4px;
-      border-radius: 10px;
-      backdrop-filter: blur(12px);
-      transition: all 0.3s;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .layer-pill-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 5px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .layer-pill-btn:hover { color: #fff; }
-    .layer-pill-btn.active {
-      background: rgba(255, 255, 255, 0.12);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    }
-
-    /* PASS DECK CONTAINER (Fixed 340x510, Zero giant scaling!) */
-    .pass-deck-wrap {
-      width: 340px;
-      height: 510px;
-      position: relative;
-      margin: 10px auto 20px auto;
-      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    /* Common Card Layer Style */
-    .ticket-layer {
-      position: absolute;
-      inset: 0;
-      border-radius: 20px;
-      padding: 22px;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-                  opacity 0.35s ease,
-                  box-shadow 0.35s ease,
-                  filter 0.35s ease,
-                  border-color 0.3s ease;
-      cursor: pointer;
-      user-select: none;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      gap: 16px;
+      position: relative;
+      z-index: 20;
+    }
+
+    .hero-pass-card {
+      background: linear-gradient(150deg, #161722 0%, #0c0d12 55%, #181524 100%);
+      border: 1px solid var(--pass-accent, rgba(245, 158, 11, 0.45));
+      border-radius: 22px;
+      padding: 0;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.9), 0 0 35px var(--pass-glow, rgba(245, 158, 11, 0.2));
       overflow: hidden;
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* ASSEMBLED MODE:
-       Front card is center stage. Layers 2, 3, 4 rest neatly behind */
-    .pass-deck-wrap.mode-assembled .layer-front {
-      transform: translate3d(0, 0, 0);
-      z-index: 10;
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .pass-deck-wrap.mode-assembled .layer-crypto {
-      transform: translate3d(0, 8px, 0) scale(0.96);
-      z-index: 3;
-      opacity: 0;
-      pointer-events: none;
-    }
-    .pass-deck-wrap.mode-assembled .layer-turnstile {
-      transform: translate3d(0, 16px, 0) scale(0.92);
-      z-index: 2;
-      opacity: 0;
-      pointer-events: none;
-    }
-    .pass-deck-wrap.mode-assembled .layer-d1 {
-      transform: translate3d(0, 24px, 0) scale(0.88);
-      z-index: 1;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    /* DECONSTRUCTED MODE (FAN VIEW):
-       All 4 layers fan out with graceful lateral and slight vertical offsets so EVERY layer header is visible.
-       Uniform scale! No translateZ magnification! */
-    .pass-deck-wrap.mode-deconstructed .layer-front {
-      transform: translate3d(-54px, -20px, 0) scale(0.94);
-      z-index: 4;
-      opacity: 0.95;
-    }
-    .pass-deck-wrap.mode-deconstructed .layer-crypto {
-      transform: translate3d(-18px, -7px, 0) scale(0.94);
-      z-index: 3;
-      opacity: 0.95;
-      pointer-events: auto;
-    }
-    .pass-deck-wrap.mode-deconstructed .layer-turnstile {
-      transform: translate3d(18px, 7px, 0) scale(0.94);
-      z-index: 2;
-      opacity: 0.95;
-      pointer-events: auto;
-    }
-    .pass-deck-wrap.mode-deconstructed .layer-d1 {
-      transform: translate3d(54px, 20px, 0) scale(0.94);
-      z-index: 1;
-      opacity: 0.95;
-      pointer-events: auto;
-    }
-
-    /* WHEN A LAYER IS FOCUSED:
-       It smoothly glides right to front center with 100% full view,
-       while the others tuck into an organized background shelf */
-    .pass-deck-wrap .ticket-layer.is-focused {
-      transform: translate3d(0, 0, 0) scale(1.02) !important;
-      z-index: 40 !important;
-      opacity: 1 !important;
-      filter: none !important;
-      pointer-events: auto !important;
-      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.95), 0 0 35px var(--layer-glow, rgba(59, 130, 246, 0.25)) !important;
-    }
-
-    .pass-deck-wrap.has-focus .ticket-layer:not(.is-focused) {
-      opacity: 0.35 !important;
-      filter: blur(0.8px) grayscale(20%);
-    }
-    .pass-deck-wrap.has-focus .ticket-layer:not(.is-focused):hover {
-      opacity: 0.8 !important;
-      filter: none;
-      transform: translateY(-4px) scale(0.96) !important;
-    }
-
-    /* Layer Top Header Banner */
-    .layer-card-banner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 10px;
-      margin-bottom: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .layer-card-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      text-transform: uppercase;
-    }
-    .layer-card-pill {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9.5px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 4px;
-    }
-
-    /* Layer 1: Visual Holographic Pass */
-    .layer-front {
-      background: linear-gradient(150deg, #171822 0%, #0d0e14 55%, #181524 100%);
-      border: 1px solid rgba(245, 158, 11, 0.4);
-      --layer-glow: rgba(245, 158, 11, 0.3);
-    }
-    .layer-front::before {
+    .hero-pass-card::before {
       content: "";
       position: absolute;
-      top: -50%; left: -50%; width: 200%; height: 200%;
+      top: -60%; left: -60%; width: 220%; height: 220%;
       background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.04) 50%, transparent 60%);
       pointer-events: none;
+      z-index: 5;
     }
 
-    /* Layer 2: Crypto HMAC Engine */
-    .layer-crypto {
-      background: linear-gradient(150deg, #0a1f18 0%, #06130f 55%, #071a14 100%);
-      border: 1px solid rgba(16, 185, 129, 0.45);
-      --layer-glow: rgba(16, 185, 129, 0.3);
-    }
-    .crypto-laser-line {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #10b981, #6ee7b7, #10b981, transparent);
-      box-shadow: 0 0 14px #10b981, 0 0 4px #fff;
-      display: none;
-      pointer-events: none;
-      z-index: 15;
-    }
-    @keyframes sweepLaserOnce {
-      0% { top: 0%; opacity: 0; }
-      15% { opacity: 1; }
-      85% { opacity: 1; }
-      100% { top: 98%; opacity: 0; }
-    }
-
-    /* Layer 3: Turnstile Matrix */
-    .layer-turnstile {
-      background: linear-gradient(150deg, #0e1a2b 0%, #09101d 55%, #161c28 100%);
-      border: 1px solid rgba(59, 130, 246, 0.45);
-      --layer-glow: rgba(59, 130, 246, 0.3);
-    }
-
-    /* Layer 4: D1 Edge Node */
-    .layer-d1 {
-      background: linear-gradient(150deg, #1a122e 0%, #0d0918 55%, #161026 100%);
-      border: 1px solid rgba(139, 92, 246, 0.45);
-      --layer-glow: rgba(139, 92, 246, 0.3);
-    }
-
-    /* Action bar inside each card */
-    .layer-action-bar {
+    /* Pass Banner Artwork Area */
+    .pass-banner-hero {
+      height: 125px;
+      width: 100%;
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #7c2d12 100%);
+      background-size: cover;
+      background-position: center;
+      position: relative;
       display: flex;
-      gap: 8px;
-      margin-top: 12px;
+      align-items: flex-end;
+      padding: 14px 18px;
+      transition: background 0.4s ease;
     }
-    .layer-btn-action {
-      flex: 1;
-      height: 32px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
+
+    .pass-banner-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(12, 13, 18, 0.95) 100%);
+    }
+
+    .pass-banner-badge {
+      position: relative;
+      z-index: 2;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 5px;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .layer-btn-action:hover {
-      background: rgba(255, 255, 255, 0.12);
-      transform: translateY(-1px);
-    }
-    .layer-btn-action.btn-accent {
-      background: rgba(59, 130, 246, 0.2);
-      border-color: rgba(59, 130, 246, 0.5);
-      color: #93c5fd;
-    }
-    .layer-btn-action.btn-emerald {
-      background: rgba(16, 185, 129, 0.2);
-      border-color: rgba(16, 185, 129, 0.5);
-      color: #6ee7b7;
-    }
-    .layer-btn-action.btn-crimson {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: rgba(239, 68, 68, 0.4);
-      color: #fca5a5;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
     }
 
-    /* Front Card Pass Elements */
-    .pass-header {
+    .pass-banner-change-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .pass-banner-change-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .hero-pass-body {
+      padding: 18px 22px 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pass-title-row {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
     }
-    .pass-event-title {
-      font-size: 15px;
+
+    .pass-event-name {
+      font-size: 16px;
       font-weight: 800;
-      letter-spacing: -0.3px;
       color: #fff;
+      letter-spacing: -0.3px;
     }
-    .pass-event-date {
+
+    .pass-event-sub {
       font-size: 11px;
       color: var(--text-secondary);
       margin-top: 2px;
     }
-    .pass-tier-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.4);
-      color: #fbbf24;
+
+    .hero-tier-badge {
+      font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       font-weight: 800;
-      letter-spacing: 0.6px;
-      padding: 3px 8px;
+      padding: 4px 9px;
       border-radius: 6px;
       text-transform: uppercase;
-      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.6px;
+      background: var(--tier-bg, rgba(245, 158, 11, 0.15));
+      border: 1px solid var(--tier-border, rgba(245, 158, 11, 0.45));
+      color: var(--tier-color, #fbbf24);
+      white-space: nowrap;
     }
-    .pass-qr-box {
+
+    .hero-qr-container {
       background: #ffffff;
       padding: 10px;
       border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 155px;
-      height: 155px;
-      margin: 10px auto;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      width: 145px;
+      height: 145px;
+      margin: 6px auto;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      position: relative;
     }
-    .pass-code-label {
+
+    .qr-watermark-sweep {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, #3b82f6, #60a5fa, transparent);
+      box-shadow: 0 0 10px #3b82f6;
+      animation: qrWatermarkSweep 3s ease-in-out infinite alternate;
+      border-radius: 2px;
+    }
+    @keyframes qrWatermarkSweep {
+      0% { top: 6%; opacity: 0.3; }
+      50% { opacity: 0.9; }
+      100% { top: 92%; opacity: 0.3; }
+    }
+
+    .pass-code-text {
       text-align: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
       color: #fff;
     }
-    .pass-footer {
-      border-top: 1px dashed rgba(255, 255, 255, 0.12);
+
+    .hero-attendee-footer {
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
       padding-top: 12px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
     }
-    .attendee-name {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: #fff;
-    }
-    .attendee-sub {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 2px;
+
+    /* Live Studio Toolbar under Pass */
+    .hero-designer-toolbar {
+      background: rgba(14, 14, 19, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      backdrop-filter: blur(14px);
     }
 
-    /* 4-LAYER PANORAMIC BLUEPRINT GRID */
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .art-preset-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .art-preset-pill:hover { color: #fff; border-color: var(--border-hover); }
+    .art-preset-pill.active {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+
+    .btn-upload-label {
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px dashed rgba(59, 130, 246, 0.45);
+      color: #93c5fd;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-upload-label:hover {
+      background: rgba(59, 130, 246, 0.22);
+      color: #fff;
+    }
+
+    .color-swatch-group {
+      display: flex;
+      gap: 6px;
+    }
+    .color-swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .color-swatch:hover { transform: scale(1.15); }
+    .color-swatch.active { border-color: #fff; box-shadow: 0 0 8px currentColor; }
+
+    /* Action bar inside pass */
+    .hero-pass-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .hero-pass-btn {
+      flex: 1;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .hero-pass-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-1px);
+    }
+    .hero-pass-btn.btn-accent {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.5);
+      color: #93c5fd;
+    }
+
+    /* 4-STEP PRODUCT EXPERIENCE / SCROLLWALK SECTION */
+    .experience-nav-bar {
+      display: flex;
+      background: rgba(14, 14, 19, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      gap: 6px;
+      max-width: 820px;
+      margin: 0 auto 44px auto;
+      backdrop-filter: blur(14px);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .exp-nav-tab {
+      flex: 1;
+      min-width: 170px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .exp-nav-tab:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+    .exp-nav-tab.active {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #60a5fa;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.2);
+    }
+
+    .exp-panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .exp-panel.active {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .exp-panel.active {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .exp-details-card {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .exp-step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      align-self: flex-start;
+    }
+
+    .exp-feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .exp-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .exp-feature-item svg {
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .exp-interactive-stage {
+      background: var(--surface-glass);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      position: relative;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Stage 1: Studio Inputs */
+    .studio-input-group {
+      margin-bottom: 14px;
+    }
+    .studio-label {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: block;
+    }
+    .studio-input {
+      width: 100%;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 0 12px;
+      color: #fff;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .studio-input:focus {
+      border-color: var(--accent);
+    }
+
+    /* Stage 3: Scanner Viewfinder Simulation */
+    .scanner-viewfinder-box {
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      background: #090a10;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 28px;
+      padding: 18px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+    }
+
+    .viewfinder-camera-feed {
+      height: 250px;
+      background: linear-gradient(180deg, #0d0f18 0%, #151824 100%);
+      border-radius: 18px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .viewfinder-reticle {
+      width: 160px;
+      height: 160px;
+      border: 2px dashed rgba(59, 130, 246, 0.6);
+      border-radius: 16px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .viewfinder-laser {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #34d399, #6ee7b7, transparent);
+      box-shadow: 0 0 12px #34d399;
+      animation: laserSweep 2.2s ease-in-out infinite alternate;
+    }
+    @keyframes laserSweep {
+      0% { top: 5%; opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { top: 95%; opacity: 0.4; }
+    }
+
+    .viewfinder-status-banner {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+
+    /* Stage 4: Admin Mini Mockup */
+    .admin-mini-dashboard {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .admin-mini-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .admin-mini-kpi {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .admin-mini-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .admin-mini-label {
+      font-size: 10.5px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .admin-mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .admin-mini-table th {
+      text-align: left;
+      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-tertiary);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .admin-mini-table td {
+      padding: 9px 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+    }
+
+    /* 4-LAYER PANORAMIC BLUEPRINT GRID (Under-the-hood section) */
     .arch-pipeline-grid {
       display: grid;
       grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
@@ -1198,10 +1329,10 @@
     </a>
 
     <div class="nav-links header-nav-links">
-      <a href="#pass" class="nav-link">3D Pass Engine</a>
-      <a href="#features" class="nav-link">Architecture</a>
+      <a href="#designer" class="nav-link">Pass Designer</a>
+      <a href="#experience" class="nav-link">Product Experience</a>
+      <a href="#architecture" class="nav-link">Edge Engine</a>
       <a href="#calculator" class="nav-link">Profit Calculator</a>
-      <a href="#audio" class="nav-link">Harmonic Audio</a>
     </div>
 
     <div class="nav-actions">
@@ -1230,45 +1361,45 @@
     <div class="hero-content">
       <div class="announcement-badge">
         <div class="badge-dot"></div>
-        <span>Edge Turnstile & D1 Serverless Engine Active</span>
+        <span>Visual Pass Studio & Sub-5ms Turnstile Gates</span>
       </div>
 
       <h1 class="hero-title">
-        Zero Commission.<br/>
-        <span>Sub-5ms Admission.</span>
+        Design Iconic Passes.<br/>
+        <span>Scan Gates in 5ms.</span>
       </h1>
 
       <p class="hero-desc">
-        The high-velocity ticketing platform engineered on Cloudflare Global Edge with native D1 SQLite. Stop bleeding 10% on BookMyShow — manage passes for ₹2.50 flat.
+        Empower your attendees with luxury Apple Wallet-ready festival passes. Upload custom banners, defeat screenshot scalpers with moving watermark QR codes, and scan gates without cloud latency or ticketing cuts.
       </p>
 
       <div class="hero-actions">
         <button class="btn btn-primary" style="height: 44px; padding: 0 22px; font-size: 14.5px;" onclick="openAuthModal('signup')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
+            <circle cx="9" r="4"></circle>
             <line x1="19" y1="8" x2="19" y2="14"></line>
             <line x1="22" y1="11" x2="16" y2="11"></line>
           </svg>
           <span>Claim 100 Free Passes</span>
         </button>
 
-        <a href="scanner.html" class="btn btn-secondary" style="height: 44px; padding: 0 20px; font-size: 14.5px;">
+        <a href="#experience" class="btn btn-secondary" style="height: 44px; padding: 0 20px; font-size: 14.5px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
-          <span>Live Gate Turnstile</span>
+          <span>Interactive Walkthrough</span>
         </a>
       </div>
 
       <div class="hero-stats">
         <div class="stat-item">
           <div class="stat-value">&lt; 5ms</div>
-          <div class="stat-label">Edge Gate Latency</div>
+          <div class="stat-label">Gate Scan Latency</div>
         </div>
         <div class="stat-item">
           <div class="stat-value">₹2.50</div>
-          <div class="stat-label">Flat Fee / Pass</div>
+          <div class="stat-label">Flat Fee / Pass (0% Cut)</div>
         </div>
         <div class="stat-item">
           <div class="stat-value">100%</div>
@@ -1277,350 +1408,555 @@
       </div>
     </div>
 
-    <!-- 4-LAYER INTERACTIVE TICKET PASS STUDIO -->
-    <div class="pass-stage" id="pass">
+    <!-- HERO PASS DESIGNER & LIVE INTERACTION STAGE -->
+    <div class="hero-pass-designer" id="designer">
       
-      <!-- Interactive Controls Panel -->
-      <div class="pass-controls-panel">
+      <!-- Hidden file input for custom banner upload -->
+      <input type="file" id="hero-banner-file" accept="image/*" style="display:none;" onchange="handleHeroBannerUpload(event)">
+
+      <!-- Holographic Pass Card -->
+      <div class="hero-pass-card" id="hero-pass-card">
         
-        <!-- Tier Selector Switcher -->
-        <div class="pass-tier-selector">
-          <button class="tier-tab active" id="tab-vip" onclick="switchTicketTier('vip')">VIP All-Access</button>
-          <button class="tier-tab" id="tab-gen" onclick="switchTicketTier('gen')">General Admission</button>
-          <button class="tier-tab" id="tab-gst" onclick="switchTicketTier('gst')">Guest List</button>
-        </div>
+        <!-- Pass Banner Artwork with Upload Trigger -->
+        <div class="pass-banner-hero" id="hero-pass-banner">
+          <span class="pass-banner-badge" id="hero-banner-badge">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: #fbbf24;"></span>
+            <span id="hero-banner-tier-text">VIP ALL-ACCESS</span>
+          </span>
 
-        <!-- Mode Bar: Assembled vs Deconstructed -->
-        <div class="pass-mode-bar">
-          <button id="btn-view-assembled" class="pass-control-btn active" onclick="togglePassView('assembled')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <button type="button" class="pass-banner-change-btn" onclick="document.getElementById('hero-banner-file').click()" title="Upload your custom banner image">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
-            <span>Assembled Pass</span>
-          </button>
-          
-          <button id="btn-view-deconstructed" class="pass-control-btn" onclick="togglePassView('deconstructed')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-              <polyline points="2 17 12 22 22 17"></polyline>
-              <polyline points="2 12 12 17 22 12"></polyline>
-            </svg>
-            <span>Deconstruct 4 Layers</span>
+            <span>Upload Banner</span>
           </button>
         </div>
 
-        <!-- Layer Inspector Pills (Brings any layer into 100% full view) -->
-        <div class="layer-inspector-bar" id="layer-inspector-bar">
-          <button class="layer-pill-btn active" id="pill-front" onclick="focusLayer('front')">
-            <span style="width: 7px; height: 7px; border-radius: 50%; background: #fbbf24;"></span>
-            <span>01 Pass</span>
-          </button>
-          <button class="layer-pill-btn" id="pill-crypto" onclick="focusLayer('crypto')">
-            <span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399;"></span>
-            <span>02 Crypto HMAC</span>
-          </button>
-          <button class="layer-pill-btn" id="pill-turnstile" onclick="focusLayer('turnstile')">
-            <span style="width: 7px; height: 7px; border-radius: 50%; background: #60a5fa;"></span>
-            <span>03 Turnstile</span>
-          </button>
-          <button class="layer-pill-btn" id="pill-d1" onclick="focusLayer('d1')">
-            <span style="width: 7px; height: 7px; border-radius: 50%; background: #a78bfa;"></span>
-            <span>04 D1 SQLite</span>
-          </button>
-        </div>
-
-      </div>
-
-      <!-- Pass Deck Stack -->
-      <div class="pass-deck-wrap mode-assembled has-focus" id="pass-deck-wrap">
-        
-        <!-- LAYER 1: FRONT VISUAL METALLIC CARD -->
-        <div class="ticket-layer layer-front is-focused" id="layer-front" onclick="focusLayer('front')">
-          
-          <!-- Inner Front Face -->
-          <div id="pass-card-front-content" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
-            <!-- Card Banner -->
-            <div class="layer-card-banner">
-              <div class="layer-card-title" style="color: #fbbf24;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
-                <span>01 • Visual Hologram Pass</span>
-              </div>
-              <span class="layer-card-pill" style="background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4);">CLIENT UI</span>
-            </div>
-
-            <div class="pass-header">
-              <div>
-                <div class="pass-event-title" id="pass-title-display">SUNBURN GOA 2026</div>
-                <div class="pass-event-date">Dec 27–30 • Vagator Beach</div>
-              </div>
-              <div class="pass-tier-badge" id="pass-tier-badge-display">VIP • 4-DAY</div>
-            </div>
-
-            <!-- Dynamic Crisp SVG QR Code -->
-            <div class="pass-qr-box">
-              <svg id="pass-qr-svg" width="135" height="135" viewBox="0 0 29 29" shape-rendering="crispEdges">
-                <rect x="0" y="0" width="29" height="29" fill="#ffffff"/>
-                <rect x="2" y="2" width="7" height="7" fill="#111827"/>
-                <rect x="3" y="3" width="5" height="5" fill="#ffffff"/>
-                <rect x="4" y="4" width="3" height="3" fill="#111827"/>
-                <rect x="20" y="2" width="7" height="7" fill="#111827"/>
-                <rect x="21" y="3" width="5" height="5" fill="#ffffff"/>
-                <rect x="22" y="4" width="3" height="3" fill="#111827"/>
-                <rect x="2" y="20" width="7" height="7" fill="#111827"/>
-                <rect x="3" y="21" width="5" height="5" fill="#ffffff"/>
-                <rect x="4" y="22" width="3" height="3" fill="#111827"/>
-                <rect x="11" y="2" width="2" height="2" fill="#111827"/>
-                <rect x="15" y="2" width="3" height="2" fill="#111827"/>
-                <rect x="10" y="5" width="2" height="3" fill="#111827"/>
-                <rect x="14" y="6" width="3" height="2" fill="#111827"/>
-                <rect x="11" y="10" width="3" height="3" fill="#111827"/>
-                <rect x="16" y="11" width="2" height="4" fill="#111827"/>
-                <rect x="4" y="11" width="3" height="2" fill="#111827"/>
-                <rect x="2" y="15" width="2" height="3" fill="#111827"/>
-                <rect x="6" y="14" width="3" height="2" fill="#111827"/>
-                <rect x="11" y="16" width="4" height="2" fill="#111827"/>
-                <rect x="18" y="16" width="3" height="3" fill="#111827"/>
-                <rect x="23" y="11" width="4" height="2" fill="#111827"/>
-                <rect x="21" y="15" width="3" height="3" fill="#111827"/>
-                <rect x="11" y="21" width="2" height="3" fill="#111827"/>
-                <rect x="15" y="22" width="3" height="2" fill="#111827"/>
-                <rect x="20" y="22" width="2" height="4" fill="#111827"/>
-                <rect x="24" y="20" width="3" height="3" fill="#111827"/>
-              </svg>
-            </div>
-
+        <!-- Pass Content Body -->
+        <div class="hero-pass-body">
+          <div class="pass-title-row">
             <div>
-              <div class="pass-code-label" id="pass-code-display">VIP-884920</div>
-              <div style="text-align: center; font-size: 10px; color: var(--text-tertiary); margin-top: 2px; font-family: 'JetBrains Mono', monospace;">
-                TAP CARD OR PILL TO INSPECT LOWER LAYERS
-              </div>
+              <div class="pass-event-name" id="hero-event-name">NEON HORIZON FESTIVAL 2026</div>
+              <div class="pass-event-sub" id="hero-event-sub">Nov 28–30 • Gate A Turnstiles • Main Arena</div>
             </div>
+            <span class="hero-tier-badge" id="hero-card-tier-pill">VIP • 4-DAY</span>
+          </div>
 
-            <div class="pass-footer">
-              <div>
-                <div class="attendee-name" id="pass-attendee-name">Raghav Sharma</div>
-                <div class="attendee-sub" id="pass-attendee-sub">Zone A • Turnstiles 1–4</div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 10px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">GATE STATUS</div>
-                <div style="font-size: 12px; font-weight: 700; color: #10b981; font-family: 'JetBrains Mono', monospace;">ACTIVE</div>
-              </div>
+          <!-- Dynamic Anti-Screenshot QR Code Box -->
+          <div class="hero-qr-container" id="hero-qr-box">
+            <div class="qr-watermark-sweep"></div>
+            <!-- High-Contrast Crisp Vector QR Code -->
+            <svg width="125" height="125" viewBox="0 0 100 100" fill="#0c0d12">
+              <rect x="0" y="0" width="30" height="30" fill="#0c0d12"></rect>
+              <rect x="4" y="4" width="22" height="22" fill="#ffffff"></rect>
+              <rect x="8" y="8" width="14" height="14" fill="#0c0d12"></rect>
+              
+              <rect x="70" y="0" width="30" height="30" fill="#0c0d12"></rect>
+              <rect x="74" y="4" width="22" height="22" fill="#ffffff"></rect>
+              <rect x="78" y="8" width="14" height="14" fill="#0c0d12"></rect>
+              
+              <rect x="0" y="70" width="30" height="30" fill="#0c0d12"></rect>
+              <rect x="4" y="74" width="22" height="22" fill="#ffffff"></rect>
+              <rect x="8" y="78" width="14" height="14" fill="#0c0d12"></rect>
+              
+              <!-- QR Data Matrix Dots -->
+              <rect x="36" y="8" width="6" height="6"></rect>
+              <rect x="48" y="8" width="6" height="6"></rect>
+              <rect x="36" y="20" width="6" height="6"></rect>
+              <rect x="54" y="20" width="6" height="6"></rect>
+              <rect x="8" y="38" width="6" height="6"></rect>
+              <rect x="20" y="38" width="6" height="6"></rect>
+              <rect x="36" y="36" width="8" height="8" fill="#3b82f6"></rect>
+              <rect x="52" y="36" width="10" height="10"></rect>
+              <rect x="68" y="38" width="6" height="6"></rect>
+              <rect x="84" y="38" width="6" height="6"></rect>
+              <rect x="36" y="52" width="6" height="6"></rect>
+              <rect x="48" y="52" width="6" height="6"></rect>
+              <rect x="60" y="52" width="6" height="6"></rect>
+              <rect x="38" y="68" width="8" height="8"></rect>
+              <rect x="54" y="68" width="6" height="6"></rect>
+              <rect x="70" y="68" width="6" height="6"></rect>
+              <rect x="84" y="68" width="8" height="8"></rect>
+              <rect x="48" y="84" width="6" height="6"></rect>
+              <rect x="64" y="84" width="6" height="6"></rect>
+              <rect x="80" y="84" width="6" height="6"></rect>
+            </svg>
+          </div>
+
+          <div class="pass-code-text" id="hero-pass-code">VIP-884920</div>
+
+          <!-- Attendee Information Footer -->
+          <div class="hero-attendee-footer">
+            <div>
+              <div style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Passholder</div>
+              <div id="hero-attendee-name" style="font-size: 13.5px; font-weight: 700; color: #fff;">Raghav Sharma</div>
             </div>
-
-            <!-- Interactive Layer Action Bar -->
-            <div class="layer-action-bar">
-              <button class="layer-btn-action btn-accent" onclick="event.stopPropagation(); randomizePass();">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                <span>Re-Issue / Randomize</span>
-              </button>
-              <button class="layer-btn-action" id="btn-flip-pass" onclick="event.stopPropagation(); flipPassCard();">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-                <span>Flip Card</span>
-              </button>
+            <div style="text-align: right;">
+              <div style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Security Check</div>
+              <div id="hero-security-status" style="font-size: 11px; font-weight: 700; color: #34d399; font-family: 'JetBrains Mono', monospace;">✓ READY</div>
             </div>
           </div>
 
-          <!-- Inner Back Face (Shown when flipped) -->
-          <div id="pass-card-back-content" style="display: none; flex-direction: column; justify-content: space-between; height: 100%;">
-            <div class="layer-card-banner">
-              <div class="layer-card-title" style="color: #fbbf24;">
-                <span>SECURITY & TURNSTILE RULES</span>
-              </div>
-              <span class="layer-card-pill" style="background: rgba(245,158,11,0.2); color: #fbbf24;">REVERSE</span>
-            </div>
-
-            <!-- Barcode Graphic -->
-            <div style="background: #ffffff; padding: 12px; border-radius: 10px; margin: 10px 0;">
-              <div style="height: 50px; background: repeating-linear-gradient(90deg, #000 0px, #000 2px, transparent 2px, transparent 5px, #000 5px, #000 9px, transparent 9px, transparent 11px, #000 11px, #000 15px); width: 100%;"></div>
-              <div style="text-align: center; color: #000; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; margin-top: 4px;">*884920-FESTIVAL-PASS*</div>
-            </div>
-
-            <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; font-size: 11px; color: var(--text-secondary); line-height: 1.5;">
-              <div style="color: #fff; font-weight: 700; margin-bottom: 4px;">Gate Entry Guidelines:</div>
-              • Valid for 1 check-in per day at designated turnstiles.<br/>
-              • Re-entry requires security wristband scan.<br/>
-              • Dynamic HMAC QR prevents screenshots & scalping.
-            </div>
-
-            <div class="layer-action-bar">
-              <button class="layer-btn-action btn-accent" style="width: 100%;" onclick="event.stopPropagation(); flipPassCard();">
-                <span>↺ Return to Pass Front</span>
-              </button>
-            </div>
+          <!-- Pass Quick Actions -->
+          <div class="hero-pass-actions">
+            <button class="hero-pass-btn btn-accent" id="btn-hero-test-scan" onclick="simulateHeroGateScan()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span>⚡ Test 5ms Gate Scan</span>
+            </button>
+            <button class="hero-pass-btn" onclick="randomizeHeroPass()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+              </svg>
+              <span>Randomize</span>
+            </button>
           </div>
 
         </div>
-
-        <!-- LAYER 2: CRYPTOGRAPHIC HMAC ENGINE -->
-        <div class="ticket-layer layer-crypto" id="layer-crypto" onclick="focusLayer('crypto')">
-          <div class="crypto-laser-line" id="crypto-laser"></div>
-
-          <div>
-            <div class="layer-card-banner">
-              <div class="layer-card-title" style="color: #34d399;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span>02 • Cryptographic HMAC Engine</span>
-              </div>
-              <span class="layer-card-pill" style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4);">SHA-256</span>
-            </div>
-
-            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 12px;">
-              Every ticket is sealed with a salted HMAC-SHA256 digest. Scanners authenticate passes offline or online in under 0.5ms.
-            </p>
-
-            <!-- Dynamic Hash Box -->
-            <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
-              <div style="color: #6ee7b7; font-size: 10px; margin-bottom: 4px;">// ACTIVE TICKET PAYLOAD</div>
-              <div id="crypto-input-val" style="color: #fff; font-size: 11px; word-break: break-all;">VIP-884920:cf_edge_turnstile_v1</div>
-              <div style="color: #6ee7b7; font-size: 10px; margin-top: 8px; margin-bottom: 4px;">// HMAC SHA-256 DIGEST</div>
-              <div id="crypto-hash-val" style="color: #34d399; font-size: 10.5px; word-break: break-all;">9f8a4e21c83b702f9a14d5e890b714f3c2...</div>
-            </div>
-
-            <!-- Dynamic Verification Result -->
-            <div id="crypto-result-box" style="margin-top: 10px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 9px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
-              <div style="color: #34d399; font-weight: 700;">✓ GATE SCAN READY</div>
-              <div style="font-size: 10.5px; color: var(--text-secondary); margin-top: 2px;">
-                Click below to simulate real-time edge cryptographic verification.
-              </div>
-            </div>
-          </div>
-
-          <!-- Interactive Action Buttons -->
-          <div>
-            <div class="layer-action-bar">
-              <button class="layer-btn-action btn-emerald" onclick="event.stopPropagation(); testValidCryptoScan();">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>⚡ Simulate Valid Scan</span>
-              </button>
-              <button class="layer-btn-action btn-crimson" onclick="event.stopPropagation(); testTamperedCryptoScan();">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                <span>⚠️ Test Fraud Pass</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- LAYER 3: MULTI-DAY TURNSTILE CONTROLLER -->
-        <div class="ticket-layer layer-turnstile" id="layer-turnstile" onclick="focusLayer('turnstile')">
-          <div>
-            <div class="layer-card-banner">
-              <div class="layer-card-title" style="color: #60a5fa;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>03 • Multi-Day Turnstile Core</span>
-              </div>
-              <span class="layer-card-pill" style="background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4);">GATE LOGIC</span>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-              <span style="font-size: 11.5px; color: var(--text-secondary);">Turnstile Gate A-04</span>
-              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fff;">
-                Admitted: <strong id="turnstile-counter-val" style="color: #60a5fa;">8,421</strong>
-              </span>
-            </div>
-
-            <!-- Multi-Day Clearance Slots -->
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 11px;">
-                <span style="font-weight: 700; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">DAY 1 (DEC 27)</span>
-                <span style="color: #34d399; font-weight: 700; font-family: 'JetBrains Mono', monospace;">✓ ADMITTED 20:14</span>
-              </div>
-
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 11px;">
-                <span style="font-weight: 700; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;">DAY 2 (DEC 28)</span>
-                <span style="color: #34d399; font-weight: 700; font-family: 'JetBrains Mono', monospace;">✓ ADMITTED 19:42</span>
-              </div>
-
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(59,130,246,0.15); border: 1px solid #3b82f6; border-radius: 8px; font-size: 11px;">
-                <span style="font-weight: 700; color: #60a5fa; font-family: 'JetBrains Mono', monospace;">DAY 3 (DEC 29)</span>
-                <span id="turnstile-day3-status" style="color: #60a5fa; font-weight: 700; font-family: 'JetBrains Mono', monospace;">● TODAY • READY FOR SCAN</span>
-              </div>
-
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; font-size: 11px;">
-                <span style="font-weight: 600; color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace;">DAY 4 (DEC 30)</span>
-                <span style="color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace;">🔒 LOCKED (TOMORROW)</span>
-              </div>
-            </div>
-
-            <!-- Dynamic Alert Box -->
-            <div id="turnstile-alert-box" style="display: none; margin-top: 10px; padding: 9px 12px; border-radius: 8px; font-size: 10.5px; font-family: 'JetBrains Mono', monospace; line-height: 1.45;"></div>
-          </div>
-
-          <!-- Interactive Action Buttons -->
-          <div>
-            <div class="layer-action-bar">
-              <button class="layer-btn-action btn-accent" id="btn-turnstile-admit" onclick="event.stopPropagation(); testTurnstileScan();">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span>Check-in Day 3 (Gate 04)</span>
-              </button>
-              <button class="layer-btn-action" onclick="event.stopPropagation(); resetTurnstileState();">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                <span>Reset Gate</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- LAYER 4: CLOUDFLARE D1 SQLITE EDGE NODE -->
-        <div class="ticket-layer layer-d1" id="layer-d1" onclick="focusLayer('d1')">
-          <div>
-            <div class="layer-card-banner">
-              <div class="layer-card-title" style="color: #a78bfa;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-                <span>04 • Cloudflare D1 Edge Node</span>
-              </div>
-              <span class="layer-card-pill" style="background: rgba(139,92,246,0.2); color: #a78bfa; border: 1px solid rgba(139,92,246,0.4);">EDGE SQLITE</span>
-            </div>
-
-            <!-- Terminal Output Window -->
-            <div id="d1-terminal-out" style="background: #090710; border: 1px solid rgba(139,92,246,0.3); border-radius: 10px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #e9d5ff; line-height: 1.55; min-height: 125px;">
-              <div style="color: #a78bfa;">// D1 PREPARED STATEMENT</div>
-              <span style="color: #f472b6;">SELECT</span> id, tier, attendee_name, day3_admitted<br/>
-              <span style="color: #f472b6;">FROM</span> passes <span style="color: #f472b6;">WHERE</span> id = <span style="color: #67e8f9;">'VIP-884920'</span>;<br/>
-              <span style="color: #34d399; margin-top: 5px; display: inline-block;">↳ 1 ROW RETURNED (0.0012s)</span><br/>
-              <span style="color: #cbd5e1;">{"id":"VIP-884920","tier":"VIP","status":"ACTIVE"}</span>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-              <div style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 8px 10px;">
-                <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Edge Replicas</div>
-                <div style="font-size: 12px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;">310 Cities</div>
-              </div>
-              <div style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 8px 10px;">
-                <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Cold Starts</div>
-                <div style="font-size: 12px; font-weight: 700; color: #a78bfa; font-family: 'JetBrains Mono', monospace;">0.00ms</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Interactive Query Runner Buttons -->
-          <div>
-            <div style="font-size: 10.5px; color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; margin-bottom: 5px;">
-              TEST LIVE PREPARED STATEMENTS:
-            </div>
-            <div class="layer-action-bar">
-              <button class="layer-btn-action btn-accent" onclick="event.stopPropagation(); runD1Query('select');">
-                <span>SELECT</span>
-              </button>
-              <button class="layer-btn-action" onclick="event.stopPropagation(); runD1Query('update');">
-                <span>UPDATE</span>
-              </button>
-              <button class="layer-btn-action" onclick="event.stopPropagation(); runD1Query('ping');">
-                <span>BENCHMARK</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
       </div>
+
+      <!-- Live Customization Toolbar -->
+      <div class="hero-designer-toolbar">
+        <!-- Row 1: Banner Art Presets & Upload -->
+        <div class="toolbar-row">
+          <div class="toolbar-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <span>Banner Art:</span>
+          </div>
+          <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+            <button type="button" class="art-preset-pill active" id="preset-cyber" onclick="setBannerPreset('cyber')">Cyberpunk</button>
+            <button type="button" class="art-preset-pill" id="preset-sunset" onclick="setBannerPreset('sunset')">Sunset Rave</button>
+            <button type="button" class="art-preset-pill" id="preset-velvet" onclick="setBannerPreset('velvet')">Velvet Jazz</button>
+            <label class="btn-upload-label" onclick="document.getElementById('hero-banner-file').click()">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              <span>+ Your Image</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Row 2: Ticket Tier Switcher -->
+        <div class="toolbar-row">
+          <div class="toolbar-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Ticket Tier:</span>
+          </div>
+          <div style="display: flex; gap: 5px;">
+            <button type="button" class="art-preset-pill active" id="tier-btn-vip" onclick="setHeroTier('vip')">VIP</button>
+            <button type="button" class="art-preset-pill" id="tier-btn-gen" onclick="setHeroTier('gen')">General</button>
+            <button type="button" class="art-preset-pill" id="tier-btn-gst" onclick="setHeroTier('gst')">Guest List</button>
+          </div>
+        </div>
+
+        <!-- Row 3: Hologram Accent Color -->
+        <div class="toolbar-row">
+          <div class="toolbar-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            <span>Hologram Foil:</span>
+          </div>
+          <div class="color-swatch-group">
+            <div class="color-swatch active" style="background: #f59e0b;" onclick="setHeroAccent('#f59e0b', 'rgba(245,158,11,0.25)', this)" title="Electric Amber"></div>
+            <div class="color-swatch" style="background: #3b82f6;" onclick="setHeroAccent('#3b82f6', 'rgba(59,130,246,0.25)', this)" title="Neon Blue"></div>
+            <div class="color-swatch" style="background: #10b981;" onclick="setHeroAccent('#10b981', 'rgba(16,185,129,0.25)', this)" title="Emerald Rave"></div>
+            <div class="color-swatch" style="background: #a855f7;" onclick="setHeroAccent('#a855f7', 'rgba(168,85,247,0.25)', this)" title="Cyber Violet"></div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 
-  <!-- 4-LAYER PANORAMIC ARCHITECTURE MATRIX -->
+  <!-- 4-STEP USER EXPERIENCE & PRODUCT WALKTHROUGH SECTION -->
+  <section class="section-wrap" id="experience">
+    <div class="section-header">
+      <div class="section-pill">Interactive Organizer Experience</div>
+      <h2 class="section-title">From Blank Canvas to Jam-Packed Venue</h2>
+      <p class="section-desc">Experience the exact four-step product lifecycle that empowers festival organizers to build passes, kill scalper fraud, breeze attendees through turnstiles, and command live gate operations.</p>
+    </div>
+
+    <!-- Step Navigation Bar -->
+    <div class="experience-nav-bar">
+      <button class="exp-nav-tab active" id="exp-tab-btn-1" onclick="switchExperienceTab(1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <span>01 • Design Passes</span>
+      </button>
+      <button class="exp-nav-tab" id="exp-tab-btn-2" onclick="switchExperienceTab(2)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>02 • Anti-Screenshot QR</span>
+      </button>
+      <button class="exp-nav-tab" id="exp-tab-btn-3" onclick="switchExperienceTab(3)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <span>03 • Gate Scanner</span>
+      </button>
+      <button class="exp-nav-tab" id="exp-tab-btn-4" onclick="switchExperienceTab(4)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+        <span>04 • Admin Command</span>
+      </button>
+    </div>
+
+    <!-- STAGE 1: PASS DESIGNER & BRANDING -->
+    <div class="exp-panel active" id="exp-panel-1">
+      <div class="exp-details-card">
+        <div class="exp-step-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35);">
+          STEP 01 • DESIGN & BRAND
+        </div>
+        <h3 style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #fff;">
+          Bespoke Festival Passes in Under 2 Minutes
+        </h3>
+        <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.65;">
+          Upload your festival poster or venue artwork. TicketScanner auto-balances colors, applies reflective holographic foiling, and prepares passes for Apple Wallet, Google Wallet, and high-resolution print badges.
+        </p>
+
+        <div class="exp-feature-list">
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Instant Banner Customization:</strong> Upload your event flyer with 1 click. Zero Photoshop needed.</span>
+          </div>
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Tier Visual Differentiation:</strong> Automatic badge styling for VIP, Press, Backstage, and General.</span>
+          </div>
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Mobile Wallet & Vector Export:</strong> Attendees store passes directly in their iPhone or Android wallet.</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <a href="#designer" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+            <span>↑ Try the Banner Uploader Above</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Stage 1 Interactive Sandbox -->
+      <div class="exp-interactive-stage">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <span style="font-size: 12px; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">LIVE PASS CUSTOMIZER</span>
+          <span style="font-size: 11px; color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace;">INTERACTIVE DEMO</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Event Title</label>
+            <input type="text" id="stage1-event-input" class="form-input" value="AURORA SOUND FESTIVAL 2026" oninput="updateStage1Pass()" />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Attendee Name</label>
+              <input type="text" id="stage1-name-input" class="form-input" value="Sarah Jenkins" oninput="updateStage1Pass()" />
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Tier Badge</label>
+              <select id="stage1-tier-select" class="form-input" onchange="updateStage1Pass()">
+                <option value="VIP ALL-ACCESS">VIP All-Access</option>
+                <option value="GENERAL ADMISSION">General Admission</option>
+                <option value="BACKSTAGE ARTIST">Backstage Artist</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Sandbox Live Preview Card -->
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 16px; margin-top: 6px; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span id="stage1-preview-tier" style="font-size: 10px; font-weight: 800; color: #fbbf24; font-family: 'JetBrains Mono', monospace;">VIP ALL-ACCESS</span>
+              <span id="stage1-preview-event" style="font-size: 14px; font-weight: 700; color: #fff;">AURORA SOUND FESTIVAL 2026</span>
+              <span id="stage1-preview-name" style="font-size: 12px; color: var(--text-secondary);">Sarah Jenkins • Pass #VIP-991204</span>
+            </div>
+            <div style="background: #fff; padding: 5px; border-radius: 8px; flex-shrink: 0;">
+              <svg width="48" height="48" viewBox="0 0 100 100" fill="#000">
+                <rect x="0" y="0" width="30" height="30"></rect>
+                <rect x="4" y="4" width="22" height="22" fill="#fff"></rect>
+                <rect x="8" y="8" width="14" height="14"></rect>
+                <rect x="70" y="0" width="30" height="30"></rect>
+                <rect x="74" y="4" width="22" height="22" fill="#fff"></rect>
+                <rect x="78" y="8" width="14" height="14"></rect>
+                <rect x="0" y="70" width="30" height="30"></rect>
+                <rect x="4" y="74" width="22" height="22" fill="#fff"></rect>
+                <rect x="8" y="78" width="14" height="14"></rect>
+                <rect x="40" y="40" width="20" height="20"></rect>
+              </svg>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; color: var(--text-tertiary); text-align: center;">
+            ✓ Real-time SVG re-rendering with instant Apple Wallet PKPass packaging.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 2: ANTI-SCREENSHOT DYNAMIC QR -->
+    <div class="exp-panel" id="exp-panel-2">
+      <div class="exp-details-card">
+        <div class="exp-step-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35);">
+          STEP 02 • FRAUD-PROOF ENGINE
+        </div>
+        <h3 style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #fff;">
+          Kill WhatsApp Screenshots & Scalper Duplicates
+        </h3>
+        <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.65;">
+          Static QR codes get screenshotted and shared across group chats to sneak 5 scalpers in on 1 ticket. TicketScanner pairs rolling cryptographic tokens with moving optical watermark sweeps that immediately reject static pictures.
+        </p>
+
+        <div class="exp-feature-list">
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Rolling HMAC-SHA256 Token:</strong> QR payload dynamically cycles every 15 seconds.</span>
+          </div>
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Optical Laser Watermark Sweep:</strong> Moving line confirms the screen is an authentic active device.</span>
+          </div>
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Strict Anti-Passback:</strong> Once scanned, the pass is locked for 60 seconds against repeat entry.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 2 Interactive Sandbox -->
+      <div class="exp-interactive-stage">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <span style="font-size: 12px; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: 0.5px;">LIVE ANTI-FRAUD SIMULATOR</span>
+          <span style="font-size: 11px; color: #34d399; font-family: 'JetBrains Mono', monospace;" id="exp-fraud-timer">Token Refresh: 12s</span>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px; text-align: center;">
+          
+          <div class="hero-qr-container" style="width: 130px; height: 130px; margin: 0 auto 12px auto;">
+            <div class="qr-watermark-sweep"></div>
+            <svg width="110" height="110" viewBox="0 0 100 100" fill="#0c0d12">
+              <rect x="0" y="0" width="30" height="30"></rect>
+              <rect x="4" y="4" width="22" height="22" fill="#fff"></rect>
+              <rect x="8" y="8" width="14" height="14"></rect>
+              <rect x="70" y="0" width="30" height="30"></rect>
+              <rect x="74" y="4" width="22" height="22" fill="#fff"></rect>
+              <rect x="78" y="8" width="14" height="14"></rect>
+              <rect x="0" y="70" width="30" height="30"></rect>
+              <rect x="4" y="74" width="22" height="22" fill="#fff"></rect>
+              <rect x="8" y="78" width="14" height="14"></rect>
+              <rect x="36" y="36" width="28" height="28" fill="#10b981"></rect>
+            </svg>
+          </div>
+
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #fff; margin-bottom: 12px;">
+            PASS: <strong style="color: #6ee7b7;">VIP-884920</strong> • HMAC: <span style="color: var(--text-tertiary);" id="exp-fraud-hmac">7a2b9f84...</span>
+          </div>
+
+          <!-- Interactive Test Buttons -->
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <button class="btn btn-primary" style="height: 36px; font-size: 12px; padding: 0 14px;" onclick="testExpGenuinePass()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Test Genuine Pass</span>
+            </button>
+            <button class="btn btn-secondary" style="height: 36px; font-size: 12px; padding: 0 14px; border-color: rgba(239,68,68,0.4); color: #fca5a5;" onclick="testExpScreenshotFraud()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              <span>Simulate Scalper Screenshot</span>
+            </button>
+          </div>
+
+          <!-- Dynamic Verification Alert Box -->
+          <div id="exp-fraud-alert" style="margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: 11.5px; font-family: 'JetBrains Mono', monospace; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #34d399;">
+            ✓ READY FOR GATE VALIDATION: Active rolling key verified.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 3: GATE SCANNER VIEWFINDER -->
+    <div class="exp-panel" id="exp-panel-3">
+      <div class="exp-details-card">
+        <div class="exp-step-badge" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35);">
+          STEP 03 • TURNSTILE SCANNER
+        </div>
+        <h3 style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #fff;">
+          Sub-5ms Turnstile Scans on Any Smartphone
+        </h3>
+        <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.65;">
+          Turn any staff iPhone or Android into a hyper-speed optical turnstile. No expensive scanner gun rentals. Staff verify VIPs by ear using harmonic acoustic chimes without having to stare down at screens.
+        </p>
+
+        <div class="exp-feature-list">
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Sub-5ms Optical Recognition:</strong> Instantaneous barcode deciphering via WebAssembly.</span>
+          </div>
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Harmonic Acoustic Chimes:</strong> Distinct polyphonic tones for VIP vs General admission.</span>
+          </div>
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Zero-Internet Resilience:</strong> Offline IndexedDB cache validates entries even if venue Wi-Fi fails.</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <a href="scanner.html" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+            <span>Launch Fullscreen Camera Scanner ➔</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Stage 3 Interactive Smartphone Viewfinder -->
+      <div class="exp-interactive-stage" style="padding: 22px;">
+        <div class="scanner-viewfinder-box" id="exp-scanner-box">
+          <div class="viewfinder-camera-feed">
+            <div class="viewfinder-laser" id="exp-scanner-laser"></div>
+            
+            <div class="viewfinder-targeting-reticle">
+              <div class="reticle-corner corner-tl"></div>
+              <div class="reticle-corner corner-tr"></div>
+              <div class="reticle-corner corner-bl"></div>
+              <div class="reticle-corner corner-br"></div>
+            </div>
+
+            <div class="viewfinder-hud">
+              <div>GATE 01 • CAMERA ACTIVE</div>
+              <div id="exp-hud-latency" style="color: #60a5fa;">LATENCY: 3.2ms</div>
+            </div>
+          </div>
+
+          <!-- Status Result Bar -->
+          <div class="viewfinder-status-banner" id="exp-viewfinder-status">
+            <span>● AIM VIEWFINDER AT ATTENDEE PASS</span>
+            <span style="color: var(--text-tertiary);">READY</span>
+          </div>
+
+          <!-- Scanner Simulation Triggers -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 12px;">
+            <button class="hero-pass-btn btn-accent" onclick="simulateExpScanner('valid')">
+              <span>✓ Valid Pass</span>
+            </button>
+            <button class="hero-pass-btn" style="border-color: rgba(239,68,68,0.4); color: #fca5a5;" onclick="simulateExpScanner('duplicate')">
+              <span>⚠️ Duplicate</span>
+            </button>
+            <button class="hero-pass-btn" onclick="simulateExpScanner('offline')">
+              <span>📡 Offline Mode</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 4: ADMIN COMMAND CENTER -->
+    <div class="exp-panel" id="exp-panel-4">
+      <div class="exp-details-card">
+        <div class="exp-step-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35);">
+          STEP 04 • ADMIN COMMAND
+        </div>
+        <h3 style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #fff;">
+          Real-Time Gate Velocity & Crowd Intelligence
+        </h3>
+        <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.65;">
+          Monitor your entire door operation from a unified command cockpit. Track admission throughput per minute per gate, search attendees live, compile thousands of passes with 1 click, and keep 100% of your box office.
+        </p>
+
+        <div class="exp-feature-list">
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Live Gate Velocity KPI:</strong> Monitor scans per minute to identify gate bottlenecks before lines form.</span>
+          </div>
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>Instant Search & Revocation:</strong> Search any attendee in under 2ms and void stolen passes instantly.</span>
+          </div>
+          <div class="exp-feature-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span><strong>1-Click Batch Pass Compiler:</strong> Generate 5,000 personalized QR passes in under 3 seconds.</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <button class="btn btn-primary" onclick="openAuthModal('signin')" style="display: inline-flex; align-items: center; gap: 8px;">
+            <span>Sign In to Admin Studio ➔</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 4 Interactive Admin Miniature Mockup -->
+      <div class="exp-interactive-stage" style="padding: 20px;">
+        <div class="admin-mini-dashboard">
+          
+          <!-- Mini KPIs -->
+          <div class="admin-mini-kpis">
+            <div class="admin-mini-kpi">
+              <span class="admin-mini-val" id="admin-mock-admitted" style="color: #60a5fa;">3,842</span>
+              <span class="admin-mini-label">Admitted / 4,500</span>
+            </div>
+            <div class="admin-mini-kpi">
+              <span class="admin-mini-val" style="color: #34d399;">74 / min</span>
+              <span class="admin-mini-label">Gate Flow</span>
+            </div>
+            <div class="admin-mini-kpi">
+              <span class="admin-mini-val" style="color: #fbbf24;">₹18,50,000</span>
+              <span class="admin-mini-label">Box Office Rev</span>
+            </div>
+          </div>
+
+          <!-- Real-Time Filter Search Input -->
+          <div>
+            <input type="text" id="admin-mock-search" class="form-input" style="height: 36px; font-size: 12px; background: rgba(0,0,0,0.5);" placeholder="🔍 Filter attendees by name or tier..." oninput="filterAdminMockTable(this.value)" />
+          </div>
+
+          <!-- Mini Attendee Table -->
+          <table class="admin-mini-table">
+            <thead>
+              <tr>
+                <th>Attendee</th>
+                <th>Tier</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="admin-mock-tbody">
+              <tr>
+                <td><strong>Raghav Sharma</strong><div style="font-size: 10px; color: var(--text-tertiary);">VIP-884920</div></td>
+                <td><span style="color: #fbbf24; font-weight: 700;">VIP</span></td>
+                <td><span style="color: #34d399;">✓ Admitted</span></td>
+              </tr>
+              <tr>
+                <td><strong>Sarah Jenkins</strong><div style="font-size: 10px; color: var(--text-tertiary);">VIP-991204</div></td>
+                <td><span style="color: #fbbf24; font-weight: 700;">VIP</span></td>
+                <td><span style="color: #34d399;">✓ Admitted</span></td>
+              </tr>
+              <tr>
+                <td><strong>Aarav Kapoor</strong><div style="font-size: 10px; color: var(--text-tertiary);">GEN-441092</div></td>
+                <td><span style="color: #60a5fa; font-weight: 700;">General</span></td>
+                <td><span style="color: #34d399;">✓ Admitted</span></td>
+              </tr>
+              <tr>
+                <td><strong>Elena Rostova</strong><div style="font-size: 10px; color: var(--text-tertiary);">GST-002148</div></td>
+                <td><span style="color: #c084fc; font-weight: 700;">Guest List</span></td>
+                <td><span style="color: #fbbf24;">● Not Scanned</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 1-Click Pass Compiler Action -->
+          <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+            <button class="hero-pass-btn btn-accent" id="btn-mock-batch" style="height: 34px;" onclick="simulateMockBatchCompile()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>⚡ Compile 100 Demo Passes</span>
+            </button>
+            <span id="mock-batch-status" style="font-size: 11px; color: #34d399; font-family: 'JetBrains Mono', monospace;">Database Synced</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ENTERPRISE EDGE RELIABILITY & CONCURRENCY MATRIX -->
   <section class="section-wrap" id="architecture" style="padding-top: 50px;">
     <div class="section-header">
-      <div class="section-pill">4-Layer Security Pipeline</div>
-      <h2 class="section-title">From Mobile Screen to Global SQLite</h2>
-      <p class="section-desc">Every festival pass operates on an unbreachable 4-layer stack. Inspect the entire data flow side-by-side with zero bottlenecks.</p>
+      <div class="section-pill">Under the Hood: Enterprise Edge Concurrency</div>
+      <h2 class="section-title">Engineered to Handle 10,000 Gate Swarms</h2>
+      <p class="section-desc">Traditional ticketing systems crash when thousands of fans rush the gates at 8:00 PM. Here is how our 4-layer edge architecture guarantees sub-5ms verification without a central database bottleneck.</p>
     </div>
 
     <div class="arch-pipeline-grid">
@@ -1944,51 +2280,366 @@
       }
     }
 
-    // ACTIVE PASS INTERACTIVE ENGINE
-    let currentPassId = "VIP-884920";
-    let currentAttendee = "Raghav Sharma";
-    let currentTier = "vip";
-    let isFlipped = false;
-    let day3Admitted = false;
-    let turnstileCounter = 8421;
-    let currentMode = "assembled";
-    let currentFocusedLayer = "front";
+    // ==========================================
+    // HERO PASS DESIGNER LOGIC
+    // ==========================================
+    let heroPassId = "VIP-884920";
+    let heroAttendee = "Raghav Sharma";
+    let heroTier = "vip";
 
-    function togglePassView(mode) {
-      currentMode = mode;
-      const wrap = document.getElementById("pass-deck-wrap");
-      const btnAss = document.getElementById("btn-view-assembled");
-      const btnDec = document.getElementById("btn-view-deconstructed");
+    function handleHeroBannerUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
 
-      if (mode === 'deconstructed') {
-        wrap.classList.add("mode-deconstructed");
-        wrap.classList.remove("mode-assembled");
-        btnDec.classList.add("active");
-        btnAss.classList.remove("active");
-        focusLayer(currentFocusedLayer || 'front');
-      } else {
-        wrap.classList.remove("mode-deconstructed");
-        wrap.classList.add("mode-assembled");
-        btnAss.classList.add("active");
-        btnDec.classList.remove("active");
-        focusLayer('front');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const bannerEl = document.getElementById("hero-pass-banner");
+        if (bannerEl) {
+          bannerEl.style.backgroundImage = `url('${e.target.result}')`;
+          bannerEl.style.backgroundSize = "cover";
+          bannerEl.style.backgroundPosition = "center";
+        }
+        document.querySelectorAll(".art-preset-pill").forEach(p => {
+          if (p.id && p.id.startsWith("preset-")) p.classList.remove("active");
+        });
+        synthesizeSound('gen');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    const bannerPresets = {
+      cyber: "linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #7c2d12 100%)",
+      sunset: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #1e1b4b 100%)",
+      velvet: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #0f172a 100%)"
+    };
+
+    function setBannerPreset(presetKey) {
+      const bannerEl = document.getElementById("hero-pass-banner");
+      if (bannerEl && bannerPresets[presetKey]) {
+        bannerEl.style.backgroundImage = bannerPresets[presetKey];
+      }
+      document.querySelectorAll(".art-preset-pill").forEach(p => {
+        if (p.id && p.id.startsWith("preset-")) p.classList.remove("active");
+      });
+      const activeBtn = document.getElementById(`preset-${presetKey}`);
+      if (activeBtn) activeBtn.classList.add("active");
+      synthesizeSound('gen');
+    }
+
+    const tierData = {
+      vip: {
+        title: "NEON HORIZON FESTIVAL 2026",
+        sub: "Nov 28–30 • Gate A Turnstiles • Main Arena",
+        badge: "VIP ALL-ACCESS",
+        cardPill: "VIP • 4-DAY",
+        color: "#fbbf24",
+        border: "rgba(245, 158, 11, 0.45)",
+        glow: "rgba(245, 158, 11, 0.25)",
+        code: "VIP-884920",
+        sound: "vip"
+      },
+      gen: {
+        title: "NEON HORIZON FESTIVAL 2026",
+        sub: "Nov 28–30 • General Lawn Turnstiles",
+        badge: "GENERAL ADMISSION",
+        cardPill: "GENERAL • DAY 2",
+        color: "#34d399",
+        border: "rgba(16, 185, 129, 0.45)",
+        glow: "rgba(16, 185, 129, 0.25)",
+        code: "GEN-441092",
+        sound: "gen"
+      },
+      gst: {
+        title: "NEON HORIZON FESTIVAL 2026",
+        sub: "Nov 28–30 • Backstage Artist Gate 04",
+        badge: "GUEST LIST • ARTIST",
+        cardPill: "ARTIST GUEST",
+        color: "#a78bfa",
+        border: "rgba(168, 85, 247, 0.45)",
+        glow: "rgba(168, 85, 247, 0.25)",
+        code: "GST-002148",
+        sound: "gst"
+      }
+    };
+
+    function setHeroTier(tierKey) {
+      heroTier = tierKey;
+      const data = tierData[tierKey];
+      if (!data) return;
+
+      const card = document.getElementById("hero-pass-card");
+      const badgeTier = document.getElementById("hero-banner-tier-text");
+      const pillTier = document.getElementById("hero-card-tier-pill");
+      const codeEl = document.getElementById("hero-pass-code");
+      const subEl = document.getElementById("hero-event-sub");
+
+      if (badgeTier) badgeTier.textContent = data.badge;
+      if (pillTier) {
+        pillTier.textContent = data.cardPill;
+        pillTier.style.color = data.color;
+        pillTier.style.borderColor = data.border;
+      }
+      if (codeEl) codeEl.textContent = data.code;
+      if (subEl) subEl.textContent = data.sub;
+
+      if (card) {
+        card.style.setProperty('--pass-accent', data.border);
+        card.style.setProperty('--pass-glow', data.glow);
+      }
+
+      document.querySelectorAll(".art-preset-pill").forEach(p => {
+        if (p.id && p.id.startsWith("tier-btn-")) p.classList.remove("active");
+      });
+      const activeBtn = document.getElementById(`tier-btn-${tierKey}`);
+      if (activeBtn) activeBtn.classList.add("active");
+
+      synthesizeSound(data.sound);
+    }
+
+    function setHeroAccent(color, glow, el) {
+      const card = document.getElementById("hero-pass-card");
+      if (card) {
+        card.style.setProperty('--pass-accent', color);
+        card.style.setProperty('--pass-glow', glow);
+      }
+      document.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("active"));
+      if (el) el.classList.add("active");
+      synthesizeSound('gen');
+    }
+
+    function simulateHeroGateScan() {
+      const card = document.getElementById("hero-pass-card");
+      const statusEl = document.getElementById("hero-security-status");
+      const btn = document.getElementById("btn-hero-test-scan");
+
+      if (card) {
+        card.style.boxShadow = "0 0 45px rgba(16, 185, 129, 0.8), 0 25px 65px rgba(0, 0, 0, 0.9)";
+        card.style.borderColor = "#10b981";
+      }
+      if (statusEl) {
+        statusEl.textContent = "✓ ADMITTED (< 3.8ms)";
+        statusEl.style.color = "#34d399";
+      }
+      if (btn) {
+        btn.innerHTML = `<span>✓ Gate Turnstile Unlocked!</span>`;
+      }
+
+      synthesizeSound(heroTier === 'vip' ? 'vip' : 'gen');
+
+      setTimeout(() => {
+        if (card) {
+          card.style.boxShadow = "";
+          card.style.borderColor = "";
+        }
+        if (statusEl) {
+          statusEl.textContent = "✓ READY";
+          statusEl.style.color = "#34d399";
+        }
+        if (btn) {
+          btn.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>⚡ Test 5ms Gate Scan</span>
+          `;
+        }
+      }, 2000);
+    }
+
+    function randomizeHeroPass() {
+      const sampleNames = ["Raghav Sharma", "Aarav Kapoor", "Elena Rostova", "Sarah Jenkins", "Devansh Patel", "Lucas Moreau"];
+      const randNum = Math.floor(100000 + Math.random() * 900000);
+      const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+      const prefix = heroTier.toUpperCase();
+
+      const nameEl = document.getElementById("hero-attendee-name");
+      const codeEl = document.getElementById("hero-pass-code");
+
+      if (nameEl) nameEl.textContent = randomName;
+      if (codeEl) codeEl.textContent = `${prefix}-${randNum}`;
+
+      synthesizeSound('gen');
+    }
+
+    // ==========================================
+    // 4-STEP EXPERIENCE WALKTHROUGH LOGIC
+    // ==========================================
+    function switchExperienceTab(step) {
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById(`exp-tab-btn-${i}`);
+        const p = document.getElementById(`exp-panel-${i}`);
+        if (btn) btn.classList.toggle("active", i === step);
+        if (p) {
+          if (i === step) {
+            p.classList.add("active");
+            p.style.display = "grid";
+          } else {
+            p.classList.remove("active");
+            p.style.display = "none";
+          }
+        }
+      }
+      synthesizeSound('gen');
+    }
+
+    // Stage 1 Live Pass Customizer
+    function updateStage1Pass() {
+      const eventInput = document.getElementById("stage1-event-input");
+      const nameInput = document.getElementById("stage1-name-input");
+      const tierSelect = document.getElementById("stage1-tier-select");
+
+      const previewTier = document.getElementById("stage1-preview-tier");
+      const previewEvent = document.getElementById("stage1-preview-event");
+      const previewName = document.getElementById("stage1-preview-name");
+
+      if (previewEvent && eventInput) previewEvent.textContent = eventInput.value || "EVENT NAME";
+      if (previewName && nameInput) previewName.textContent = `${nameInput.value || "Attendee"} • Pass #VIP-991204`;
+      if (previewTier && tierSelect) {
+        previewTier.textContent = tierSelect.value;
+        if (tierSelect.value.includes("VIP")) previewTier.style.color = "#fbbf24";
+        else if (tierSelect.value.includes("GENERAL")) previewTier.style.color = "#60a5fa";
+        else previewTier.style.color = "#c084fc";
       }
     }
 
-    function focusLayer(layerId) {
-      currentFocusedLayer = layerId;
-      const wrap = document.getElementById("pass-deck-wrap");
-
-      document.querySelectorAll(".layer-pill-btn").forEach(btn => btn.classList.remove("active"));
-      const pill = document.getElementById(`pill-${layerId}`);
-      if (pill) pill.classList.add("active");
-
-      document.querySelectorAll(".ticket-layer").forEach(layer => layer.classList.remove("is-focused"));
-      const target = document.getElementById(`layer-${layerId}`);
-      if (target) {
-        target.classList.add("is-focused");
-        wrap.classList.add("has-focus");
+    // Stage 2 Anti-Screenshot Simulation
+    let fraudTokenTimer = 15;
+    setInterval(() => {
+      fraudTokenTimer--;
+      if (fraudTokenTimer <= 0) {
+        fraudTokenTimer = 15;
+        const hmacEl = document.getElementById("exp-fraud-hmac");
+        if (hmacEl) {
+          const randHex = Math.random().toString(16).substring(2, 10);
+          hmacEl.textContent = `${randHex}...`;
+        }
       }
+      const timerEl = document.getElementById("exp-fraud-timer");
+      if (timerEl) timerEl.textContent = `Token Refresh: ${fraudTokenTimer}s`;
+    }, 1000);
+
+    function testExpGenuinePass() {
+      const alertBox = document.getElementById("exp-fraud-alert");
+      if (alertBox) {
+        alertBox.style.background = "rgba(16,185,129,0.15)";
+        alertBox.style.borderColor = "rgba(16,185,129,0.5)";
+        alertBox.style.color = "#34d399";
+        alertBox.innerHTML = `✓ GENUINE PASS CONFIRMED: Live watermark sweep + rolling HMAC valid (0.34ms). Turnstile open.`;
+      }
+      synthesizeSound('vip');
+    }
+
+    function testExpScreenshotFraud() {
+      const alertBox = document.getElementById("exp-fraud-alert");
+      if (alertBox) {
+        alertBox.style.background = "rgba(239,68,68,0.18)";
+        alertBox.style.borderColor = "rgba(239,68,68,0.5)";
+        alertBox.style.color = "#f87171";
+        alertBox.innerHTML = `❌ COUNTERFEIT FLAGGED: Static screenshot rejected (Missing live watermark sweep frequency). Gate locked.`;
+      }
+      synthesizeSound('dup');
+    }
+
+    // Stage 3 Gate Scanner Viewfinder Simulation
+    let expScannerAdmissions = 1482;
+    function simulateExpScanner(type) {
+      const statusEl = document.getElementById("exp-viewfinder-status");
+      const box = document.getElementById("exp-scanner-box");
+      const hudLatency = document.getElementById("exp-hud-latency");
+
+      if (type === 'valid') {
+        expScannerAdmissions++;
+        if (statusEl) {
+          statusEl.style.background = "rgba(16,185,129,0.2)";
+          statusEl.style.borderColor = "#10b981";
+          statusEl.style.color = "#34d399";
+          statusEl.innerHTML = `<span>✓ PASS VALIDATED: VIP #884920</span><span><strong style="color:#fff;">WELCOME!</strong></span>`;
+        }
+        if (box) box.style.borderColor = "rgba(16,185,129,0.7)";
+        if (hudLatency) hudLatency.textContent = "LATENCY: 2.1ms";
+        synthesizeSound('vip');
+      } else if (type === 'duplicate') {
+        if (statusEl) {
+          statusEl.style.background = "rgba(239,68,68,0.25)";
+          statusEl.style.borderColor = "#ef4444";
+          statusEl.style.color = "#f87171";
+          statusEl.innerHTML = `<span>⚠️ ALREADY SCANNED (Turnstile 02)</span><span>ENTRY DENIED</span>`;
+        }
+        if (box) box.style.borderColor = "rgba(239,68,68,0.8)";
+        if (hudLatency) hudLatency.textContent = "LATENCY: 1.8ms";
+        synthesizeSound('dup');
+      } else {
+        if (statusEl) {
+          statusEl.style.background = "rgba(59,130,246,0.2)";
+          statusEl.style.borderColor = "#3b82f6";
+          statusEl.style.color = "#60a5fa";
+          statusEl.innerHTML = `<span>📡 OFFLINE CACHE ACTIVE</span><span>SYNCED VIA INDEXEDDB</span>`;
+        }
+        if (box) box.style.borderColor = "rgba(59,130,246,0.7)";
+        if (hudLatency) hudLatency.textContent = "LATENCY: 0.8ms (Local Cache)";
+        synthesizeSound('gen');
+      }
+
+      setTimeout(() => {
+        if (box) box.style.borderColor = "var(--border)";
+      }, 1500);
+    }
+
+    // Stage 4 Admin Mini Dashboard Simulation
+    const mockAttendees = [
+      { name: "Raghav Sharma", id: "VIP-884920", tier: "VIP", color: "#fbbf24", status: "✓ Admitted", statusColor: "#34d399" },
+      { name: "Sarah Jenkins", id: "VIP-991204", tier: "VIP", color: "#fbbf24", status: "✓ Admitted", statusColor: "#34d399" },
+      { name: "Aarav Kapoor", id: "GEN-441092", tier: "General", color: "#60a5fa", status: "✓ Admitted", statusColor: "#34d399" },
+      { name: "Elena Rostova", id: "GST-002148", tier: "Guest List", color: "#c084fc", status: "● Not Scanned", statusColor: "#fbbf24" },
+      { name: "Devansh Patel", id: "GEN-552190", tier: "General", color: "#60a5fa", status: "● Not Scanned", statusColor: "#fbbf24" }
+    ];
+
+    function filterAdminMockTable(query) {
+      const tbody = document.getElementById("admin-mock-tbody");
+      if (!tbody) return;
+      const q = (query || "").toLowerCase();
+      const filtered = mockAttendees.filter(a => a.name.toLowerCase().includes(q) || a.tier.toLowerCase().includes(q) || a.id.toLowerCase().includes(q));
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-tertiary); padding: 16px;">No attendees found matching "${query}"</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(a => `
+        <tr>
+          <td><strong>${a.name}</strong><div style="font-size: 10px; color: var(--text-tertiary);">${a.id}</div></td>
+          <td><span style="color: ${a.color}; font-weight: 700;">${a.tier}</span></td>
+          <td><span style="color: ${a.statusColor};">${a.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function simulateMockBatchCompile() {
+      const btn = document.getElementById("btn-mock-batch");
+      const statusEl = document.getElementById("mock-batch-status");
+      if (!btn) return;
+
+      btn.disabled = true;
+      btn.innerHTML = `<span>Compiling passes...</span>`;
+      if (statusEl) statusEl.textContent = "Writing to D1 Edge SQLite...";
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<span>✓ 100 Passes Ready!</span>`;
+        if (statusEl) {
+          statusEl.textContent = "Committed in 0.28s";
+          statusEl.style.color = "#34d399";
+        }
+        synthesizeSound('vip');
+
+        setTimeout(() => {
+          btn.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>⚡ Compile 100 Demo Passes</span>
+          `;
+          if (statusEl) statusEl.textContent = "Database Synced";
+        }, 3000);
+      }, 700);
     }
 
     // Pass Tier Switcher
