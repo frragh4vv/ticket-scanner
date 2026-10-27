@@ -1,6 +1,6 @@
 # 🎟️ TicketScanner Pro • Enterprise Event Ticketing & Scanner Platform (v3)
 
-A high-performance, full-stack event ticket management and gate verification platform. Built on **Cloudflare Workers** (serverless edge API + asset hosting) and backed by **Firebase Realtime Database** with integrated email dispatch via **Resend**.
+A high-performance, full-stack event ticket management and gate verification platform. Built on **Cloudflare Workers** (serverless edge API + asset hosting) and backed by **Cloudflare D1** (SQLite at the edge) with integrated email dispatch via **Resend** and credit top-ups via **Razorpay**.
 
 ---
 
@@ -13,13 +13,13 @@ A high-performance, full-stack event ticket management and gate verification pla
   * ⭐ **Guestlist**: Royal electric violet badge, melodic chime, honorary guest entry marker.
 * **Smart Tier Prefixes**: Automatically generates human-readable, collision-resistant codes (e.g. `VIP-4A9B2C`, `GEN-8D1E3F`, `GST-7A2F0B`).
 
-### 2. 📷 High-Velocity Gate Scanner (`index.html`)
+### 2. 📷 High-Velocity Gate Scanner (`scanner.html`)
 * **Continuous "Scan Next" Workflow**:
   * Scanned ticket result modal **stays pinned** on screen showing Attendee Name, Tier Badge, Ticket ID, Gate Operator, and Timestamp.
   * Big primary **[Scan Next Ticket]** button to immediately open the camera for the next attendee (triggered by clicking, pressing `Spacebar`, `Enter`, or tapping anywhere).
   * Optional **Continuous Auto-Scan** toggle for hands-free 2.8s auto-resuming during high-volume rushes.
 * **Gate Ergonomics**:
-  * **Built-in Web Audio Synthesizer**: Generates distinct harmonic chimes offline without external audio files (VIP fanfare chord, General confirmation chime, Duplicate warning tone, Invalid buzzer).
+  * **Built-in Web Audio Synthesizer**: Generates distinct harmonic chimes in-browser without external audio files (VIP fanfare chord, General confirmation chime, Duplicate warning tone, Invalid buzzer).
   * **Torch / Flashlight Toggle**: Instantly illuminates camera flash for dimly lit night venues and clubs.
   * **Camera Switcher**: Flip between rear wide/macro lens and front selfie camera.
   * **Haptic Vibration**: Differentiated vibration pulses for verified entry vs duplicates.
@@ -44,8 +44,8 @@ A high-performance, full-stack event ticket management and gate verification pla
 
 ### 5. ⚠️ Database Clean Slate & Batch Creator
 * **Safety-Gated Database Reset**:
-  * `POST /api/reset-db` protected by master bearer key and explicit confirmation phrase (`CONFIRM_RESET`).
-  * **Wipe All Records**: Clears the entire database for a fresh event.
+  * `POST /api/reset-db` protected by an organizer session and an explicit confirmation phrase (`CONFIRM_RESET`).
+  * **Wipe All Records**: Clears all tickets and scan logs for the selected event.
   * **Reset Scanned Statuses**: Keeps attendee names and tiers, but resets all tickets back to `Valid`.
 * **Multi-Tier Generator**:
   * Create custom quantities of VIP, General, and Guestlist passes in a single batch.
@@ -60,10 +60,12 @@ A high-performance, full-stack event ticket management and gate verification pla
 ├── qrmaker.py               # Local multi-tier QR & CSV generator script
 └── worker/                  # Cloudflare Worker serverless full-stack app
     ├── wrangler.toml        # Cloudflare configuration & static asset directory
-    ├── src/index.js         # REST API (/api/*) — talks to Firebase + Resend
+    ├── schema.sql / seed.sql # D1 schema and demo data
+    ├── src/index.js         # REST API (/api/*) — talks to D1, Resend and Razorpay
     └── public/              # High-performance static web app served from Cloudflare's edge
-        ├── index.html       # Mobile-first Gate Scanner PWA
-        └── admin.html       # Event Command Center & Visual Ticket Studio
+        ├── landing.html     # Marketing page (served at /)
+        ├── scanner.html     # Mobile-first Gate Scanner (served at /scan)
+        └── admin.html       # Event Command Center & Visual Ticket Studio (served at /admin)
 ```
 
 ---
@@ -74,17 +76,25 @@ The frontend and API are deployed together as a **single Cloudflare Worker**. Th
 
 ### Environment Variables & Secrets
 
-Set these in your Cloudflare dashboard or using Wrangler:
+Set these in your Cloudflare dashboard or using Wrangler (for local dev, put them in `worker/.dev.vars`):
 ```bash
 cd worker
-npx wrangler secret put FIREBASE_SECRET   # Firebase Realtime Database Auth Secret
-npx wrangler secret put RESEND_API_KEY    # Resend API Key for ticket emails
+npx wrangler secret put SCANNER_ACCESS_KEY   # Master key for the owner account (admin login)
+npx wrangler secret put SESSION_SECRET       # Long random string used to sign session tokens
+npx wrangler secret put RESEND_API_KEY       # Resend API key for ticket emails
+npx wrangler secret put RAZORPAY_KEY_ID      # Razorpay key id (credit top-ups)
+npx wrangler secret put RAZORPAY_KEY_SECRET  # Razorpay key secret (payment signature checks)
 ```
 
-`FIREBASE_URL` is configured in `worker/wrangler.toml`:
-```toml
-[vars]
-FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app"
+Optional vars: `APP_URL` (public URL used in password-reset links), `EMAIL_FROM` (a sender on your verified Resend domain), `OWNER_ORG_ID` (organizer the master key signs in as, default `org_raghav`), `EMAIL_DAILY_CAP` (pass emails per organizer per day, default 1000), `ALLOWED_ORIGINS` (extra cross-origin callers), and `DEMO_BILLING="true"` to grant credits without a payment gateway — **local testing only**; it is ignored when Razorpay keys are set.
+
+See [LAUNCH.md](LAUNCH.md) for the full go-live checklist (legal placeholders, Razorpay KYC, email domain, security settings).
+
+The D1 database is bound as `DB` in `worker/wrangler.toml`. Create it and apply the schema:
+```bash
+npx wrangler d1 create ticket-scanner-db          # paste the database_id into wrangler.toml
+npx wrangler d1 execute ticket-scanner-db --remote --file=schema.sql
+npx wrangler d1 execute ticket-scanner-db --remote --file=seed.sql   # optional demo data
 ```
 
 ### Local Development
@@ -106,6 +116,9 @@ npx wrangler deploy
 
 ## 🔑 Authentication
 
-Both the **Gate Scanner** (`index.html`) and the **Admin Panel** (`admin.html`) are protected by the master access token:
-* **Access Token**: `Bearer Raghav@ticket`
-* Passwords are saved in browser `localStorage` on successful login for frictionless session management on gate staff devices.
+All `/api/*` routes except sign-in require a signed session token (`Authorization: Bearer st....`), and every query is scoped to the signed-in organizer's own events.
+
+* **Organizers**: sign up at `/signup` and sign in at `/admin` with email + password (PBKDF2-hashed). Password reset by email (`/reset`), change password, data export and account deletion are in Settings. Sessions last 7 days and end on every device when the password changes. The platform owner can also sign in with the master key (`SCANNER_ACCESS_KEY`).
+* **Gate volunteers**: open the gate link shared from the admin panel (`/scanner.html?event=<id>&pin=<pin>`). The PIN only unlocks scanning for that one event — no ticket lists, stats or settings. Sessions last 14 days.
+* **Brute-force protection**: 10 failed attempts per event PIN, email, or IP locks that key out for 15 minutes.
+* **Scans are atomic**: two gates scanning the same pass at the same instant can't both admit it.

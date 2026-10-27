@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reset password · stub</title>
+<meta name="description" content="Choose a new password for your stub account." />
+<meta name="robots" content="noindex,nofollow" />
+<meta name="theme-color" content="#0F1012" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<header class="site-header">
+  <nav aria-label="Main">
+    <a href="/" class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="15" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="1" y="15" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="16" y="16" width="4" height="4" fill="#D4F36B"/><rect x="21" y="21" width="4" height="4" fill="#D4F36B"/></svg><span>stub</span></a>
+    <div class="nav-links">
+      <a href="/#pricing" class="hide-sm">Pricing</a>
+      <a href="/contact" class="hide-sm">Contact</a>
+      <a href="/admin" class="btn btn-ghost" style="min-height:44px;padding:10px 18px;font-size:15px">Sign in</a>
+    </div>
+  </nav>
+</header>
+<main class="center">
+  <div class="card">
+    <h1>Choose a new password</h1>
+    <p id="intro">Reset links work once and expire after 30 minutes.</p>
+    <form id="reset-form" style="display:flex;flex-direction:column;gap:14px" novalidate>
+      <label class="field">New password<input id="pw" class="input" type="password" autocomplete="new-password" minlength="8" maxlength="200" required /></label>
+      <label class="field">Repeat password<input id="pw2" class="input" type="password" autocomplete="new-password" minlength="8" maxlength="200" required /></label>
+      <p id="msg" class="msg" role="alert" hidden></p>
+      <button class="btn btn-accent" id="go" type="submit">Save new password</button>
+    </form>
+    <p style="font-size:14px"><a href="/admin">Back to sign in</a></p>
+  </div>
+</main>
+<script>
+  // The token travels in the URL fragment, which browsers never send to servers or in Referer headers
+  const token = new URLSearchParams(location.hash.slice(1)).get("token");
+  history.replaceState(null, "", location.pathname);
+  const form = document.getElementById("reset-form");
+  const msg = document.getElementById("msg");
+  const say = (text, ok) => { msg.textContent = text; msg.className = "msg " + (ok ? "ok" : "err"); msg.hidden = false; };
+  if (!token) {
+    form.hidden = true;
+    document.getElementById("intro").textContent = "This link is missing its reset code. Request a new link from the sign-in page.";
+  }
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const pw = document.getElementById("pw").value, pw2 = document.getElementById("pw2").value;
+    if (pw.length < 8) return say("Use at least 8 characters.");
+    if (pw !== pw2) return say("The passwords don't match.");
+    const btn = document.getElementById("go");
+    btn.disabled = true;
+    try {
+      const res = await fetch("/api/auth/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, password: pw }) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.token) {
+        try { localStorage.setItem("admin_key", data.token); } catch (err) {}
+        say("Password saved. Taking you to your dashboard…", true);
+        setTimeout(() => { location.href = "/admin"; }, 900);
+      } else {
+        say(data.error || "Couldn't reset the password. Request a new link.");
+        btn.disabled = false;
+      }
+    } catch (err) {
+      say("Can't reach the server. Check your connection and try again.");
+      btn.disabled = false;
+    }
+  });
+</script>
+<footer class="site-footer">
+  <div class="inner">
+    <span>© 2026 stub</span>
+    <nav aria-label="Legal">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/refunds">Refunds</a>
+      <a href="/cookies">Cookies</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+<script src="/consent.js" defer></script>
+</body>
+</html>

@@ -2,14 +2,12 @@ name = "ticket-scanner-api"
 main = "src/index.js"
 compatibility_date = "2026-05-29"
 
-# Serve the frontend (index.html / admin.html) as static assets straight from
+# Serve the frontend (landing / scanner / admin) as static assets straight from
 # Cloudflare's global edge. Requests that match a file in ./public are served
 # as static assets; anything else (e.g. /api/*) falls through to the Worker script in src/index.js.
 [assets]
 directory = "./public"
-
-[vars]
-FIREBASE_URL = "https://ticketsqr1-default-rtdb.asia-southeast1.firebasedatabase.app"
+binding = "ASSETS"   # lets src/index.js route /, /scan and /admin
 
 # 🗄️ Cloudflare D1 Relational SQLite Database Binding
 [[d1_databases]]

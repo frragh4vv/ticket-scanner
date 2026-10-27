@@ -3,32 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>TicketScanner Pro • Gate Scanner</title>
+  <title>stub • Gate Scanner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="robots" content="noindex,nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
   <style>
     :root {
-      --bg-dark: #0A0A0C;
-      --card-bg: #121215;
+      --bg-dark: #0F1012;
+      --card-bg: #17191C;
       --card-border: rgba(255, 255, 255, 0.08);
       --card-border-strong: rgba(255, 255, 255, 0.18);
-      --text-main: #F5F5F0;
-      --text-muted: #8A8A93;
+      --text-main: #F2EFE8;
+      --text-muted: #9C9B94;
       
-      --volt: #D4FF00;
-      --volt-glow: rgba(212, 255, 0, 0.3);
-      --color-vip: #D4FF00;
-      --color-vip-glow: rgba(212, 255, 0, 0.25);
-      --color-gen: #34D399;
-      --color-gen-glow: rgba(52, 211, 153, 0.25);
-      --color-gst: #C084FC;
-      --color-gst-glow: rgba(192, 132, 252, 0.25);
-      --color-dup: #FB923C;
-      --color-err: #F87171;
-      --primary: #D4FF00;
+      --volt: #D4F36B;
+      --volt-glow: rgba(212, 243, 107, 0.3);
+      --color-vip: #D4F36B;
+      --color-vip-glow: rgba(212, 243, 107, 0.25);
+      --color-gen: #7FE3C4;
+      --color-gen-glow: rgba(127, 227, 196, 0.25);
+      --color-gst: #C9B6FF;
+      --color-gst-glow: rgba(201, 182, 255, 0.25);
+      --color-dup: #FFB870;
+      --color-err: #FF7A6B;
+      --primary: #D4F36B;
     }
 
     * {
@@ -41,9 +43,10 @@
     }
 
     body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg-dark);
-      background-image: radial-gradient(circle at 50% 0%, rgba(212, 255, 0, 0.04) 0%, transparent 70%);
+      background-image: radial-gradient(rgba(242, 239, 232, 0.06) 1px, transparent 1px);
+      background-size: 22px 22px;
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
@@ -95,7 +98,7 @@
       width: 28px;
       height: 28px;
       background: var(--volt);
-      color: #0A0A0C;
+      color: #0F1012;
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -115,7 +118,7 @@
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--card-border);
       padding: 6px 12px;
-      border-radius: 6px;
+      border-radius: 999px;
       color: var(--text-muted);
       cursor: pointer;
       display: flex;
@@ -131,9 +134,9 @@
     }
 
     .scan-counter {
-      background: rgba(212, 255, 0, 0.12);
+      background: rgba(212, 243, 107, 0.12);
       color: var(--volt);
-      border: 1px solid rgba(212, 255, 0, 0.3);
+      border: 1px solid rgba(212, 243, 107, 0.3);
       padding: 4px 10px;
       border-radius: 6px;
       font-family: 'JetBrains Mono', monospace;
@@ -181,8 +184,8 @@
     .gate-icon {
       width: 56px;
       height: 56px;
-      background: rgba(212, 255, 0, 0.1);
-      border: 1px solid rgba(212, 255, 0, 0.25);
+      background: rgba(212, 243, 107, 0.1);
+      border: 1px solid rgba(212, 243, 107, 0.25);
       border-radius: 14px;
       display: flex;
       align-items: center;
@@ -208,7 +211,7 @@
       padding: 15px 18px;
       border-radius: 8px;
       border: 1px solid var(--card-border-strong);
-      background: #08080A;
+      background: #0B0C0E;
       color: #fff;
       font-family: 'JetBrains Mono', monospace;
       font-size: 18px;
@@ -233,8 +236,8 @@
       padding: 15px;
       background: var(--volt);
       border: 1px solid var(--volt);
-      border-radius: 8px;
-      color: #0A0A0C;
+      border-radius: 999px;
+      color: #0F1012;
       font-weight: 700;
       font-size: 15px;
       cursor: pointer;
@@ -242,7 +245,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 15px rgba(212, 255, 0, 0.25);
+      box-shadow: 0 4px 15px rgba(212, 243, 107, 0.25);
       transition: all 0.15s ease;
       font-family: inherit;
     }
@@ -251,7 +254,7 @@
       transform: scale(0.98);
     }
     .btn-primary:hover {
-      background: #C2EB00;
+      background: #C3E25A;
     }
 
     /* Scanner Viewport */
@@ -328,7 +331,7 @@
       left: 5%;
       width: 90%;
       height: 2.5px;
-      background: linear-gradient(90deg, transparent, #D4FF00, #FFFFFF, transparent);
+      background: linear-gradient(90deg, transparent, #D4F36B, #FFFFFF, transparent);
       box-shadow: 0 0 14px var(--volt);
       animation: laserMove 2.2s infinite ease-in-out;
       border-radius: 2px;
@@ -369,9 +372,9 @@
     }
 
     .tool-btn.active {
-      background: #f59e0b;
+      background: #FFB870;
       color: #000;
-      border-color: #f59e0b;
+      border-color: #FFB870;
     }
 
     .camera-status {
@@ -385,9 +388,9 @@
     .pulse-dot {
       width: 8px;
       height: 8px;
-      background: #10b981;
+      background: #7FE3C4;
       border-radius: 50%;
-      box-shadow: 0 0 8px #10b981;
+      box-shadow: 0 0 8px #7FE3C4;
       animation: pulse 1.6s infinite;
     }
 
@@ -416,7 +419,7 @@
     .result-sheet {
       width: 100%;
       max-width: 440px;
-      background: #141416;
+      background: #17191C;
       border-radius: 28px;
       border: 2px solid var(--card-border);
       padding: 28px 24px;
@@ -446,12 +449,12 @@
 
     .result-sheet.duplicate {
       border-color: var(--color-dup);
-      box-shadow: 0 10px 40px rgba(249, 115, 22, 0.3);
+      box-shadow: 0 10px 40px rgba(255, 184, 112, 0.3);
     }
 
     .result-sheet.invalid, .result-sheet.notfound {
       border-color: var(--color-err);
-      box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+      box-shadow: 0 10px 40px rgba(255, 122, 107, 0.3);
     }
 
     .status-badge {
@@ -466,14 +469,14 @@
       gap: 6px;
     }
 
-    .status-badge.valid { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-    .status-badge.duplicate { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid #f97316; }
-    .status-badge.invalid { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
-    .status-badge.wrong_day { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+    .status-badge.valid { background: rgba(127, 227, 196, 0.2); color: #7FE3C4; border: 1px solid #7FE3C4; }
+    .status-badge.duplicate { background: rgba(255, 184, 112, 0.2); color: #FFB870; border: 1px solid #FFB870; }
+    .status-badge.invalid { background: rgba(255, 122, 107, 0.2); color: #FF7A6B; border: 1px solid #FF7A6B; }
+    .status-badge.wrong_day { background: rgba(255, 184, 112, 0.2); color: #FFB870; border: 1px solid #FFB870; }
 
     .result-sheet.wrong_day {
-      border-color: #f59e0b;
-      box-shadow: 0 10px 40px rgba(245, 158, 11, 0.35);
+      border-color: #FFB870;
+      box-shadow: 0 10px 40px rgba(255, 184, 112, 0.35);
     }
 
     /* Multi-Day Strip & Timeline */
@@ -481,17 +484,17 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(59, 130, 246, 0.12);
-      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: rgba(127, 227, 196, 0.12);
+      border: 1px solid rgba(127, 227, 196, 0.3);
       padding: 6px 14px;
       border-radius: 20px;
       font-size: 13px;
       font-weight: 600;
-      color: #93c5fd;
+      color: #A9EED8;
     }
 
     .multiday-pill {
-      background: #2563eb;
+      background: #6CCFB1;
       color: #fff;
       padding: 2px 8px;
       border-radius: 10px;
@@ -523,15 +526,15 @@
     }
 
     .day-chip.scanned {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      background: rgba(127, 227, 196, 0.2);
+      color: #7FE3C4;
+      border: 1px solid rgba(127, 227, 196, 0.4);
     }
 
     .day-chip.valid {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: rgba(127, 227, 196, 0.15);
+      color: #7FE3C4;
+      border: 1px solid rgba(127, 227, 196, 0.3);
     }
 
     .day-chip.not-allowed {
@@ -542,16 +545,16 @@
     }
 
     .day-chip.active-day {
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-      border-color: #3b82f6 !important;
+      box-shadow: 0 0 10px rgba(127, 227, 196, 0.5);
+      border-color: #7FE3C4 !important;
     }
 
     .btn-reentry {
       width: 100%;
       padding: 12px;
       border-radius: 14px;
-      border: 1px solid #f97316;
-      background: rgba(249, 115, 22, 0.15);
+      border: 1px solid #FFB870;
+      background: rgba(255, 184, 112, 0.15);
       color: #fdba74;
       font-size: 14px;
       font-weight: 700;
@@ -564,7 +567,7 @@
     }
 
     .btn-reentry:hover {
-      background: rgba(249, 115, 22, 0.25);
+      background: rgba(255, 184, 112, 0.25);
       color: #fff;
     }
 
@@ -585,7 +588,7 @@
     .day-modal-card {
       width: 100%;
       max-width: 380px;
-      background: #141416;
+      background: #17191C;
       border: 1px solid var(--card-border);
       border-radius: 24px;
       padding: 24px;
@@ -621,10 +624,10 @@
     }
 
     .day-btn.active {
-      background: #2563eb;
-      border-color: #3b82f6;
+      background: #6CCFB1;
+      border-color: #7FE3C4;
       color: #fff;
-      box-shadow: 0 0 14px rgba(37, 99, 235, 0.6);
+      box-shadow: 0 0 14px rgba(108, 207, 177, 0.6);
     }
 
     .tier-chip {
@@ -641,14 +644,14 @@
     .tier-chip.vip {
       background: linear-gradient(135deg, #78350f, #b45309);
       color: #fef3c7;
-      border: 1px solid #f59e0b;
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+      border: 1px solid #FFB870;
+      box-shadow: 0 4px 15px rgba(255, 184, 112, 0.3);
     }
 
     .tier-chip.general {
       background: linear-gradient(135deg, #064e3b, #047857);
       color: #d1fae5;
-      border: 1px solid #10b981;
+      border: 1px solid #7FE3C4;
     }
 
     .tier-chip.guestlist {
@@ -703,18 +706,23 @@
       padding: 18px;
       border-radius: 18px;
       border: none;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: #fff;
+      background: var(--volt);
+      color: var(--volt-text);
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.3px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+      box-shadow: 0 8px 24px var(--volt-glow);
       transition: all 0.2s;
+    }
+
+    .btn-scan-next:hover {
+      background: #e2ff3b;
+      box-shadow: 0 10px 30px var(--volt-glow);
     }
 
     .btn-scan-next:active {
@@ -770,7 +778,7 @@
       border-radius: 50%;
     }
 
-    input:checked + .slider { background-color: #3b82f6; }
+    input:checked + .slider { background-color: #7FE3C4; }
     input:checked + .slider:before { transform: translateX(20px); }
 
     /* Manual Section */
@@ -821,10 +829,16 @@
   <!-- Top Navigation Bar -->
   <header>
     <div class="brand">
-      <div class="brand-icon">🎟️</div>
-      <span>TicketScanner <span style="font-weight: 300; opacity: 0.6; font-size: 13px;">PRO</span></span>
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="15" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="1" y="15" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="16" y="16" width="4" height="4" fill="#D4F36B"/><rect x="21" y="21" width="4" height="4" fill="#D4F36B"/></svg>
+      <span>stub <span style="font-weight: 400; color: var(--text-muted); font-size: 13px;">gate</span></span>
     </div>
     <div class="header-actions">
+      <a href="/" class="badge-btn" title="Back to Product Walkthrough">
+        <span style="color: var(--volt);">⚡</span> <span>Walkthrough</span>
+      </a>
+      <a href="admin.html" class="badge-btn" title="Open Organizer Admin & Ticket Studio">
+        <span>🛠️</span> <span>Admin</span>
+      </a>
       <button id="day-badge-btn" class="badge-btn" onclick="openDayPickerModal()" title="Switch Active Event Day">
         <span>📅</span> <span id="header-day-label">Day 1</span>
       </button>
@@ -841,12 +855,13 @@
   <!-- Step 1: Security Access Key Screen -->
   <div id="key-screen" class="gate-screen">
     <div class="gate-card">
-      <div class="gate-icon">🔐</div>
+      <div class="gate-icon"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#D4F36B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.4" fill="#D4F36B"/></svg></div>
       <h2>Staff Authentication</h2>
       <p>Enter the gate passkey to unlock the camera scanner for this session.</p>
       <input id="key-input" class="gate-input" type="password" placeholder="••••••••••" maxlength="30" autocomplete="off"
         onkeydown="if(event.key==='Enter') verifyKey()" />
-      <p id="key-error" style="color: #ef4444; font-size: 13px; display: none;">Invalid passkey. Please check and retry.</p>
+      <p id="key-error" style="color: #FF7A6B; font-size: 13px; display: none;">Invalid passkey. Please check and retry.</p>
+      <p style="font-size: 12px; color: var(--text-muted);">By scanning you agree to the <a href="/terms" style="color: inherit;">Terms</a>. Camera images stay on this phone. <a href="/privacy" style="color: inherit;">Privacy</a></p>
       <button class="btn-primary" onclick="verifyKey()">
         <span>Unlock Gate Scanner</span> ➔
       </button>
@@ -856,7 +871,7 @@
   <!-- Step 2: Gate / Staff Identity Screen -->
   <div id="name-screen" class="gate-screen" style="display:none;">
     <div class="gate-card">
-      <div class="gate-icon">🏷️</div>
+      <div class="gate-icon"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#D4F36B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5" fill="#D4F36B"/></svg></div>
       <h2>Gate Identifier</h2>
       <p>Assign this terminal a station name and choose the active event day.</p>
       
@@ -998,7 +1013,7 @@
         </div>
         <div id="res-meta-note-row" class="meta-row" style="display:none;">
           <span>Notice:</span>
-          <strong id="res-meta-notes" style="color: #f97316;">—</strong>
+          <strong id="res-meta-notes" style="color: #FFB870;">—</strong>
         </div>
       </div>
 
@@ -1033,9 +1048,8 @@
 
   <script>
     // 🌐 Cloudflare Workers API Endpoint Configuration
-    const API_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? "http://localhost:8787" 
-      : window.location.origin;
+    // The Worker serves pages and API from one origin; a file:// copy talks to the default `wrangler dev` port
+    const API_URL = window.location.protocol === "file:" ? "http://localhost:8787" : window.location.origin;
 
     let authToken = localStorage.getItem("scanner_key") || "";
 
@@ -1155,12 +1169,14 @@
         const params = new URLSearchParams(window.location.search);
         const eventId = params.get("event") || "";
 
-        // Try Gate PIN auth first
-        let res = await fetch(`${API_URL}/api/gate/auth`, {
+        // Saved organizer sessions ("st." tokens) skip the PIN check; PINs try gate auth first
+        const isSession = enteredKey.startsWith("st.");
+        let res = isSession ? { ok: false } : await fetch(`${API_URL}/api/gate/auth`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ event_id: eventId, pin: enteredKey })
         });
+        const usedPin = res.ok;
 
         if (!res.ok) {
           // Fallback to master passkey check
@@ -1176,7 +1192,8 @@
         if (res.ok) {
           const authData = await res.json();
           authToken = authData.token || enteredKey;
-          localStorage.setItem("scanner_key", enteredKey);
+          // Keep the gate PIN so the scanner can re-open; never keep the owner master key
+          localStorage.setItem("scanner_key", usedPin ? enteredKey : authToken);
           document.getElementById("key-screen").style.display = "none";
           document.getElementById("name-screen").style.display = "flex";
           
@@ -1320,6 +1337,12 @@
           })
         });
 
+        if (res.status === 401) {
+          // Session expired — reload re-authenticates with the saved PIN / key
+          window.location.reload();
+          return;
+        }
+
         const data = await res.json();
         showScanResult(data, code);
 
@@ -1452,15 +1475,15 @@
       const notesEl = document.getElementById("res-meta-notes");
       if (result === "wrong_day") {
         noteRow.style.display = "flex";
-        notesEl.style.color = "#fbbf24";
+        notesEl.style.color = "#FFB870";
         notesEl.textContent = `Valid on Day(s): ${allowedDays.join(', ')} • Current scanner set to Day ${currentEventDay}`;
       } else if (result === "duplicate") {
         noteRow.style.display = "flex";
-        notesEl.style.color = "#f97316";
+        notesEl.style.color = "#FFB870";
         notesEl.textContent = `Already verified today by ${ticket.scanned_by || "another gate"}`;
       } else if (data.isReEntry) {
         noteRow.style.display = "flex";
-        notesEl.style.color = "#34d399";
+        notesEl.style.color = "#7FE3C4";
         notesEl.textContent = `Re-Entry logged at ${ticket.scan_time} by ${scannerName}`;
       } else {
         noteRow.style.display = "none";

@@ -62,6 +62,13 @@ CREATE TABLE IF NOT EXISTS credit_orders (
     FOREIGN KEY (organizer_id) REFERENCES organizers(id)
 );
 
+-- 6. FAILED AUTH ATTEMPTS (Brute-force lockout for gate PINs, logins & master key)
+CREATE TABLE IF NOT EXISTS auth_attempts (
+    key TEXT PRIMARY KEY,                      -- e.g. 'gate:evt_123', 'login:a@b.com', 'master:<ip>'
+    failures INTEGER NOT NULL,
+    window_start INTEGER NOT NULL              -- unix seconds
+);
+
 -- HIGH-SPEED QUERY INDEXES
 CREATE INDEX IF NOT EXISTS idx_events_organizer ON events(organizer_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_event_id ON tickets(event_id);

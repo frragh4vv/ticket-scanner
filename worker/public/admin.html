@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TicketScanner Pro • Event Admin & Ticket Studio</title>
+  <title>stub • Event Admin & Pass Studio</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="robots" content="noindex,nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
   <!-- Client-side ZIP & QR Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -19,32 +21,32 @@
        SWISS-EDITORIAL EVENT COMMAND & TICKET STUDIO DESIGN SYSTEM
        ========================================================================== */
     :root {
-      --bg-dark: #0A0A0C;
-      --bg-dark-card: #121215;
-      --bg-dark-elevated: #18181D;
-      --card-bg: #121215;
+      --bg-dark: #0F1012;
+      --bg-dark-card: #17191C;
+      --bg-dark-elevated: #1B1D21;
+      --card-bg: #17191C;
       --card-border: rgba(255, 255, 255, 0.08);
       --card-border-strong: rgba(255, 255, 255, 0.18);
-      --card-hover: #18181D;
-      --text-main: #F5F5F0;
-      --text-muted: #8A8A93;
-      --text-dim: #575760;
+      --card-hover: #1B1D21;
+      --text-main: #F2EFE8;
+      --text-muted: #9C9B94;
+      --text-dim: #8F8E87;
       
       /* Signature Electric Acid Volt Lime Accent */
-      --volt: #D4FF00;
-      --volt-glow: rgba(212, 255, 0, 0.28);
-      --volt-text: #0A0A0C;
-      --primary: #D4FF00;
-      --primary-hover: #C2EB00;
+      --volt: #D4F36B;
+      --volt-glow: rgba(212, 243, 107, 0.28);
+      --volt-text: #0F1012;
+      --primary: #D4F36B;
+      --primary-hover: #C3E25A;
       
-      --vip-gold: #D4FF00;
-      --vip-bg: rgba(212, 255, 0, 0.12);
-      --gen-green: #34D399;
-      --gen-bg: rgba(52, 211, 153, 0.12);
-      --gst-purple: #C084FC;
-      --gst-bg: rgba(192, 132, 252, 0.12);
-      --scanned-orange: #FB923C;
-      --err-red: #F87171;
+      --vip-gold: #D4F36B;
+      --vip-bg: rgba(212, 243, 107, 0.12);
+      --gen-green: #7FE3C4;
+      --gen-bg: rgba(127, 227, 196, 0.12);
+      --gst-purple: #C9B6FF;
+      --gst-bg: rgba(201, 182, 255, 0.12);
+      --scanned-orange: #FFB870;
+      --err-red: #FF7A6B;
     }
 
     * {
@@ -56,11 +58,10 @@
     }
 
     body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg-dark);
-      background-image: 
-        radial-gradient(circle at 15% 0%, rgba(212, 255, 0, 0.04) 0%, transparent 45%),
-        radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
+      background-image: radial-gradient(rgba(242, 239, 232, 0.06) 1px, transparent 1px);
+      background-size: 22px 22px;
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
@@ -113,8 +114,8 @@
     .key-icon {
       width: 56px;
       height: 56px;
-      background: rgba(212, 255, 0, 0.1);
-      border: 1px solid rgba(212, 255, 0, 0.25);
+      background: rgba(212, 243, 107, 0.1);
+      border: 1px solid rgba(212, 243, 107, 0.25);
       border-radius: 14px;
       display: flex;
       align-items: center;
@@ -127,7 +128,7 @@
       padding: 14px 18px;
       border-radius: 10px;
       border: 1px solid var(--card-border-strong);
-      background: #08080A;
+      background: #0B0C0E;
       color: #fff;
       font-family: 'JetBrains Mono', monospace;
       font-size: 17px;
@@ -141,6 +142,25 @@
       border-color: var(--volt);
       box-shadow: 0 0 0 2px var(--volt-glow);
     }
+
+    [hidden] { display: none !important; }
+
+    /* Organizer sign-in / sign-up */
+    .auth-tabs { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--card-border); border-radius: 999px; width: 100%; }
+    .auth-tab { flex: 1; font: inherit; font-size: 14px; font-weight: 600; color: var(--text-muted); background: transparent; border: 0; border-radius: 999px; height: 38px; cursor: pointer; }
+    .auth-tab[aria-selected="true"] { background: var(--text-main); color: #111214; }
+    .auth-form { width: 100%; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+    .auth-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .auth-field .key-input { font-family: inherit; font-size: 15px; text-align: left; letter-spacing: 0; padding: 12px 14px; }
+    .auth-check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+    .auth-check input { margin-top: 3px; accent-color: var(--volt); }
+    .auth-check a, .auth-links a { color: var(--text-main); }
+    .auth-msg { font-size: 13px; line-height: 1.5; margin: 0; }
+    .auth-links { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; font-size: 13px; color: var(--text-dim); }
+    .link-btn { font: inherit; color: var(--text-muted); background: none; border: 0; padding: 4px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .link-btn:hover { color: var(--text-main); }
+    .account-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+    .account-row .auth-field { flex: 1 1 200px; }
 
     /* Navigation Header */
     header {
@@ -170,7 +190,7 @@
 
     .brand-tag {
       background: var(--volt);
-      color: #0A0A0C;
+      color: #0F1012;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10.5px;
       font-weight: 800;
@@ -210,9 +230,9 @@
 
     .tab-btn.active {
       background: var(--volt);
-      color: #0A0A0C;
+      color: #0F1012;
       font-weight: 700;
-      box-shadow: 0 2px 10px rgba(212, 255, 0, 0.25);
+      box-shadow: 0 2px 10px rgba(212, 243, 107, 0.25);
     }
 
     .header-right {
@@ -303,7 +323,7 @@
     /* Buttons */
     .btn {
       padding: 9px 16px;
-      border-radius: 8px;
+      border-radius: 999px;
       border: 1px solid transparent;
       font-family: inherit;
       font-weight: 600;
@@ -319,20 +339,20 @@
 
     .btn-blue, .btn-volt {
       background: var(--volt);
-      color: #0A0A0C;
+      color: #0F1012;
       font-weight: 700;
       border: 1px solid var(--volt);
-      box-shadow: 0 2px 10px rgba(212, 255, 0, 0.2);
+      box-shadow: 0 2px 10px rgba(212, 243, 107, 0.2);
     }
     .btn-blue:hover, .btn-volt:hover {
-      background: #C2EB00;
-      border-color: #C2EB00;
+      background: #C3E25A;
+      border-color: #C3E25A;
       color: #000;
     }
 
     .btn-green, .btn-stone {
-      background: #F5F5F0;
-      color: #0A0A0C;
+      background: #F2EFE8;
+      color: #0F1012;
       font-weight: 700;
       border: 1px solid #FFFFFF;
     }
@@ -341,11 +361,11 @@
     }
 
     .btn-red {
-      background: rgba(248, 113, 113, 0.12);
-      border: 1px solid rgba(248, 113, 113, 0.3);
-      color: #F87171;
+      background: rgba(255, 122, 107, 0.12);
+      border: 1px solid rgba(255, 122, 107, 0.3);
+      color: #FF7A6B;
     }
-    .btn-red:hover { background: rgba(248, 113, 113, 0.22); }
+    .btn-red:hover { background: rgba(255, 122, 107, 0.22); }
 
     .btn-ghost {
       background: rgba(255, 255, 255, 0.04);
@@ -383,7 +403,7 @@
       padding: 10px 16px;
       border-radius: 8px;
       border: 1px solid var(--card-border);
-      background: #08080A;
+      background: #0B0C0E;
       color: #fff;
       font-size: 13px;
       min-width: 280px;
@@ -404,7 +424,7 @@
 
     .pill {
       padding: 6px 13px;
-      border-radius: 6px;
+      border-radius: 999px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--card-border);
       color: var(--text-muted);
@@ -416,9 +436,9 @@
     }
 
     .pill.active {
-      background: #F5F5F0;
-      color: #0A0A0C;
-      border-color: #F5F5F0;
+      background: #F2EFE8;
+      color: #0F1012;
+      border-color: #F2EFE8;
       font-weight: 700;
     }
 
@@ -478,19 +498,19 @@
     .badge-vip {
       background: var(--vip-bg);
       color: var(--vip-gold);
-      border: 1px solid rgba(212, 255, 0, 0.3);
+      border: 1px solid rgba(212, 243, 107, 0.3);
     }
 
     .badge-general {
       background: var(--gen-bg);
       color: var(--gen-green);
-      border: 1px solid rgba(52, 211, 153, 0.3);
+      border: 1px solid rgba(127, 227, 196, 0.3);
     }
 
     .badge-guestlist {
       background: var(--gst-bg);
       color: var(--gst-purple);
-      border: 1px solid rgba(192, 132, 252, 0.3);
+      border: 1px solid rgba(201, 182, 255, 0.3);
     }
 
     .status-dot {
@@ -501,7 +521,7 @@
     }
 
     .status-valid { background: var(--volt); box-shadow: 0 0 6px var(--volt); }
-    .status-scanned { background: #FB923C; }
+    .status-scanned { background: #FFB870; }
 
     .cell-input {
       padding: 6px 10px;
@@ -543,7 +563,7 @@
     }
 
     .studio-preview-box {
-      background: #08080A;
+      background: #0B0C0E;
       border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 30px;
@@ -581,7 +601,7 @@
       padding: 10px 14px;
       border-radius: 8px;
       border: 1px solid var(--card-border);
-      background: #08080A;
+      background: #0B0C0E;
       color: #fff;
       font-size: 13px;
       outline: none;
@@ -603,18 +623,18 @@
       display: inline-block;
     }
     .mini-day-pill.scanned {
-      background: rgba(52, 211, 153, 0.15);
-      color: #34D399;
-      border: 1px solid rgba(52, 211, 153, 0.35);
+      background: rgba(127, 227, 196, 0.15);
+      color: #7FE3C4;
+      border: 1px solid rgba(127, 227, 196, 0.35);
     }
     .mini-day-pill.valid {
-      background: rgba(212, 255, 0, 0.12);
+      background: rgba(212, 243, 107, 0.12);
       color: var(--volt);
-      border: 1px solid rgba(212, 255, 0, 0.3);
+      border: 1px solid rgba(212, 243, 107, 0.3);
     }
     .mini-day-pill.disabled {
       background: rgba(255, 255, 255, 0.04);
-      color: #666;
+      color: #8F8E87;
       border: 1px solid rgba(255, 255, 255, 0.08);
       opacity: 0.5;
     }
@@ -636,7 +656,7 @@
     .modal-card {
       max-width: 440px;
       width: 100%;
-      background: #121215;
+      background: #17191C;
       border: 1px solid var(--card-border-strong);
       border-radius: 16px;
       padding: 28px;
@@ -676,17 +696,17 @@
     }
 
     .elem-tab.active {
-      background: rgba(212, 255, 0, 0.12);
+      background: rgba(212, 243, 107, 0.12);
       border-color: var(--volt);
       color: var(--volt);
-      box-shadow: 0 0 10px rgba(212, 255, 0, 0.15);
+      box-shadow: 0 0 10px rgba(212, 243, 107, 0.15);
     }
 
     .color-picker-wrap {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: #08080A;
+      background: #0B0C0E;
       border: 1px solid var(--card-border);
       border-radius: 8px;
       padding: 6px 12px;
@@ -704,14 +724,14 @@
     .color-picker-wrap span {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
-      color: #8A8A93;
+      color: #9C9B94;
     }
 
     /* Batch Compiler Modal */
     .batch-modal-card {
       max-width: 580px;
       width: 100%;
-      background: #121215;
+      background: #17191C;
       border: 1px solid var(--card-border-strong);
       border-radius: 16px;
       padding: 28px;
@@ -740,7 +760,7 @@
     }
 
     .batch-limit-btn.active {
-      background: rgba(212, 255, 0, 0.15) !important;
+      background: rgba(212, 243, 107, 0.15) !important;
       border-color: var(--volt) !important;
       color: var(--volt) !important;
     }
@@ -753,15 +773,42 @@
 
   <!-- STEP 1: AUTHENTICATION GATE -->
   <div id="key-screen">
-    <div class="key-icon">🔐</div>
-    <h2>Admin Authentication</h2>
-    <p style="color: var(--text-muted); font-size: 14px;">Enter the master access key to manage tickets, studio passes, and live event check-in metrics.</p>
-    <input id="key-input" class="key-input" type="password" placeholder="••••••••••" autocomplete="off"
-      onkeydown="if(event.key==='Enter') verifyAdminKey()" />
-    <p id="key-error" style="color: #ef4444; font-size: 13px; display: none;">Incorrect key. Access denied.</p>
-    <button class="btn btn-blue" style="width: 100%; padding: 14px; font-size: 15px;" onclick="verifyAdminKey()">
-      <span>Access Admin Panel</span> ➔
-    </button>
+    <div class="key-icon"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#D4F36B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.4" fill="#D4F36B"/></svg></div>
+    <h2 id="auth-title">Sign in to stub</h2>
+    <p id="auth-sub" style="color: var(--text-muted); font-size: 14px; line-height: 1.5;">Manage your events, passes and gate check-ins.</p>
+
+    <div class="auth-tabs" role="tablist" id="auth-tabs">
+      <button type="button" class="auth-tab" role="tab" id="tab-signin" aria-selected="true" onclick="setAuthMode('signin')">Sign in</button>
+      <button type="button" class="auth-tab" role="tab" id="tab-signup" aria-selected="false" onclick="setAuthMode('signup')">Create account</button>
+    </div>
+
+    <form class="auth-form" id="auth-form" onsubmit="submitAuth(event)" novalidate>
+      <label class="auth-field" id="f-company" hidden>Organization or event brand
+        <input id="auth-company" class="key-input" type="text" maxlength="120" autocomplete="organization" placeholder="Monsoon Sessions" />
+      </label>
+      <label class="auth-field" id="f-email">Email
+        <input id="auth-email" class="key-input" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" />
+      </label>
+      <label class="auth-field" id="f-password"><span id="auth-password-label">Password</span>
+        <input id="auth-password" class="key-input" type="password" maxlength="200" autocomplete="current-password" placeholder="At least 8 characters" />
+      </label>
+      <label class="auth-check" id="f-terms" hidden>
+        <input type="checkbox" id="auth-terms" />
+        <span>I agree to the <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+      </label>
+      <p id="key-error" class="auth-msg" role="alert" style="color: #FF7A6B;" hidden></p>
+      <p id="auth-info" class="auth-msg" role="status" style="color: var(--volt);" hidden></p>
+      <button type="submit" id="auth-submit" class="btn btn-blue" style="width: 100%; padding: 14px; font-size: 15px; justify-content: center;">Sign in</button>
+    </form>
+
+    <div class="auth-links">
+      <button type="button" class="link-btn" id="link-forgot" onclick="setAuthMode('forgot')">Forgot password?</button>
+      <button type="button" class="link-btn" id="link-back" onclick="setAuthMode('signin')" hidden>Back to sign in</button>
+      <span aria-hidden="true" id="link-sep">·</span>
+      <button type="button" class="link-btn" id="link-master" onclick="setAuthMode('master')">Owner master key</button>
+    </div>
+    <p style="font-size: 12px; color: var(--text-dim);">Gate staff don't need an account — open the gate link your organizer shared.</p>
+    <p style="font-size: 12px; color: var(--text-dim);"><a href="/privacy" style="color: inherit;">Privacy</a> · <a href="/terms" style="color: inherit;">Terms</a> · <a href="/contact" style="color: inherit;">Help</a></p>
   </div>
 
   <!-- STEP 2: MAIN DASHBOARD -->
@@ -769,9 +816,9 @@
     
     <header>
       <div class="brand">
-        <span style="font-size: 22px;">🎟️</span>
+        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="15" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="1" y="15" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="16" y="16" width="4" height="4" fill="#D4F36B"/><rect x="21" y="21" width="4" height="4" fill="#D4F36B"/></svg>
         <div>
-          <span>TicketScanner <span class="brand-tag">PRO</span></span>
+          <span>stub</span>
           <div style="font-size: 11px; color: var(--text-muted); font-weight: 400;">Event Command & Ticketing Studio</div>
         </div>
       </div>
@@ -780,8 +827,8 @@
       <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.04); padding: 4px 8px; border-radius: 12px; border: 1px solid var(--card-border);">
         <span style="font-size: 14px;">🎪</span>
         <select id="event-selector" onchange="onEventSelectChanged()" style="background: transparent; color: #fff; border: none; font-size: 13px; font-weight: 600; cursor: pointer; outline: none; max-width: 200px;">
-          <option value="evt_sunburn2026" style="background: #18181b;">Sunburn Arena 2026 (3-Day)</option>
-          <option value="ALL" style="background: #18181b;">All Events</option>
+          <option value="evt_sunburn2026" style="background: #1B1D21;">Sunburn Arena 2026 (3-Day)</option>
+          <option value="ALL" style="background: #1B1D21;">All Events</option>
         </select>
         <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 11px; height: auto;" onclick="openNewEventModal()" title="Create New Event">+ Event</button>
       </div>
@@ -802,19 +849,24 @@
         </button>
       </div>
 
-      <div class="header-right" style="display: flex; align-items: center; gap: 10px;">
+      <div class="header-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <!-- Product Walkthrough Link -->
+        <a href="/" class="btn btn-ghost" title="View Product Walkthrough Landing Page">
+          <span style="color: var(--volt);">⚡</span> Walkthrough
+        </a>
+
         <!-- Volunteer Gate PIN -->
-        <div class="gate-pin-badge" style="display: flex; align-items: center; gap: 6px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); padding: 5px 12px; border-radius: 20px; font-size: 12px;">
+        <div class="gate-pin-badge" style="display: flex; align-items: center; gap: 6px; background: rgba(212, 243, 107, 0.08); border: 1px solid rgba(212, 243, 107, 0.25); padding: 5px 12px; border-radius: 20px; font-size: 12px;">
           <span style="color: var(--text-muted);">Gate PIN:</span>
-          <strong id="header-gate-pin" style="color: #60a5fa; font-family: monospace; letter-spacing: 1px;">8421</strong>
-          <button onclick="copyGateLink()" title="Copy Volunteer Scanner Link" style="background: none; border: none; cursor: pointer; font-size: 13px; padding: 0; color: #60a5fa;">📋</button>
+          <strong id="header-gate-pin" style="color: var(--volt); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;">8421</strong>
+          <button onclick="copyGateLink()" title="Copy Volunteer Scanner Link" style="background: none; border: none; cursor: pointer; font-size: 13px; padding: 0; color: var(--volt);">📋</button>
         </div>
 
         <!-- Ticket Credits Wallet -->
-        <div onclick="openRechargeModal()" style="display: flex; align-items: center; gap: 7px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 88, 12, 0.15)); border: 1px solid rgba(245, 158, 11, 0.4); padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: transform 0.2s;" title="Click to buy more ticket credits">
-          <span style="color: #f59e0b; font-size: 13px;">⚡</span>
-          <span style="font-weight: 700; color: #fbbf24;"><span id="header-credits-count">500</span> Passes</span>
-          <span style="background: #f59e0b; color: #000; font-size: 10px; font-weight: 800; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">+</span>
+        <div onclick="openRechargeModal()" style="display: flex; align-items: center; gap: 7px; background: linear-gradient(135deg, rgba(255, 184, 112, 0.15), rgba(255, 122, 107, 0.15)); border: 1px solid rgba(255, 184, 112, 0.4); padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: transform 0.2s;" title="Click to buy more ticket credits">
+          <span style="color: #FFB870; font-size: 13px;">⚡</span>
+          <span style="font-weight: 700; color: #FFB870;"><span id="header-credits-count">500</span> Passes</span>
+          <span style="background: #FFB870; color: #000; font-size: 10px; font-weight: 800; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">+</span>
         </div>
 
         <button class="btn btn-ghost" onclick="loadAllTickets(currentPage)">
@@ -823,6 +875,7 @@
         <a href="scanner.html" target="_blank" class="btn btn-blue">
           <span>📷</span> Open Scanner UI ↗
         </a>
+        <button class="btn btn-ghost" onclick="signOut()" title="Sign out of this device">Sign out</button>
       </div>
     </header>
 
@@ -877,9 +930,9 @@
         <div class="kpi-card">
           <div class="kpi-title">
             <span>Multi-Day Passes</span>
-            <span style="color: #60a5fa;">📅</span>
+            <span style="color: #7FE3C4;">📅</span>
           </div>
-          <div id="kpi-multiday-count" class="kpi-value" style="color: #60a5fa;">0</div>
+          <div id="kpi-multiday-count" class="kpi-value" style="color: #7FE3C4;">0</div>
           <div id="kpi-multiday-sub" class="kpi-sub">0 total day check-ins</div>
         </div>
       </div>
@@ -974,7 +1027,7 @@
               <label><span>⚡ Quick Designer Presets</span></label>
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
                 <button type="button" class="btn btn-ghost" style="padding: 7px 10px; font-size: 11.5px; justify-content: flex-start; gap: 8px;" onclick="applyStudioPreset('volt')">
-                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #D4FF00;"></span> ⚡ Acid Volt
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #D4F36B;"></span> ⚡ Acid Volt
                 </button>
                 <button type="button" class="btn btn-ghost" style="padding: 7px 10px; font-size: 11.5px; justify-content: flex-start; gap: 8px;" onclick="applyStudioPreset('obsidian')">
                   <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #FFFFFF;"></span> 🌑 Stealth Obsidian
@@ -983,7 +1036,7 @@
                   <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ECECE6;"></span> 🏛️ Chalk Stone
                 </button>
                 <button type="button" class="btn btn-ghost" style="padding: 7px 10px; font-size: 11.5px; justify-content: flex-start; gap: 8px;" onclick="applyStudioPreset('cyber')">
-                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #C084FC;"></span> 🟣 Cyber Neon
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #C9B6FF;"></span> 🟣 Cyber Neon
                 </button>
               </div>
             </div>
@@ -1027,7 +1080,7 @@
             <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-weight: 700; font-size: 14px; color: #fff;">🎯 Movable Studio Elements</span>
-                <span style="font-size: 11px; color: #60a5fa; font-weight: 500;">✋ Drag on canvas</span>
+                <span style="font-size: 11px; color: #7FE3C4; font-weight: 500;">✋ Drag on canvas</span>
               </div>
 
               <!-- Element Selector Tabs -->
@@ -1048,8 +1101,8 @@
 
               <!-- Live Position Indicator -->
               <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.35); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--card-border); font-size: 12px;">
-                <span style="color: var(--text-muted);">Active: <strong id="active-elem-name" style="color: #60a5fa;">QR Code</strong></span>
-                <span style="font-family: monospace; font-weight: 700; color: #67e8f9;">
+                <span style="color: var(--text-muted);">Active: <strong id="active-elem-name" style="color: #7FE3C4;">QR Code</strong></span>
+                <span style="font-family: monospace; font-weight: 700; color: #7FE3C4;">
                   X: <span id="elem-x-val">210px</span>, Y: <span id="elem-y-val">320px</span>
                 </span>
               </div>
@@ -1145,8 +1198,8 @@
                 <div class="control-group">
                   <label>Custom Badge Color (Optional)</label>
                   <div class="color-picker-wrap">
-                    <input type="color" id="tier-color-picker" value="#f59e0b" oninput="onTierColorChange()" />
-                    <span id="tier-color-hex">#f59e0b</span>
+                    <input type="color" id="tier-color-picker" value="#FFB870" oninput="onTierColorChange()" />
+                    <span id="tier-color-hex">#FFB870</span>
                   </div>
                 </div>
 
@@ -1190,8 +1243,8 @@
                 <div class="control-group">
                   <label>Date/Venue Text Color</label>
                   <div class="color-picker-wrap">
-                    <input type="color" id="sub-color-picker" value="#a1a1aa" oninput="onSubColorChange()" />
-                    <span id="sub-color-hex">#a1a1aa</span>
+                    <input type="color" id="sub-color-picker" value="#B9B8B0" oninput="onSubColorChange()" />
+                    <span id="sub-color-hex">#B9B8B0</span>
                   </div>
                 </div>
 
@@ -1233,13 +1286,13 @@
           <div class="studio-preview-box">
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
               <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px;">LIVE TICKET PASS PREVIEW</div>
-              <div id="canvas-drag-hint" style="font-size: 11px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 3px 10px; border-radius: 12px; font-weight: 600;">
+              <div id="canvas-drag-hint" style="font-size: 11px; background: rgba(127, 227, 196, 0.15); color: #7FE3C4; border: 1px solid rgba(127, 227, 196, 0.3); padding: 3px 10px; border-radius: 12px; font-weight: 600;">
                 ✋ Drag Any Element to Move
               </div>
             </div>
             <canvas id="pass-canvas" width="600" height="900"></canvas>
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">
-              Selected: <span id="canvas-pos-indicator" style="color: #67e8f9; font-family: monospace;">QR Code • X: 210px, Y: 320px</span>
+              Selected: <span id="canvas-pos-indicator" style="color: #7FE3C4; font-family: monospace;">QR Code • X: 210px, Y: 320px</span>
             </div>
           </div>
         </div>
@@ -1304,7 +1357,7 @@
               <input id="gen-pass-name" class="control-input" type="text" placeholder="e.g. 2-Day VIP Festival Pass" oninput="this.dataset.userEdited='true'" />
             </div>
 
-            <div id="gen-plan-summary" style="background: rgba(212, 255, 0, 0.08); border: 1px solid rgba(212, 255, 0, 0.25); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--volt);">
+            <div id="gen-plan-summary" style="background: rgba(212, 243, 107, 0.08); border: 1px solid rgba(212, 243, 107, 0.25); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--volt);">
               Passes will be valid for multiple check-ins: Day 1 and Day 2 (1 admission per day).
             </div>
           </div>
@@ -1344,14 +1397,48 @@
       <!-- ================================================================= -->
       <div id="tab-settings" class="tab-content">
         <div style="max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
-          <div class="section-tag">* 05 / D1 EDGE DATABASE</div>
+          <div class="section-tag">* 05 / ACCOUNT</div>
+
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 22px;">
+            <div>
+              <h3 style="font-size: 18px; font-weight: 700;">Your account</h3>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Signed in as <strong id="acct-email" style="color: var(--text-main);">—</strong></p>
+            </div>
+
+            <form class="account-row" onsubmit="changePassword(event)">
+              <label class="auth-field">Current password<input id="pw-current" class="key-input" type="password" autocomplete="current-password" maxlength="200" /></label>
+              <label class="auth-field">New password<input id="pw-new" class="key-input" type="password" autocomplete="new-password" minlength="8" maxlength="200" /></label>
+              <button class="btn btn-ghost" type="submit">Change password</button>
+            </form>
+            <p id="pw-msg" class="auth-msg" role="status" hidden></p>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn btn-ghost" onclick="exportAccount()">Download my data (JSON)</button>
+              <button class="btn btn-ghost" onclick="signOut()">Sign out</button>
+            </div>
+
+            <form onsubmit="deleteAccount(event)" style="border-top: 1px solid var(--card-border); padding-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <div>
+                <h4 style="font-size: 15px; color: #FF7A6B;">Delete account</h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">Permanently erases your events, tickets, attendee details and scan history. Unused credits are forfeited. Payment receipts are kept for tax records without your personal details. This can't be undone.</p>
+              </div>
+              <div class="account-row">
+                <label class="auth-field">Type DELETE<input id="del-confirm" class="key-input" type="text" autocomplete="off" /></label>
+                <label class="auth-field">Current password<input id="del-password" class="key-input" type="password" autocomplete="current-password" maxlength="200" /></label>
+                <button class="btn btn-red" type="submit">Delete my account</button>
+              </div>
+              <p id="del-msg" class="auth-msg" role="alert" style="color: #FF7A6B;" hidden></p>
+            </form>
+          </div>
+
+          <div class="section-tag">* 06 / D1 EDGE DATABASE</div>
           
           <!-- Wipe Database Card -->
-          <div style="background: var(--card-bg); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="background: var(--card-bg); border: 1px solid rgba(255, 122, 107, 0.3); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 16px;">
             <div style="display: flex; gap: 14px; align-items: flex-start;">
               <div style="font-size: 28px;">⚠️</div>
               <div>
-                <h3 style="font-size: 18px; color: #f87171; font-weight: 700;">Clean Slate & Database Wipe</h3>
+                <h3 style="font-size: 18px; color: #FF7A6B; font-weight: 700;">Clean Slate & Database Wipe</h3>
                 <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">
                   Clear old test records to launch a clean slate for a new event, or reset all check-in scan timestamps back to 'Valid'.
                 </p>
@@ -1372,7 +1459,7 @@
           <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; display: flex; flex-direction: column; gap: 16px;">
             <h3 style="font-size: 18px; font-weight: 700;">⚙️ System Configuration</h3>
             <div style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
-              • <strong>Active API:</strong> <code id="cfg-api-url" style="color: #60a5fa;"></code><br/>
+              • <strong>Active API:</strong> <code id="cfg-api-url" style="color: #7FE3C4;"></code><br/>
               • <strong>Cloudflare Worker:</strong> <code>ticket-scanner-api</code><br/>
               • <strong>Authentication:</strong> Master Passkey Verified via Cloudflare Edge API<br/>
               • <strong>Email Delivery:</strong> Resend API Integration
@@ -1387,7 +1474,7 @@
   <!-- RESET CONFIRMATION MODAL -->
   <div id="reset-modal" class="modal-overlay">
     <div class="modal-card">
-      <h3 style="color: #ef4444; font-size: 18px; font-weight: 700;">Confirm Database Action</h3>
+      <h3 style="color: #FF7A6B; font-size: 18px; font-weight: 700;">Confirm Database Action</h3>
       <p id="reset-modal-desc" style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"></p>
       
       <div class="control-group">
@@ -1457,7 +1544,7 @@
             </div>
           </div>
 
-          <div id="batch-summary-box" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #93c5fd; display: flex; align-items: center; justify-content: space-between;">
+          <div id="batch-summary-box" style="background: rgba(127, 227, 196, 0.08); border: 1px solid rgba(127, 227, 196, 0.25); border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #A9EED8; display: flex; align-items: center; justify-content: space-between;">
             <span>Ready to compile:</span>
             <strong id="batch-target-count" style="font-size: 15px; color: #fff;">0 passes</strong>
           </div>
@@ -1474,15 +1561,15 @@
       <!-- Screen 2: Active Non-Blocking Compilation Screen -->
       <div id="batch-active-screen" style="display: none; flex-direction: column; gap: 18px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3 id="batch-status-title" style="font-size: 18px; font-weight: 700; color: #60a5fa;">
+          <h3 id="batch-status-title" style="font-size: 18px; font-weight: 700; color: #7FE3C4;">
             ⚙️ Compiling Passes...
           </h3>
-          <span id="batch-pct-badge" style="font-family: monospace; font-size: 14px; font-weight: 700; color: #67e8f9;">0%</span>
+          <span id="batch-pct-badge" style="font-family: monospace; font-size: 14px; font-weight: 700; color: #7FE3C4;">0%</span>
         </div>
 
         <!-- Progress Bar -->
         <div style="background: rgba(255, 255, 255, 0.08); border-radius: 10px; height: 12px; overflow: hidden; position: relative;">
-          <div id="batch-progress-bar" style="background: linear-gradient(90deg, #3b82f6, #06b6d4); height: 100%; width: 0%; transition: width 0.15s ease;"></div>
+          <div id="batch-progress-bar" style="background: linear-gradient(90deg, #7FE3C4, #06b6d4); height: 100%; width: 0%; transition: width 0.15s ease;"></div>
         </div>
 
         <!-- Metric Counters -->
@@ -1493,11 +1580,11 @@
           </div>
           <div>
             <div style="font-size: 11px; color: var(--text-muted);">Render Speed</div>
-            <div id="batch-speed-metric" style="font-size: 16px; font-weight: 700; color: #34d399; margin-top: 2px;">~0 /s</div>
+            <div id="batch-speed-metric" style="font-size: 16px; font-weight: 700; color: #7FE3C4; margin-top: 2px;">~0 /s</div>
           </div>
           <div>
             <div style="font-size: 11px; color: var(--text-muted);">Estimated Left</div>
-            <div id="batch-eta-metric" style="font-size: 16px; font-weight: 700; color: #f59e0b; margin-top: 2px;">--</div>
+            <div id="batch-eta-metric" style="font-size: 16px; font-weight: 700; color: #FFB870; margin-top: 2px;">--</div>
           </div>
         </div>
 
@@ -1506,8 +1593,8 @@
           <canvas id="batch-thumb-canvas" width="60" height="90" style="border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: #000;"></canvas>
           <div style="flex: 1; min-width: 0;">
             <div style="font-size: 11px; color: var(--text-muted);">Current Ticket:</div>
-            <div id="batch-current-id" style="font-family: monospace; font-size: 15px; font-weight: 700; color: #67e8f9; margin-top: 2px;">---</div>
-            <div id="batch-current-attendee" style="font-size: 13px; color: #e4e4e7; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">---</div>
+            <div id="batch-current-id" style="font-family: monospace; font-size: 15px; font-weight: 700; color: #7FE3C4; margin-top: 2px;">---</div>
+            <div id="batch-current-attendee" style="font-size: 13px; color: #E4E1D8; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">---</div>
           </div>
         </div>
 
@@ -1519,7 +1606,7 @@
           <button id="batch-stop-btn" class="btn btn-blue" onclick="stopAndDownloadPartialZip()">
             <span>⏹️</span> Stop & Download (<span id="batch-partial-count">0</span> Passes)
           </button>
-          <button class="btn btn-ghost" style="color: #ef4444;" onclick="cancelBatchRender()">
+          <button class="btn btn-ghost" style="color: #FF7A6B;" onclick="cancelBatchRender()">
             ✕ Abort
           </button>
         </div>
@@ -1545,7 +1632,7 @@
         <div>
           <h3 style="font-size: 20px; font-weight: 700;">⚡ Buy Ticket Credits</h3>
           <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
-            Current Balance: <strong id="modal-current-credits" style="color: #f59e0b;">500</strong> Passes Available
+            Current Balance: <strong id="modal-current-credits" style="color: #FFB870;">500</strong> Passes Available
           </p>
         </div>
         <button class="btn btn-ghost" style="padding: 6px 10px; font-size: 14px;" onclick="closeRechargeModal()">✕</button>
@@ -1560,21 +1647,21 @@
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <strong style="font-size: 15px; color: #fff;">Starter Pack • 500 Passes</strong>
-              <span style="font-size: 16px; font-weight: 800; color: #38bdf8;">₹1,499</span>
+              <span style="font-size: 16px; font-weight: 800; color: #7FE3C4;">₹1,499</span>
             </div>
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">₹3.00 / pass • Ideal for club nights & college fests</div>
           </div>
         </label>
 
         <!-- Pro Option (Default) -->
-        <label class="scope-radio-card" id="card-pack-pro" onclick="selectCreditPack('pro', 2500, 6250)" style="border-color: rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.08);">
+        <label class="scope-radio-card" id="card-pack-pro" onclick="selectCreditPack('pro', 2500, 6250)" style="border-color: rgba(127, 227, 196, 0.5); background: rgba(127, 227, 196, 0.08);">
           <input type="radio" name="credit-pack" value="pro" checked />
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <strong style="font-size: 15px; color: #fff;">
-                Pro Growth • 2,500 Passes <span style="font-size: 10px; background: #3b82f6; color: #fff; padding: 2px 6px; border-radius: 10px; margin-left: 4px;">POPULAR</span>
+                Pro Growth • 2,500 Passes <span style="font-size: 10px; background: #7FE3C4; color: #fff; padding: 2px 6px; border-radius: 10px; margin-left: 4px;">POPULAR</span>
               </strong>
-              <span style="font-size: 16px; font-weight: 800; color: #38bdf8;">₹6,250</span>
+              <span style="font-size: 16px; font-weight: 800; color: #7FE3C4;">₹6,250</span>
             </div>
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">₹2.50 / pass • Multi-day festival & concert tier</div>
           </div>
@@ -1586,7 +1673,7 @@
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <strong style="font-size: 15px; color: #fff;">Enterprise • 10,000 Passes</strong>
-              <span style="font-size: 16px; font-weight: 800; color: #38bdf8;">₹19,999</span>
+              <span style="font-size: 16px; font-weight: 800; color: #7FE3C4;">₹19,999</span>
             </div>
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">₹2.00 / pass • Mega stadiums & multi-venue series</div>
           </div>
@@ -1596,7 +1683,7 @@
       <!-- Payment Method Badge -->
       <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--card-border); font-size: 12px; color: var(--text-muted);">
         <span>💳 Instant Checkout via:</span>
-        <strong style="color: #e4e4e7;">UPI (GPay / PhonePe / Paytm) & Cards</strong>
+        <strong style="color: #E4E1D8;">UPI (GPay / PhonePe / Paytm) & Cards</strong>
       </div>
 
       <button id="recharge-pay-btn" class="btn btn-green" style="width: 100%; padding: 14px; font-size: 15px; justify-content: center;" onclick="executeCreditRecharge()">
@@ -1639,8 +1726,8 @@
         </div>
 
         <div>
-          <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Volunteer Gate PIN (4 digits):</label>
-          <input id="new-event-pin" class="key-input" style="font-family: monospace; font-size: 16px; letter-spacing: 3px;" placeholder="8421" maxlength="6" value="8421" />
+          <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Volunteer Gate PIN (6–8 digits, blank = random):</label>
+          <input id="new-event-pin" class="key-input" style="font-family: monospace; font-size: 16px; letter-spacing: 3px;" placeholder="Auto" inputmode="numeric" maxlength="8" value="" />
           <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Volunteers use this PIN to scan tickets at entrance gates.</div>
         </div>
       </div>
@@ -1653,9 +1740,8 @@
 
   <script>
     // 🌐 Cloudflare Workers API Settings
-    const API_URL = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? "http://localhost:8787" 
-      : window.location.origin;
+    // The Worker serves pages and API from one origin; a file:// copy talks to the default `wrangler dev` port
+    const API_URL = window.location.protocol === "file:" ? "http://localhost:8787" : window.location.origin;
 
     let authToken = localStorage.getItem("admin_key") || "";
 
@@ -1678,42 +1764,192 @@
     // =========================================================================
     // STEP 1: AUTHENTICATION & MULTI-TENANT INITIALIZATION
     // =========================================================================
-    async function verifyAdminKey() {
-      const input = document.getElementById("key-input");
-      const err = document.getElementById("key-error");
-      const enteredKey = input.value.trim();
+    let authMode = "signin";
 
-      if (!enteredKey) return;
+    function setAuthMsg(id, text) {
+      const el = document.getElementById(id);
+      el.textContent = text || "";
+      el.hidden = !text;
+    }
 
+    function setAuthMode(mode) {
+      authMode = mode;
+      const show = (id, on) => { document.getElementById(id).hidden = !on; };
+      const copy = {
+        signin: ["Sign in to stub", "Manage your events, passes and gate check-ins.", "Sign in"],
+        signup: ["Create your organizer account", "100 free passes to start. No card needed.", "Create account"],
+        forgot: ["Reset your password", "We'll email you a link that works once for 30 minutes.", "Send reset link"],
+        master: ["Owner sign-in", "For the platform owner only. Uses the SCANNER_ACCESS_KEY secret.", "Sign in with master key"],
+      }[mode];
+      document.getElementById("auth-title").textContent = copy[0];
+      document.getElementById("auth-sub").textContent = copy[1];
+      document.getElementById("auth-submit").textContent = copy[2];
+      document.getElementById("tab-signin").setAttribute("aria-selected", String(mode === "signin"));
+      document.getElementById("tab-signup").setAttribute("aria-selected", String(mode === "signup"));
+      show("auth-tabs", mode === "signin" || mode === "signup");
+      show("f-company", mode === "signup");
+      show("f-terms", mode === "signup");
+      show("f-email", mode !== "master");
+      show("f-password", mode !== "forgot");
+      show("link-forgot", mode === "signin");
+      show("link-back", mode !== "signin" && mode !== "signup");
+      show("link-master", mode !== "master");
+      show("link-sep", mode !== "master" && mode !== "signup");
+      document.getElementById("auth-password-label").textContent = mode === "master" ? "Master key" : "Password";
+      document.getElementById("auth-password").autocomplete = mode === "signup" ? "new-password" : mode === "master" ? "off" : "current-password";
+      setAuthMsg("key-error", "");
+      setAuthMsg("auth-info", "");
+    }
+
+    async function submitAuth(e) {
+      e.preventDefault();
+      setAuthMsg("key-error", "");
+      setAuthMsg("auth-info", "");
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const btn = document.getElementById("auth-submit");
+
+      if (authMode === "master") return verifyAdminKey(password, true);
+      if (!email) return setAuthMsg("key-error", "Enter your email address.");
+      if (authMode !== "forgot" && password.length < 8) return setAuthMsg("key-error", "Password must be at least 8 characters.");
+      if (authMode === "signup" && !document.getElementById("auth-terms").checked) {
+        return setAuthMsg("key-error", "Please accept the Terms of Service and Privacy Policy.");
+      }
+
+      const endpoint = { signin: "/api/auth/login", signup: "/api/auth/register", forgot: "/api/auth/forgot" }[authMode];
+      const body = authMode === "signup"
+        ? { email, password, company_name: document.getElementById("auth-company").value.trim(), accept_terms: true }
+        : authMode === "forgot" ? { email } : { email, password };
+
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_URL}${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (authMode === "forgot") {
+          setAuthMsg("auth-info", data.message || "If an account exists for that email, a reset link is on its way.");
+        } else if (res.ok && data.token) {
+          await enterApp(data.token);
+        } else {
+          setAuthMsg("key-error", data.error || "Something went wrong. Try again.");
+        }
+      } catch (err) {
+        setAuthMsg("key-error", "Can't reach the server. Check your connection and try again.");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Exchanges a saved session (or the owner master key) for a fresh check; silent on auto-login
+    async function verifyAdminKey(key, showErrors) {
+      if (!key) return;
       try {
         const res = await fetch(`${API_URL}/api/auth-verify`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${enteredKey}`
-          }
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` }
         });
-
-        if (res.ok) {
-          authToken = enteredKey;
-          localStorage.setItem("admin_key", enteredKey);
-          document.getElementById("key-screen").style.display = "none";
-          document.getElementById("main-app").style.display = "block";
-          document.getElementById("cfg-api-url").textContent = API_URL;
-          
-          await initOrganizerSession();
-          await loadEvents();
-          await loadAllTickets(1);
-          initStudioCustomizer();
-          pollStats();
-          setInterval(pollStats, 15000); // 15s edge-cached background poll
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.role === "admin") {
+          await enterApp(data.token);
         } else {
-          input.value = "";
-          err.style.display = "block";
+          localStorage.removeItem("admin_key");
+          if (showErrors) setAuthMsg("key-error", res.status === 429 ? data.error : "Incorrect key. Access denied.");
         }
       } catch (e) {
-        alert("Verification server unreachable: " + e.message);
+        if (showErrors) setAuthMsg("key-error", "Can't reach the server. Check your connection and try again.");
       }
+    }
+
+    async function enterApp(token) {
+      // Only the signed session token is stored, never a password or the master key
+      authToken = token;
+      localStorage.setItem("admin_key", authToken);
+      document.getElementById("auth-password").value = "";
+      document.getElementById("key-screen").style.display = "none";
+      document.getElementById("main-app").style.display = "block";
+      document.getElementById("cfg-api-url").textContent = API_URL;
+
+      await initOrganizerSession();
+      await loadEvents();
+      await loadAllTickets(1);
+      initStudioCustomizer();
+      pollStats();
+      setInterval(pollStats, 15000); // 15s edge-cached background poll
+    }
+
+    function signOut() {
+      localStorage.removeItem("admin_key");
+      authToken = "";
+      window.location.href = "/admin";
+    }
+
+    // Any API call that comes back 401 (expired session, password changed elsewhere) signs out
+    const rawFetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+      const res = await rawFetch(...args);
+      const target = String(args[0]);
+      if (res.status === 401 && authToken && target.includes("/api/") && !target.includes("/api/auth")) signOut();
+      return res;
+    };
+
+    async function changePassword(e) {
+      e.preventDefault();
+      const res = await fetch(`${API_URL}/api/auth/password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+        body: JSON.stringify({ current_password: document.getElementById("pw-current").value, new_password: document.getElementById("pw-new").value })
+      });
+      const data = await res.json().catch(() => ({}));
+      const msg = document.getElementById("pw-msg");
+      if (res.ok && data.token) {
+        authToken = data.token;
+        localStorage.setItem("admin_key", authToken);
+        document.getElementById("pw-current").value = "";
+        document.getElementById("pw-new").value = "";
+        msg.style.color = "var(--volt)";
+        setAuthMsg("pw-msg", "Password changed. Other devices have been signed out.");
+      } else {
+        msg.style.color = "#FF7A6B";
+        setAuthMsg("pw-msg", data.error || "Couldn't change the password.");
+      }
+    }
+
+    async function exportAccount() {
+      const res = await fetch(`${API_URL}/api/auth/export`, { headers: { "Authorization": `Bearer ${authToken}` } });
+      if (!res.ok) return alert("Export failed. Try again.");
+      saveAs(await res.blob(), `stub-account-export-${new Date().toISOString().slice(0, 10)}.json`);
+    }
+
+    async function deleteAccount(e) {
+      e.preventDefault();
+      const res = await fetch(`${API_URL}/api/auth/delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+        body: JSON.stringify({ confirm: document.getElementById("del-confirm").value.trim(), password: document.getElementById("del-password").value })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        localStorage.removeItem("admin_key");
+        alert("Your account has been deleted.");
+        window.location.href = "/";
+      } else {
+        setAuthMsg("del-msg", data.error || "Couldn't delete the account.");
+      }
+    }
+
+    // Escape anything from the database before it goes into HTML
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+
+    // CSV cell: quoted, inner quotes doubled, and formula-looking values defused for spreadsheets
+    function csvCell(value) {
+      let s = String(value ?? "");
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
     }
 
     async function initOrganizerSession() {
@@ -1724,8 +1960,9 @@
         if (res.ok) {
           const data = await res.json();
           if (data.organizer) {
-            currentCreditsBalance = data.organizer.ticket_credits || 500;
+            currentCreditsBalance = data.organizer.ticket_credits ?? 0;
             document.getElementById("header-credits-count").textContent = currentCreditsBalance;
+            document.getElementById("acct-email").textContent = data.organizer.email;
           }
         }
       } catch (e) {
@@ -1764,14 +2001,14 @@
             const opt = document.createElement("option");
             opt.value = ev.id;
             opt.textContent = `${ev.title} (${ev.total_days}D)`;
-            opt.style.background = "#18181b";
+            opt.style.background = "#1B1D21";
             sel.appendChild(opt);
           });
 
           const allOpt = document.createElement("option");
           allOpt.value = "ALL";
           allOpt.textContent = "All Events (Consolidated)";
-          allOpt.style.background = "#18181b";
+          allOpt.style.background = "#1B1D21";
           sel.appendChild(allOpt);
 
           if (currentEventsList.some(e => e.id === currentEventId)) {
@@ -1814,7 +2051,7 @@
 
     function openNewEventModal() {
       document.getElementById("new-event-modal").style.display = "flex";
-      document.getElementById("new-event-pin").value = Math.floor(1000 + Math.random() * 9000).toString();
+      document.getElementById("new-event-pin").value = ""; // blank -> server generates a random 6-digit PIN
       document.getElementById("new-event-date").value = new Date().toISOString().split("T")[0];
     }
 
@@ -1826,7 +2063,7 @@
       const title = (document.getElementById("new-event-title").value || "").trim();
       const days = parseInt(document.getElementById("new-event-days").value, 10) || 1;
       const date = document.getElementById("new-event-date").value || new Date().toISOString().split("T")[0];
-      const pin = (document.getElementById("new-event-pin").value || "").trim() || "8421";
+      const pin = (document.getElementById("new-event-pin").value || "").trim(); // blank -> server generates one
 
       if (!title) {
         alert("Please enter an event title.");
@@ -1872,7 +2109,7 @@
         if (!res.ok || (data && data.error)) {
           const errMsg = data ? (data.details || data.error) : res.statusText;
           console.error("Database error loading tickets:", errMsg);
-          document.getElementById("table-body").innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 40px; color: #ef4444;">Database Connection Error: ${errMsg}</td></tr>`;
+          document.getElementById("table-body").innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 40px; color: #FF7A6B;">Database Connection Error: ${esc(errMsg)}</td></tr>`;
           return;
         }
 
@@ -1998,8 +2235,8 @@
         const el = document.getElementById(`card-pack-${p}`);
         if (el) {
           if (p === packId) {
-            el.style.borderColor = "rgba(59, 130, 246, 0.5)";
-            el.style.background = "rgba(59, 130, 246, 0.08)";
+            el.style.borderColor = "rgba(127, 227, 196, 0.5)";
+            el.style.background = "rgba(127, 227, 196, 0.08)";
           } else {
             el.style.borderColor = "var(--card-border)";
             el.style.background = "rgba(255, 255, 255, 0.02)";
@@ -2007,6 +2244,38 @@
         }
       });
       document.getElementById("recharge-pay-btn").innerHTML = `<span>⚡ Pay ₹${amount.toLocaleString()} & Unlock ${credits.toLocaleString()} Passes</span>`;
+    }
+
+    function loadRazorpayScript() {
+      if (window.Razorpay) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://checkout.razorpay.com/v1/checkout.js";
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("Could not load Razorpay Checkout"));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function openRazorpayCheckout(order) {
+      await loadRazorpayScript();
+      return new Promise((resolve, reject) => {
+        const rzp = new window.Razorpay({
+          key: order.razorpay_key_id,
+          order_id: order.order_id,
+          amount: order.amount_inr * 100,
+          currency: order.currency,
+          name: "stub",
+          description: `${order.credits.toLocaleString()} ticket credits`,
+          handler: (resp) => resolve({
+            razorpay_payment_id: resp.razorpay_payment_id,
+            razorpay_signature: resp.razorpay_signature
+          }),
+          modal: { ondismiss: () => reject(new Error("Payment cancelled")) }
+        });
+        rzp.on("payment.failed", (resp) => reject(new Error(resp.error?.description || "Payment failed")));
+        rzp.open();
+      });
     }
 
     async function executeCreditRecharge() {
@@ -2021,14 +2290,18 @@
           body: JSON.stringify({ pack: selectedPack.id })
         });
         const order = await createRes.json();
+        if (!order.ok) throw new Error(order.error || "Could not create order");
 
-        // Simulate instant secure UPI checkout confirmation
+        // Real payments open Razorpay Checkout; demo mode (DEMO_BILLING=true, local only) skips straight to verify
+        const payment = order.razorpay_key_id ? await openRazorpayCheckout(order) : {};
+
         const verifyRes = await fetch(`${API_URL}/api/billing/verify-order`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
-          body: JSON.stringify({ order_id: order.order_id, credits: selectedPack.credits })
+          body: JSON.stringify({ order_id: order.order_id, ...payment })
         });
         const ver = await verifyRes.json();
+        if (!ver.ok) throw new Error(ver.error || "Payment could not be verified");
 
         if (ver.ok) {
           currentCreditsBalance = ver.new_balance;
@@ -2112,7 +2385,7 @@
           }
           daysHtml = `
             <div style="display:flex; flex-direction:column; gap:3px;">
-              <span style="font-size:12px; font-weight:700; color:#93c5fd;">${passName}</span>
+              <span style="font-size:12px; font-weight:700; color:#A9EED8;">${passName}</span>
               <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
                 <span style="font-size:10px; color:var(--text-muted);">${daysUsed}/${allowedDays.length} used</span>
                 ${pills.join("")}
@@ -2124,42 +2397,42 @@
         }
 
         tr.innerHTML = `
-          <td style="color: #666;">${i + 1}</td>
-          <td style="font-family: monospace; font-weight: 700; color: #67e8f9;">${t.id}</td>
+          <td style="color: #8F8E87;">${i + 1}</td>
+          <td style="font-family: monospace; font-weight: 700; color: #7FE3C4;">${esc(t.id)}</td>
           <td>
             <span class="badge badge-${tierClass}">
-              ${t.tier === 'VIP' ? '👑' : t.tier === 'Guestlist' ? '⭐' : '🎟️'} ${t.tier}
+              ${t.tier === 'VIP' ? '👑' : t.tier === 'Guestlist' ? '⭐' : '🎟️'} ${esc(t.tier)}
             </span>
           </td>
           <td>${daysHtml}</td>
           <td>
-            <input class="cell-input" value="${t.attendee_name}" placeholder="Add name..." 
-              onchange="saveAttendeeField('${t.id}', 'attendee_name', this.value)" />
+            <input class="cell-input" value="${esc(t.attendee_name)}" placeholder="Add name..." 
+              onchange="saveAttendeeField('${esc(t.id)}', 'attendee_name', this.value)" />
           </td>
           <td>
-            <input class="cell-input" value="${t.email}" placeholder="Add email..." 
-              onchange="saveAttendeeField('${t.id}', 'email', this.value)" />
+            <input class="cell-input" value="${esc(t.email)}" placeholder="Add email..." 
+              onchange="saveAttendeeField('${esc(t.id)}', 'email', this.value)" />
           </td>
           <td>
             <span style="display: flex; align-items: center; gap: 6px;">
-              <span class="status-dot status-${t.status.toLowerCase()}"></span>
-              <span style="font-weight: 600;">${t.status}</span>
+              <span class="status-dot status-${esc(t.status.toLowerCase())}"></span>
+              <span style="font-weight: 600;">${esc(t.status)}</span>
             </span>
           </td>
-          <td style="color: var(--text-muted);">${t.scanned_by || '—'}</td>
-          <td style="color: var(--text-muted); font-size: 12px;">${t.scan_time || '—'}</td>
+          <td style="color: var(--text-muted);">${esc(t.scanned_by || '—')}</td>
+          <td style="color: var(--text-muted); font-size: 12px;">${esc(t.scan_time || '—')}</td>
           <td>
-            <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${t.rendered ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.06)'}; color: ${t.rendered ? '#60a5fa' : '#888'};">
+            <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${t.rendered ? 'rgba(127, 227, 196,0.15)' : 'rgba(255,255,255,0.06)'}; color: ${t.rendered ? '#7FE3C4' : '#9C9B94'};">
               ${t.rendered ? 'Rendered ✓' : 'Unrendered'}
             </span>
           </td>
           <td>
-            <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${t.email_sent ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)'}; color: ${t.email_sent ? '#34d399' : '#888'};">
+            <span style="font-size: 11px; padding: 3px 8px; border-radius: 6px; background: ${t.email_sent ? 'rgba(127, 227, 196,0.15)' : 'rgba(255,255,255,0.06)'}; color: ${t.email_sent ? '#7FE3C4' : '#9C9B94'};">
               ${t.email_sent ? 'Sent ✓' : 'Unsent'}
             </span>
           </td>
           <td style="text-align: right;">
-            <button class="btn btn-ghost" style="padding: 6px 10px; font-size: 12px;" onclick="dispatchSinglePass('${t.id}')" title="Email Pass">
+            <button class="btn btn-ghost" style="padding: 6px 10px; font-size: 12px;" onclick="dispatchSinglePass('${esc(t.id)}')" title="Email Pass">
               ✉ Pass
             </button>
           </td>
@@ -2218,7 +2491,7 @@
     let tierBadgeHeight = 36;
     let tierFontSize = 13;
     let tierAutoColor = true;
-    let tierCustomBgColor = "#f59e0b";
+    let tierCustomBgColor = "#FFB870";
     let tierTextColor = "#000000";
     let showTierBadge = true;
 
@@ -2228,7 +2501,7 @@
     let headerFontSize = 26;
     let headerColor = "#ffffff";
     let subFontSize = 13;
-    let subColor = "#a1a1aa";
+    let subColor = "#B9B8B0";
     let showHeader = true;
 
     function initStudioCustomizer() {
@@ -2320,7 +2593,7 @@
       document.getElementById("header-color-hex").textContent = headerColor;
       document.getElementById("studio-sub-size").value = subFontSize;
       document.getElementById("sub-size-val").textContent = `${subFontSize}px`;
-      document.getElementById("sub-color-picker").value = subColor.startsWith("#") ? subColor : "#a1a1aa";
+      document.getElementById("sub-color-picker").value = subColor.startsWith("#") ? subColor : "#B9B8B0";
       document.getElementById("sub-color-hex").textContent = subColor;
     }
 
@@ -2703,7 +2976,7 @@
         ctx.drawImage(customTemplateImg, 0, 0, w, h);
       } else {
         // Authentic Swiss-Editorial Perforated Ticket Stub Pass
-        ctx.fillStyle = "#0A0A0C";
+        ctx.fillStyle = "#0F1012";
         ctx.fillRect(0, 0, w, h);
 
         const padX = 24;
@@ -2725,7 +2998,7 @@
         ctx.stroke();
 
         // Top Header Brand Banner (Volt Lime accent bar)
-        ctx.fillStyle = "#D4FF00";
+        ctx.fillStyle = "#D4F36B";
         ctx.beginPath();
         ctx.roundRect(padX, padY, cardW, 8, [18, 18, 0, 0]);
         ctx.fill();
@@ -2739,14 +3012,14 @@
         ctx.fillText("CF EDGE D1 • 5MS", padX + cardW - 24, padY + 34);
 
         // Perforated Circular Notches on Left and Right sides
-        ctx.fillStyle = "#0A0A0C";
+        ctx.fillStyle = "#0F1012";
         ctx.beginPath();
         ctx.arc(padX, tearY, notchR, -Math.PI / 2, Math.PI / 2);
         ctx.fill();
         ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
         ctx.stroke();
 
-        ctx.fillStyle = "#0A0A0C";
+        ctx.fillStyle = "#0F1012";
         ctx.beginPath();
         ctx.arc(padX + cardW, tearY, notchR, Math.PI / 2, -Math.PI / 2);
         ctx.fill();
@@ -2789,7 +3062,7 @@
       // 1. Header Section (Event Title & Date)
       if (showHeader) {
         ctx.fillStyle = headerColor;
-        ctx.font = `800 ${headerFontSize}px 'Plus Jakarta Sans', sans-serif`;
+        ctx.font = `800 ${headerFontSize}px 'Bricolage Grotesque', sans-serif`;
         ctx.letterSpacing = "-0.03em";
         ctx.textAlign = "center";
         ctx.fillText(eventName, headerX, headerY);
@@ -2808,16 +3081,16 @@
 
         if (tierAutoColor) {
           if (tier === "VIP") {
-            badgeBg = "#D4FF00";
-            badgeTextColor = "#0A0A0C";
+            badgeBg = "#D4F36B";
+            badgeTextColor = "#0F1012";
             badgeLabel = "👑 OFFICIAL VIP PASS";
           } else if (tier === "Guestlist") {
-            badgeBg = "#C084FC";
-            badgeTextColor = "#0A0A0C";
+            badgeBg = "#C9B6FF";
+            badgeTextColor = "#0F1012";
             badgeLabel = "⭐ HONORARY GUESTLIST";
           } else {
-            badgeBg = "#F5F5F0";
-            badgeTextColor = "#0A0A0C";
+            badgeBg = "#F2EFE8";
+            badgeTextColor = "#0F1012";
             badgeLabel = "🎟️ GENERAL ADMISSION";
           }
         } else {
@@ -2839,7 +3112,7 @@
       // 3. Attendee Name
       if (showAttendeeName) {
         ctx.fillStyle = nameColor;
-        ctx.font = `${nameFontWeight} ${nameFontSize}px 'Plus Jakarta Sans', sans-serif`;
+        ctx.font = `${nameFontWeight} ${nameFontSize}px 'Bricolage Grotesque', sans-serif`;
         ctx.letterSpacing = "-0.02em";
         ctx.textAlign = "center";
         ctx.fillText(attendee, nameX, nameY);
@@ -2874,14 +3147,14 @@
         if (targetHighlight) {
           const b = getElementBounds(targetHighlight);
           ctx.save();
-          ctx.strokeStyle = "#D4FF00";
+          ctx.strokeStyle = "#D4F36B";
           ctx.lineWidth = 2;
           ctx.setLineDash([6, 4]);
           ctx.strokeRect(b.x, b.y, b.width, b.height);
 
           // 4 Corner anchors
           ctx.setLineDash([]);
-          ctx.fillStyle = "#D4FF00";
+          ctx.fillStyle = "#D4F36B";
           const hs = 8;
           ctx.fillRect(b.x - hs/2, b.y - hs/2, hs, hs);
           ctx.fillRect(b.x + b.width - hs/2, b.y - hs/2, hs, hs);
@@ -2890,12 +3163,12 @@
 
           // Floating Tag Pill
           const tagW = Math.max(130, b.label.length * 8 + 36);
-          ctx.fillStyle = "#D4FF00";
+          ctx.fillStyle = "#D4F36B";
           ctx.beginPath();
           ctx.roundRect(b.x, b.y - 25, tagW, 20, 4);
           ctx.fill();
 
-          ctx.fillStyle = "#0A0A0C";
+          ctx.fillStyle = "#0F1012";
           ctx.font = "bold 11px 'JetBrains Mono', monospace";
           ctx.textAlign = "left";
           ctx.fillText(`🎯 ${b.label}`, b.x + 8, b.y - 11);
@@ -2910,28 +3183,28 @@
     function applyStudioPreset(preset) {
       if (preset === 'volt') {
         nameColor = '#FFFFFF';
-        headerColor = '#D4FF00';
-        subColor = '#8A8A93';
-        tierCustomBgColor = '#D4FF00';
-        tierTextColor = '#0A0A0C';
+        headerColor = '#D4F36B';
+        subColor = '#9C9B94';
+        tierCustomBgColor = '#D4F36B';
+        tierTextColor = '#0F1012';
         tierAutoColor = false;
       } else if (preset === 'obsidian') {
-        nameColor = '#F5F5F0';
+        nameColor = '#F2EFE8';
         headerColor = '#FFFFFF';
         subColor = '#71717A';
         tierCustomBgColor = '#27272A';
         tierTextColor = '#FFFFFF';
         tierAutoColor = false;
       } else if (preset === 'stone') {
-        nameColor = '#0A0A0C';
-        headerColor = '#0A0A0C';
+        nameColor = '#0F1012';
+        headerColor = '#0F1012';
         subColor = '#52525B';
-        tierCustomBgColor = '#0A0A0C';
-        tierTextColor = '#F5F5F0';
+        tierCustomBgColor = '#0F1012';
+        tierTextColor = '#F2EFE8';
         tierAutoColor = false;
       } else if (preset === 'cyber') {
         nameColor = '#E9D5FF';
-        headerColor = '#C084FC';
+        headerColor = '#C9B6FF';
         subColor = '#94A3B8';
         tierCustomBgColor = '#A855F7';
         tierTextColor = '#000000';
@@ -3155,11 +3428,11 @@
       if (isExportPaused) {
         btn.innerHTML = `<span>▶️</span> Resume`;
         title.textContent = `⏸️ Compilation Paused`;
-        title.style.color = `#f59e0b`;
+        title.style.color = `#FFB870`;
       } else {
         btn.innerHTML = `<span>⏸️</span> Pause`;
         title.textContent = `⚙️ Compiling Passes...`;
-        title.style.color = `#60a5fa`;
+        title.style.color = `#7FE3C4`;
       }
     }
 
@@ -3183,24 +3456,14 @@
     async function finalizeAndDownloadBatch(isFullSuccess) {
       const count = currentBatchRenderedIds.length;
       document.getElementById("batch-status-title").textContent = "📦 Compressing ZIP file in browser...";
-      document.getElementById("batch-status-title").style.color = "#34d399";
+      document.getElementById("batch-status-title").style.color = "#7FE3C4";
 
       currentBatchZip.file("tickets_manifest.csv", currentBatchManifest);
       const zipBlob = await currentBatchZip.generateAsync({ type: "blob" });
       saveAs(zipBlob, `event_ticket_passes_${count}.zip`);
 
-      // Mark rendered in Firebase via Cloudflare Worker
+      // Mark rendered in local state (not persisted server-side)
       try {
-        await fetch(`${API_URL}/api/mark-rendered`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${authToken}`
-          },
-          body: JSON.stringify({ ticketIds: currentBatchRenderedIds })
-        });
-
-        // Mark local state
         currentBatchRenderedIds.forEach(id => {
           const found = allTickets.find(t => t.id === id);
           if (found) found.rendered = true;
@@ -3336,7 +3599,7 @@
             "Content-Type": "application/json",
             "Authorization": `Bearer ${authToken}`
           },
-          body: JSON.stringify({ batches })
+          body: JSON.stringify({ batches, event_id: currentEventId })
         });
 
         const data = await res.json();
@@ -3396,7 +3659,8 @@
           },
           body: JSON.stringify({
             mode: pendingResetMode,
-            confirm: confirmVal
+            confirm: confirmVal,
+            event_id: currentEventId
           })
         });
 
@@ -3502,7 +3766,7 @@
       let csv = "Ticket_ID,Tier,Pass_Type,Total_Days,Allowed_Days,Days_Used,Attendee_Name,Email,Status,Scanned_By,Scan_Time,Rendered\r\n";
       allTickets.forEach(t => {
         const allowed = Array.isArray(t.allowed_days) ? t.allowed_days.join(";") : "1";
-        csv += `"${t.id}","${t.tier}","${t.pass_type_name || ''}","${t.total_days || 1}","${allowed}","${t.days_used || 0}","${t.attendee_name}","${t.email}","${t.status}","${t.scanned_by}","${t.scan_time}","${t.rendered ? 'Yes' : 'No'}"\r\n`;
+        csv += [t.id, t.tier, t.pass_type_name || '', t.total_days || 1, allowed, t.days_used || 0, t.attendee_name, t.email, t.status, t.scanned_by || '', t.scan_time || '', t.rendered ? 'Yes' : 'No'].map(csvCell).join(",") + "\r\n";
       });
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       saveAs(blob, `ticket_database_export_${new Date().toISOString().slice(0, 10)}.csv`);
@@ -3511,11 +3775,9 @@
     // Auto-login with saved key & initialize multi-day creator options
     window.addEventListener("DOMContentLoaded", () => {
       updateGenDayAccessOptions();
+      if (location.pathname === "/signup" || new URLSearchParams(location.search).get("mode") === "signup") setAuthMode("signup");
       const savedKey = localStorage.getItem("admin_key");
-      if (savedKey) {
-        document.getElementById("key-input").value = savedKey;
-        verifyAdminKey();
-      }
+      if (savedKey) verifyAdminKey(savedKey, false);
     });
   </script>
 </body>

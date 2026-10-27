@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy Policy · stub</title>
+<meta name="description" content="How stub collects, uses and protects personal data under India's DPDP Act, 2023." />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#0F1012" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<header class="site-header">
+  <nav aria-label="Main">
+    <a href="/" class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="15" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="1" y="15" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="16" y="16" width="4" height="4" fill="#D4F36B"/><rect x="21" y="21" width="4" height="4" fill="#D4F36B"/></svg><span>stub</span></a>
+    <div class="nav-links">
+      <a href="/#pricing" class="hide-sm">Pricing</a>
+      <a href="/contact" class="hide-sm">Contact</a>
+      <a href="/admin" class="btn btn-ghost" style="min-height:44px;padding:10px 18px;font-size:15px">Sign in</a>
+    </div>
+  </nav>
+</header>
+<main class="doc">
+  <p class="eyebrow">Legal</p>
+  <h1>Privacy Policy</h1>
+  <p class="meta">Last updated 27 October 2026</p>
+  <nav class="toc" aria-label="On this page"><ol><li><a href="#who">Who we are</a></li><li><a href="#roles">Our role for each kind of data</a></li><li><a href="#collect">What we collect</a></li><li><a href="#basis">Why we're allowed to use it</a></li><li><a href="#share">Who we share it with</a></li><li><a href="#transfer">Where your data is stored</a></li><li><a href="#retention">How long we keep it</a></li><li><a href="#rights">Your rights</a></li><li><a href="#security">How we protect it</a></li><li><a href="#storage">Cookies and browser storage</a></li><li><a href="#children">Children</a></li><li><a href="#changes">Changes to this policy</a></li><li><a href="#contact">Grievance Officer and contact</a></li></ol></nav><h2 id="who">Who we are</h2>
+<p>stub is a service for event organizers to design QR passes, send them to attendees and scan them at the door. stub is operated by <span class="fill">[LEGAL ENTITY NAME]</span>, <span class="fill">[REGISTERED ADDRESS]</span> (“we”, “us”).</p>
+<p>This policy explains what personal data we handle, why, and the choices you have. It is written for India's Digital Personal Data Protection Act, 2023 (“DPDP Act”) and the Information Technology Act, 2000 and its rules.</p><h2 id="roles">Our role for each kind of data</h2>
+<ul>
+<li><strong>Organizer accounts:</strong> we decide how this data is used, so we are the <em>data fiduciary</em>.</li>
+<li><strong>Attendee details that organizers upload</strong> (names, emails, phone numbers, scan history): the organizer decides why it is collected and is the data fiduciary. We process it only on the organizer's instructions to issue, send and check passes, acting as their <em>data processor</em>. Attendees should contact the event organizer first; we will help organizers answer those requests.</li>
+</ul><h2 id="collect">What we collect</h2>
+<div class="table-box"><table>
+<thead><tr><th>Who</th><th>Data</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Organizers</td><td>Email, organization name, password (stored only as a salted PBKDF2 hash), credit balance</td><td>Create and secure your account, provide the service</td></tr>
+<tr><td>Organizers who buy credits</td><td>Order ID, payment ID, amount, status. Card, UPI and bank details go directly to Razorpay; we never see or store them.</td><td>Process payments, keep tax records, handle refunds</td></tr>
+<tr><td>Attendees (via organizers)</td><td>Name, email, phone, ticket tier, allowed event days, pass ID</td><td>Issue and email passes</td></tr>
+<tr><td>Attendees at the door</td><td>Scan time, event day, gate name typed by staff</td><td>Stop a pass being used twice and show the organizer who checked in</td></tr>
+<tr><td>Gate staff</td><td>The gate or operator name they type, event PIN attempts</td><td>Label scans and block PIN guessing</td></tr>
+<tr><td>Everyone</td><td>IP address, browser type, request time (in Cloudflare's logs and our rate-limit records)</td><td>Security, abuse prevention, keeping the service running</td></tr>
+</tbody></table></div>
+<p>The door scanner uses your phone camera only to read QR codes. Camera images stay on the device; only the decoded pass ID is sent to our server.</p>
+<p>We do not sell personal data, show ads, build advertising profiles, or use analytics trackers.</p><h2 id="basis">Why we're allowed to use it</h2>
+<ul>
+<li><strong>Consent</strong> you give when you create an account and accept these terms, which you can withdraw by deleting your account.</li>
+<li><strong>Legitimate uses</strong> allowed by the DPDP Act, such as complying with law (tax records) and responding to security incidents.</li>
+<li>For attendee data, the organizer is responsible for having a lawful basis and for telling attendees how their data is used, for example on their ticket sales page.</li>
+</ul><h2 id="share">Who we share it with</h2>
+<p>We share data only with the service providers we need to run stub, under contracts that limit how they can use it:</p>
+<div class="table-box"><table>
+<thead><tr><th>Provider</th><th>What they do</th><th>Data involved</th></tr></thead>
+<tbody>
+<tr><td>Cloudflare, Inc.</td><td>Hosting, database (D1), network security</td><td>All data stored by stub, request logs</td></tr>
+<tr><td>Resend</td><td>Sending pass and password-reset emails</td><td>Recipient email, email content (name, tier, pass ID)</td></tr>
+<tr><td>Razorpay Software Pvt. Ltd.</td><td>Payment processing for credit packs</td><td>Order amount, your payment details (entered on Razorpay's form)</td></tr>
+<tr><td>Google Fonts</td><td>Delivering the website's fonts</td><td>Your IP address and browser details when pages load</td></tr>
+<tr><td>goqr.me (api.qrserver.com)</td><td>Drawing the QR image inside pass emails</td><td>The pass ID, when an attendee opens the email</td></tr>
+</tbody></table></div>
+<p>We may also disclose data if Indian law, a court order or a government authority requires it, or to protect people from fraud or harm.</p><h2 id="transfer">Where your data is stored</h2>
+<p>Cloudflare runs a global network, and our database's primary copy may be located outside India. Data transfers follow the DPDP Act and any restrictions the Government of India notifies.</p><h2 id="retention">How long we keep it</h2>
+<ul>
+<li><strong>Account data:</strong> until you delete your account.</li>
+<li><strong>Events, passes and scan history:</strong> until the organizer deletes them (Settings → Wipe records) or deletes their account.</li>
+<li><strong>Payment records:</strong> kept for as long as Indian tax and accounting law requires (currently up to 8 years). After account deletion they are detached from your name and email.</li>
+<li><strong>Rate-limit records</strong> (IP, email or event used in sign-in attempts): overwritten within 24 hours.</li>
+<li><strong>Cloudflare request logs:</strong> kept according to Cloudflare's retention settings.</li>
+</ul><h2 id="rights">Your rights</h2>
+<p>Under the DPDP Act you can:</p>
+<ul>
+<li><strong>Access</strong> your data: Settings → Account → <em>Download my data</em> gives you everything stored for your account as a JSON file.</li>
+<li><strong>Correct</strong> it: edit attendee details in the dashboard, or write to us about account details.</li>
+<li><strong>Erase</strong> it: Settings → Account → <em>Delete account</em>. This permanently removes your events, passes, attendee data and scan history.</li>
+<li><strong>Withdraw consent</strong> at any time by deleting your account.</li>
+<li><strong>Nominate</strong> someone to exercise these rights if you die or become unable to.</li>
+<li><strong>Raise a grievance</strong> with our Grievance Officer (below), and, if you're not satisfied, with the Data Protection Board of India.</li>
+</ul>
+<p>Attendees: please contact the organizer of your event first. If you can't reach them, write to us and we'll pass your request on.</p><h2 id="security">How we protect it</h2>
+<ul>
+<li>All traffic is encrypted with HTTPS (TLS).</li>
+<li>Passwords are salted and hashed with PBKDF2-SHA256; we can't read them.</li>
+<li>Sessions are signed tokens that expire, and a password change signs out every device.</li>
+<li>Each organizer can only reach their own events. Gate PINs unlock scanning for a single event and nothing else.</li>
+<li>Repeated failed sign-ins and PIN guesses are blocked.</li>
+</ul>
+<p>No system is perfectly secure. If we learn of a breach that affects your personal data, we will notify you and the Data Protection Board as the DPDP Act requires.</p><h2 id="storage">Cookies and browser storage</h2>
+<p>We don't use advertising or analytics cookies. See the <a href="/cookies">Cookie Policy</a> for the small amount of browser storage stub needs.</p><h2 id="children">Children</h2>
+<p>Organizer accounts are for people 18 and older. Organizers who issue passes to attendees under 18 must get verifiable consent from a parent or guardian, as the DPDP Act requires.</p><h2 id="changes">Changes to this policy</h2>
+<p>If we make material changes, we'll email account holders and update the date at the top before the change takes effect.</p><h2 id="contact">Grievance Officer and contact</h2>
+<div class="callout"><p><strong>Grievance Officer:</strong> <span class="fill">[GRIEVANCE OFFICER NAME]</span><br>Email: <span class="fill">[GRIEVANCE EMAIL]</span><br>Address: <span class="fill">[REGISTERED ADDRESS]</span><br>We acknowledge grievances within 24 hours and resolve them within 15 days. For anything else, write to <span class="fill">[SUPPORT EMAIL]</span>.</p></div>
+</main>
+<footer class="site-footer">
+  <div class="inner">
+    <span>© 2026 stub</span>
+    <nav aria-label="Legal">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/refunds">Refunds</a>
+      <a href="/cookies">Cookies</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+<script src="/consent.js" defer></script>
+</body>
+</html>
