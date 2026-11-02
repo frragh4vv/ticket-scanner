@@ -1,0 +1,13 @@
+# Copy to worker/.dev.vars (gitignored) and fill in. Use `wrangler secret put` in production.
+SESSION_SECRET=
+SCANNER_ACCESS_KEY=
+RESEND_API_KEY=
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+# Optional
+APP_URL=http://localhost:8787
+ALLOWED_ORIGINS=
+EMAIL_FROM=
+EMAIL_DAILY_CAP=
+OWNER_ORG_ID=
+DEMO_BILLING=

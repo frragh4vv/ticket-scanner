@@ -20,3 +20,17 @@ tickets_for_appsheet/
 worker/.dev.vars
 
 
+
+.handoff/
+.codegraph/
+
+# Workflow & Agent Docs (Local only)
+.agents/
+skills-lock.json
+AGENTS.md
+CLAUDE.md
+CODEMAP.md
+DESIGN.md
+GEMINI.md
+PRODUCT.md
+

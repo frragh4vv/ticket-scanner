@@ -14,9 +14,9 @@ const ATTEMPT_WINDOW_SECONDS = 15 * 60;
 const PBKDF2_ITERATIONS = 100000;          // Workers' WebCrypto max
 
 const CREDIT_PACKS = {
-  starter: { credits: 500, amount: 1499 },
-  pro: { credits: 2500, amount: 6250 },
-  enterprise: { credits: 10000, amount: 19999 }
+  starter: { credits: 500, amount: 5000 },
+  pro: { credits: 2500, amount: 20000 },
+  enterprise: { credits: 10000, amount: 50000 }
 };
 
 // Cross-origin callers allowed in addition to same-origin pages (comma-separated ALLOWED_ORIGINS var).
@@ -116,10 +116,13 @@ function timingSafeEqual(a, b) {
   const aBytes = encoder.encode(a);
   const bBytes = encoder.encode(b);
   if (aBytes.byteLength !== bBytes.byteLength) {
-    crypto.subtle.timingSafeEqual(aBytes, aBytes);
     return false;
   }
-  return crypto.subtle.timingSafeEqual(aBytes, bBytes);
+  let diff = 0;
+  for (let i = 0; i < aBytes.byteLength; i++) {
+    diff |= aBytes[i] ^ bBytes[i];
+  }
+  return diff === 0;
 }
 
 function getSessionSecret(env) {
@@ -228,6 +231,50 @@ async function adminSessionIsCurrent(env, session) {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Delivery-tracking columns added after launch. Checked once per isolate so databases created
+// from an older schema.sql pick them up without a manual migration.
+let ticketColumnsReady = false;
+async function ensureTicketColumns(env) {
+  if (ticketColumnsReady) return;
+  const cols = await env.DB.prepare("SELECT name FROM pragma_table_info('tickets')").all();
+  const have = new Set((cols.results || []).map(c => c.name));
+  for (const [name, type] of [["email_sent_at", "DATETIME"], ["rendered_at", "DATETIME"]]) {
+    if (!have.has(name)) await env.DB.prepare(`ALTER TABLE tickets ADD COLUMN ${name} ${type}`).run();
+  }
+  const evCols = await env.DB.prepare("SELECT name FROM pragma_table_info('events')").all();
+  const haveEv = new Set((evCols.results || []).map(c => c.name));
+  for (const [name, type] of [["use_tiers", "INTEGER DEFAULT 0"], ["timezone", `TEXT DEFAULT '${DEFAULT_EVENT_TZ}'`]]) {
+    if (!haveEv.has(name)) await env.DB.prepare(`ALTER TABLE events ADD COLUMN ${name} ${type}`).run();
+  }
+  ticketColumnsReady = true;
+}
+
+const DEFAULT_EVENT_TZ = "Asia/Kolkata";
+// The event day rolls over at 6 AM local time, so a 1 AM scan still counts toward the night it started.
+const DAY_ROLLOVER_HOUR = 6;
+
+function validTimeZone(tz) {
+  try { new Intl.DateTimeFormat("en", { timeZone: tz }); return true; } catch (_) { return false; }
+}
+
+// Which day of the event it is right now in the event's own timezone (1 = start date).
+// Gates no longer pick a day by hand, so a day-1 scan never blocks the same pass on day 2.
+// Returns null when the event has no usable start date.
+function eventDayNow(startDate, totalDays, timeZone) {
+  const tz = validTimeZone(timeZone) ? timeZone : DEFAULT_EVENT_TZ;
+  const [y, m, d] = String(startDate || "").split("-").map(Number);
+  if (!y || !m || !d) return null;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23"
+  }).formatToParts(new Date());
+  const get = type => parseInt(parts.find(p => p.type === type).value, 10);
+  let today = Date.UTC(get("year"), get("month") - 1, get("day"));
+  if (get("hour") < DAY_ROLLOVER_HOUR) today -= 86400000;
+  const total = Math.max(1, totalDays || 1);
+  const day = Math.round((today - Date.UTC(y, m - 1, d)) / 86400000) + 1;
+  return { day, total, before: day < 1, after: day > total };
+}
 
 // SQL fragment restricting a tickets/scan_logs query to the organizer's own events.
 // `eventId === "ALL"` means every event this organizer owns (never other organizers').
@@ -370,7 +417,7 @@ export default {
         await env.DB.batch([
           env.DB.prepare(`
             INSERT INTO organizers (id, email, company_name, password_hash, ticket_credits)
-            VALUES (?, ?, ?, ?, 100)
+            VALUES (?, ?, ?, ?, 50)
           `).bind(orgId, cleanEmail, company, passwordHash),
           // Create default starter event workspace
           env.DB.prepare(`
@@ -382,7 +429,7 @@ export default {
         return json({
           ok: true,
           token: await adminSession(env, { id: orgId, password_hash: passwordHash }),
-          organizer: { id: orgId, email: cleanEmail, company_name: company, ticket_credits: 100 }
+          organizer: { id: orgId, email: cleanEmail, company_name: company, ticket_credits: 50 }
         }, 200, origin);
       }
 
@@ -482,7 +529,8 @@ export default {
           return lockedOutResponse(origin);
         }
 
-        const event = await env.DB.prepare("SELECT id, organizer_id, title, total_days, start_date, gate_pin FROM events WHERE id = ?")
+        await ensureTicketColumns(env);
+        const event = await env.DB.prepare("SELECT id, organizer_id, title, total_days, start_date, gate_pin, timezone FROM events WHERE id = ?")
           .bind(cleanEventId).first();
         if (!event || !timingSafeEqual(String(pin).trim(), String(event.gate_pin))) {
           await recordFailure(env, lockKey);
@@ -496,7 +544,8 @@ export default {
           ok: true,
           role: "gate",
           token: await signSession(env, { role: "gate", sub: organizer_id, evt: event.id }, GATE_SESSION_TTL),
-          event: publicEvent
+          event: publicEvent,
+          today: eventDayNow(event.start_date, event.total_days, event.timezone)
         }, 200, origin);
       }
 
@@ -511,6 +560,7 @@ export default {
       }
       const organizerId = session.sub;
       const isAdmin = session.role === "admin";
+      await ensureTicketColumns(env);
 
       // -----------------------------------------------------------------------
       // POST /api/check -> Atomic Multi-Day Verification (admin or gate sessions)
@@ -518,14 +568,14 @@ export default {
       if (url.pathname === "/api/check" && request.method === "POST") {
         const { ticketId, scannerName, eventDay: rawEventDay, allowReEntry } = await request.json();
         const cleanTicketId = (ticketId || "").trim();
-        const eventDay = Math.max(1, Math.min(10, parseInt(rawEventDay, 10) || 1));
 
         if (!cleanTicketId) {
           return json({ error: "Missing ticketId" }, 400, origin);
         }
 
         const ticket = await env.DB.prepare(`
-          SELECT t.* FROM tickets t JOIN events e ON e.id = t.event_id
+          SELECT t.*, e.start_date AS event_start, e.total_days AS event_days, e.timezone AS event_tz
+          FROM tickets t JOIN events e ON e.id = t.event_id
           WHERE t.id = ? AND e.organizer_id = ?
         `).bind(cleanTicketId, organizerId).first();
 
@@ -545,6 +595,22 @@ export default {
             ticket: { id: cleanTicketId, tier: ticket.tier, attendee_name: ticket.attendee_name, status: "revoked" }
           }, 200, origin);
         }
+
+        // The day comes from the event's start date, not the scanner. Gates are held to the event
+        // dates; organizers may scan outside them (rehearsals) using the day their scanner sends.
+        const today = eventDayNow(ticket.event_start, ticket.event_days, ticket.event_tz);
+        const clientDay = Math.max(1, Math.min(10, parseInt(rawEventDay, 10) || 1));
+        if (today && (today.before || today.after) && session.role === "gate") {
+          return json({
+            result: "wrong_day",
+            message: today.before
+              ? `EVENT HASN'T STARTED\nStarts ${ticket.event_start}`
+              : "EVENT HAS ENDED\nThis pass is no longer valid.",
+            ticket: { id: cleanTicketId, tier: ticket.tier, attendee_name: ticket.attendee_name, status: ticket.status },
+            eventDay: today.day
+          }, 200, origin);
+        }
+        const eventDay = today && !today.before && !today.after ? today.day : clientDay;
 
         // Compute Allowed & Scanned Days
         const totalDays = ticket.total_days || 1;
@@ -652,8 +718,13 @@ export default {
 
       // GET /api/auth/me -> Current Organizer Profile & Balance
       if (url.pathname === "/api/auth/me" && request.method === "GET") {
-        const org = await env.DB.prepare("SELECT id, email, company_name, ticket_credits FROM organizers WHERE id = ?").bind(organizerId).first();
+        const org = await env.DB.prepare(`
+          SELECT o.id, o.email, o.company_name, o.ticket_credits,
+            EXISTS (SELECT 1 FROM tour_grants g WHERE g.organizer_id = o.id) AS tour_tickets_used
+          FROM organizers o WHERE o.id = ?
+        `).bind(organizerId).first();
         if (!org) return json({ ok: false, error: "Organizer not found" }, 404, origin);
+        org.tour_tickets_used = !!org.tour_tickets_used;
         return json({ ok: true, organizer: org }, 200, origin);
       }
 
@@ -721,7 +792,7 @@ export default {
 
       // POST /api/events -> Create New Event
       if (url.pathname === "/api/events" && request.method === "POST") {
-        const { title, total_days, start_date, gate_pin } = await request.json();
+        const { title, total_days, start_date, gate_pin, use_tiers, timezone } = await request.json();
         const cleanTitle = (title || "").trim().slice(0, 120);
         if (!cleanTitle) return json({ ok: false, error: "Event title is required." }, 400, origin);
 
@@ -731,14 +802,29 @@ export default {
         const totalDays = Math.max(1, Math.min(10, parseInt(total_days, 10) || 1));
         const startDate = /^\d{4}-\d{2}-\d{2}$/.test(start_date || "") ? start_date : new Date().toISOString().split("T")[0];
 
+        const useTiers = use_tiers ? 1 : 0;
+        const tz = (typeof timezone === "string" && validTimeZone(timezone)) ? timezone : DEFAULT_EVENT_TZ;
+
+        // Events can't start in the past (compared on the event's own calendar day)
+        const todayInTz = new Date().toLocaleDateString("en-CA", { timeZone: tz });
+        if (startDate < todayInTz) {
+          return json({ ok: false, error: "The start date can't be in the past." }, 400, origin);
+        }
+
+        const dupe = await env.DB.prepare("SELECT 1 FROM events WHERE organizer_id = ? AND lower(title) = lower(?)")
+          .bind(organizerId, cleanTitle).first();
+        if (dupe) {
+          return json({ ok: false, error: `You already have an event called "${cleanTitle}". Pick a different name.` }, 409, origin);
+        }
+
         await env.DB.prepare(`
-          INSERT INTO events (id, organizer_id, title, total_days, start_date, gate_pin)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(eventId, organizerId, cleanTitle, totalDays, startDate, pin).run();
+          INSERT INTO events (id, organizer_id, title, total_days, start_date, gate_pin, use_tiers, timezone)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(eventId, organizerId, cleanTitle, totalDays, startDate, pin, useTiers, tz).run();
 
         return json({
           ok: true,
-          event: { id: eventId, title: cleanTitle, total_days: totalDays, start_date: startDate, gate_pin: pin }
+          event: { id: eventId, title: cleanTitle, total_days: totalDays, start_date: startDate, gate_pin: pin, use_tiers: useTiers, timezone: tz }
         }, 200, origin);
       }
 
@@ -948,6 +1034,9 @@ export default {
           const wild = `%${q}%`;
           params.push(wild, wild, wild);
         }
+        if (url.searchParams.get("unsent") === "1") where += " AND email_sent_at IS NULL AND COALESCE(email, '') != ''";
+        if (url.searchParams.get("unrendered") === "1") where += " AND rendered_at IS NULL";
+        if (url.searchParams.get("multiday") === "1") where += " AND total_days > 1";
 
         const countRes = await env.DB.prepare(`SELECT COUNT(*) as total FROM tickets WHERE ${where}`).bind(...params).first();
         const totalCount = countRes ? countRes.total : 0;
@@ -977,6 +1066,8 @@ export default {
             status: t.status === "scanned" ? "Scanned" : "Valid",
             daily_scans: dailyScans,
             pass_type_name: (t.total_days || 1) > 1 ? `${t.total_days}-Day Pass` : "Single Day Pass",
+            email_sent: !!t.email_sent_at,
+            rendered: !!t.rendered_at,
             created_at: t.created_at
           };
         });
@@ -1006,10 +1097,25 @@ export default {
           });
         }
 
-        const event = await env.DB.prepare("SELECT id FROM events WHERE id = ? AND organizer_id = ?")
+        const event = await env.DB.prepare("SELECT id, total_days FROM events WHERE id = ? AND organizer_id = ?")
           .bind(body.event_id || "", organizerId).first();
         if (!event) {
           return json({ error: "Event not found. Select one of your events first." }, 404, origin);
+        }
+
+        // A batch may carry an attendee list (pasted or CSV-imported); one ticket per row
+        for (const b of batches) {
+          if (!Array.isArray(b.attendees)) continue;
+          b.attendees = b.attendees.map(a => ({
+            name: String(a?.name || "").trim().slice(0, 120),
+            email: String(a?.email || "").trim().toLowerCase().slice(0, 254),
+            phone: String(a?.phone || "").trim().slice(0, 20)
+          }));
+          const badRow = b.attendees.findIndex(a => a.email && !EMAIL_RE.test(a.email));
+          if (badRow !== -1) {
+            return json({ error: `Row ${badRow + 1}: '${b.attendees[badRow].email}' is not a valid email.` }, 400, origin);
+          }
+          b.count = b.attendees.length;
         }
 
         let totalTicketsToMake = 0;
@@ -1029,8 +1135,23 @@ export default {
           return json({ error: `You can generate up to ${MAX_TICKETS_PER_BATCH} tickets per batch.` }, 400, origin);
         }
 
+        // Guided tour: one free sample set per organizer, at most one blank ticket per tier, no credits spent
+        const tour = body.tour === true;
+        if (tour) {
+          const used = batches.filter(b => (parseInt(b.count, 10) || 0) > 0);
+          const tiers = used.map(b => b.tier || "General");
+          if (used.some(b => b.attendees || parseInt(b.count, 10) > 1) || new Set(tiers).size !== tiers.length) {
+            return json({ error: "Free tour tickets are limited to one blank ticket per tier." }, 400, origin);
+          }
+          // INSERT OR IGNORE is the one-time claim: a second request (or a replayed tour) changes nothing
+          const grant = await env.DB.prepare("INSERT OR IGNORE INTO tour_grants (organizer_id) VALUES (?)").bind(organizerId).run();
+          if (!grant.meta || grant.meta.changes === 0) {
+            return json({ error: "Your free tour tickets were already made. Generate more with credits.", code: "TOUR_USED" }, 409, origin);
+          }
+        }
+
         // Reserve credits first; the conditional UPDATE can never drive the balance negative
-        const reserve = await env.DB.prepare(
+        const reserve = tour ? { meta: { changes: 1 } } : await env.DB.prepare(
           "UPDATE organizers SET ticket_credits = ticket_credits - ? WHERE id = ? AND ticket_credits >= ?"
         ).bind(totalTicketsToMake, organizerId, totalTicketsToMake).run();
 
@@ -1052,7 +1173,8 @@ export default {
           const count = parseInt(batch.count, 10) || 0;
           const tier = batch.tier || "General";
           const prefix = getTierPrefix(tier);
-          const totalDays = Math.max(1, Math.min(10, parseInt(batch.total_days, 10) || 1));
+          // A ticket can never cover more days than the event runs
+          const totalDays = event.total_days;
           const allowedDaysStr = batch.allowed_days === "ALL"
             ? "ALL"
             : (Array.isArray(batch.allowed_days) ? batch.allowed_days : String(batch.allowed_days || "1").split(","))
@@ -1062,6 +1184,7 @@ export default {
 
           for (let i = 0; i < count; i++) {
             const ticketId = `${prefix}-${generateRandomCode(8)}`;
+            const person = batch.attendees ? batch.attendees[i] : { name: batch.attendee_name, email: batch.email, phone: batch.phone };
             insertStatements.push(
               env.DB.prepare(`
                 INSERT INTO tickets (id, event_id, attendee_name, email, phone, tier, total_days, allowed_days, scanned_days, status)
@@ -1069,9 +1192,9 @@ export default {
               `).bind(
                 ticketId,
                 event.id,
-                batch.attendee_name || "",
-                batch.email || "",
-                batch.phone || "",
+                person.name || "",
+                person.email || "",
+                person.phone || "",
                 tier,
                 totalDays,
                 allowedDaysStr
@@ -1080,6 +1203,8 @@ export default {
 
             createdList.push({
               id: ticketId,
+              attendee_name: person.name || "",
+              email: person.email || "",
               tier,
               total_days: totalDays,
               allowed_days: allowedDaysStr,
@@ -1091,9 +1216,11 @@ export default {
         try {
           await env.DB.batch(insertStatements);
         } catch (err) {
-          // Refund the reservation if the inserts failed (batch is all-or-nothing)
-          await env.DB.prepare("UPDATE organizers SET ticket_credits = ticket_credits + ? WHERE id = ?")
-            .bind(totalTicketsToMake, organizerId).run();
+          // Refund the reservation (or give the tour grant back) if the inserts failed (batch is all-or-nothing)
+          await (tour
+            ? env.DB.prepare("DELETE FROM tour_grants WHERE organizer_id = ?").bind(organizerId)
+            : env.DB.prepare("UPDATE organizers SET ticket_credits = ticket_credits + ? WHERE id = ?").bind(totalTicketsToMake, organizerId)
+          ).run();
           throw err;
         }
 
@@ -1103,6 +1230,108 @@ export default {
           count: createdList.length,
           tickets: createdList,
           remaining_credits: org ? org.ticket_credits : 0
+        }, 200, origin);
+      }
+
+      // -----------------------------------------------------------------------
+      // POST /api/assign -> Put names on blank tickets the organizer already generated.
+      // No credits are spent; each row takes one blank ticket of the matching tier and day scope.
+      // -----------------------------------------------------------------------
+      if (url.pathname === "/api/assign" && request.method === "POST") {
+        const body = await request.json();
+        const event = await env.DB.prepare("SELECT id, total_days, use_tiers FROM events WHERE id = ? AND organizer_id = ?")
+          .bind(body.event_id || "", organizerId).first();
+        if (!event) return json({ ok: false, error: "Event not found. Select one of your events first." }, 404, origin);
+
+        const rawRows = Array.isArray(body.rows) ? body.rows : [];
+        if (rawRows.length === 0) return json({ ok: false, error: "Nothing to assign." }, 400, origin);
+        if (rawRows.length > MAX_TICKETS_PER_BATCH) {
+          return json({ ok: false, error: `You can assign up to ${MAX_TICKETS_PER_BATCH} tickets at a time.` }, 400, origin);
+        }
+
+        // Day scope as a canonical "1,2" string, or null for "any blank ticket"; never beyond the event's days
+        const dayKey = (v) => {
+          if (v === undefined || v === null || v === "") return null;
+          if (String(v).toUpperCase() === "ALL") return Array.from({ length: event.total_days }, (_, i) => i + 1).join(",");
+          const days = [...new Set((Array.isArray(v) ? v : String(v).split(","))
+            .map(d => parseInt(d, 10)).filter(d => d >= 1 && d <= event.total_days))].sort((a, b) => a - b);
+          return days.length ? days.join(",") : undefined;
+        };
+        const defaultKey = dayKey(body.allowed_days);
+        if (defaultKey === undefined) {
+          return json({ ok: false, error: `This event only runs ${event.total_days} day${event.total_days === 1 ? "" : "s"}.` }, 400, origin);
+        }
+        const defaultTier = VALID_TIERS.includes(body.tier) ? body.tier : null;
+
+        const rows = [];
+        for (let i = 0; i < rawRows.length; i++) {
+          const r = rawRows[i] || {};
+          const row = {
+            name: String(r.name || "").trim().slice(0, 120),
+            email: String(r.email || "").trim().toLowerCase().slice(0, 254),
+            phone: String(r.phone || "").trim().slice(0, 20),
+            tier: event.use_tiers ? (VALID_TIERS.includes(r.tier) ? r.tier : defaultTier) : null,
+            key: r.days ? dayKey(r.days) : defaultKey
+          };
+          if (!row.name && !row.email) return json({ ok: false, error: `Row ${i + 1} has no name or email.` }, 400, origin);
+          if (row.email && !EMAIL_RE.test(row.email)) {
+            return json({ ok: false, error: `Row ${i + 1}: '${row.email}' is not a valid email.` }, 400, origin);
+          }
+          if (row.key === undefined) {
+            return json({ ok: false, error: `Row ${i + 1}: this event only runs ${event.total_days} day${event.total_days === 1 ? "" : "s"}.` }, 400, origin);
+          }
+          rows.push(row);
+        }
+
+        const blanks = (await env.DB.prepare(`
+          SELECT id, tier, allowed_days FROM tickets
+          WHERE event_id = ? AND attendee_name = '' AND COALESCE(email, '') = '' AND status = 'valid'
+          ORDER BY created_at, id LIMIT 5000
+        `).bind(event.id).all()).results || [];
+        for (const b of blanks) b.key = dayKey(b.allowed_days) || "";
+
+        const taken = new Set();
+        const picks = [];
+        const short = {};
+        for (const row of rows) {
+          const match = blanks.find(b => !taken.has(b.id) && (!row.tier || b.tier === row.tier) && (row.key === null || b.key === row.key));
+          if (!match) {
+            const label = [row.tier, row.key ? `day${row.key.includes(",") ? "s" : ""} ${row.key}` : ""].filter(Boolean).join(", ") || "any";
+            short[label] = (short[label] || 0) + 1;
+            continue;
+          }
+          taken.add(match.id);
+          picks.push({ id: match.id, tier: match.tier, row });
+        }
+        if (Object.keys(short).length) {
+          const detail = Object.entries(short).map(([k, n]) => `${n} more (${k})`).join("; ");
+          return json({
+            ok: false,
+            error: `Not enough blank tickets. Generate ${detail} first.`,
+            code: "NOT_ENOUGH_BLANKS",
+            short
+          }, 409, origin);
+        }
+
+        // Preview: report which blank ticket each row would take, without writing anything
+        if (body.dry_run === true) {
+          return json({
+            ok: true,
+            dry_run: true,
+            assigned: picks.length,
+            tickets: picks.map(p => ({ id: p.id, tier: p.tier, attendee_name: p.row.name, email: p.row.email }))
+          }, 200, origin);
+        }
+
+        await env.DB.batch(picks.map(p => env.DB.prepare(`
+          UPDATE tickets SET attendee_name = ?, email = ?, phone = ?
+          WHERE id = ? AND attendee_name = '' AND COALESCE(email, '') = ''
+        `).bind(p.row.name, p.row.email, p.row.phone, p.id)));
+
+        return json({
+          ok: true,
+          assigned: picks.length,
+          tickets: picks.map(p => ({ id: p.id, tier: p.tier, attendee_name: p.row.name, email: p.row.email }))
         }, 200, origin);
       }
 
@@ -1130,6 +1359,25 @@ export default {
         if (!result.meta || result.meta.changes === 0) {
           return json({ error: "Ticket not found" }, 404, origin);
         }
+        return json({ success: true }, 200, origin);
+      }
+
+      // -----------------------------------------------------------------------
+      // POST /api/mark-rendered -> Record that pass images were exported
+      // -----------------------------------------------------------------------
+      if (url.pathname === "/api/mark-rendered" && request.method === "POST") {
+        const { ticketIds } = await request.json();
+        const ids = (Array.isArray(ticketIds) ? ticketIds : []).map(String).slice(0, MAX_TICKETS_PER_BATCH);
+        if (ids.length === 0) return json({ error: "ticketIds is required." }, 400, origin);
+        const stmts = [];
+        for (let i = 0; i < ids.length; i += 50) {
+          const chunk = ids.slice(i, i + 50);
+          stmts.push(env.DB.prepare(`
+            UPDATE tickets SET rendered_at = CURRENT_TIMESTAMP
+            WHERE id IN (${chunk.map(() => "?").join(",")}) AND event_id IN (SELECT id FROM events WHERE organizer_id = ?)
+          `).bind(...chunk, organizerId));
+        }
+        await env.DB.batch(stmts);
         return json({ success: true }, 200, origin);
       }
 
@@ -1168,7 +1416,7 @@ export default {
       // POST /api/send-email -> Dispatch Pass via Resend
       // =========================================================================
       if (url.pathname === "/api/send-email" && request.method === "POST") {
-        const { ticketId, email, eventName, passImageData } = await request.json();
+        const { ticketId, email, eventName, passImageData, passPdfData } = await request.json();
 
         const ticket = await env.DB.prepare(`
           SELECT t.*, e.title AS event_title FROM tickets t JOIN events e ON e.id = t.event_id
@@ -1184,72 +1432,78 @@ export default {
         }
 
         const ticketTier = ticket.tier || "General";
-        const displayName = escapeHtml(ticket.attendee_name || "Event Guest");
-        const displayEvent = escapeHtml((eventName || ticket.event_title || "Official Event Admission").slice(0, 120));
+        const plainEvent = (eventName || ticket.event_title || "your event").slice(0, 120);
+        const displayEvent = escapeHtml(plainEvent);
+        const firstName = escapeHtml((ticket.attendee_name || "").trim().split(/\s+/)[0] || "there");
         const safeTicketId = escapeHtml(ticket.id);
 
-        let badgeColor = "#7FE3C4";
-        let tierBg = "#16302A";
-        let tierLabel = "GENERAL ADMISSION";
+        // Tier chip colours, tuned for a light email body
+        const tierStyle = {
+          VIP: { fg: "#4A6200", bg: "#EEF8C4", label: "VIP" },
+          Guestlist: { fg: "#5A3FB0", bg: "#EFE9FF", label: "Guestlist" },
+          General: { fg: "#0F6B53", bg: "#DDF5EC", label: "General" }
+        }[ticketTier] || { fg: "#0F6B53", bg: "#DDF5EC", label: "General" };
 
-        if (ticketTier === "VIP") {
-          badgeColor = "#D4F36B";
-          tierBg = "#2A3014";
-          tierLabel = "👑 VIP PASS";
-        } else if (ticketTier === "Guestlist") {
-          badgeColor = "#C9B6FF";
-          tierBg = "#2A2540";
-          tierLabel = "⭐ GUESTLIST PASS";
-        }
-
-        // Rendered passes go out as a real attachment — most mail clients block data: URI images
+        // The ticket goes out as a real attachment (PDF preferred, JPG as fallback); data: URI images are blocked by most mail clients
         const attachments = [];
-        const passMatch = typeof passImageData === "string" && passImageData.match(/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/);
-        if (passMatch && passMatch[2].length < 5_000_000) {
-          attachments.push({ filename: `${ticket.id}.${passMatch[1] === "png" ? "png" : "jpg"}`, content: passMatch[2] });
+        const pdfMatch = typeof passPdfData === "string" && passPdfData.match(/^data:application\/pdf(?:;[a-z-]+=[^;,]+)*;base64,([A-Za-z0-9+/=]+)$/);
+        const imgMatch = typeof passImageData === "string" && passImageData.match(/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/);
+        if (pdfMatch && pdfMatch[1].length < 7_000_000) {
+          attachments.push({ filename: `${ticket.id}.pdf`, content: pdfMatch[1] });
+        } else if (imgMatch && imgMatch[2].length < 5_000_000) {
+          attachments.push({ filename: `${ticket.id}.${imgMatch[1] === "png" ? "png" : "jpg"}`, content: imgMatch[2] });
         }
+        const attachedKind = attachments.length ? (attachments[0].filename.endsWith(".pdf") ? "PDF" : "image") : "";
 
-        const passContentHtml = `
-          <div style="background: #17191C; border: 1px solid #2A2D31; border-radius: 16px; padding: 24px; margin: 20px 0; text-align: center;">
-            <div style="display: inline-block; padding: 4px 14px; background: ${tierBg}; color: ${badgeColor}; border: 1px solid ${badgeColor}; border-radius: 20px; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 16px;">
-              ${tierLabel}
-            </div>
-            <div style="background: #ffffff; display: inline-block; padding: 14px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 16px;">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(ticket.id)}" alt="Entry QR Code" width="200" height="200" style="display: block;" />
-            </div>
-            <div style="font-family: monospace; font-size: 20px; font-weight: 700; color: #F2EFE8; letter-spacing: 3px; margin-bottom: 8px;">
-              ${safeTicketId}
-            </div>
-            <div style="font-size: 14px; color: #C9C7BF;">
-              Attendee: <strong style="color: #F2EFE8;">${displayName}</strong>
-            </div>
-            ${attachments.length ? `<div style="font-size: 12px; color: #9C9B94; margin-top: 10px;">Your designed pass is attached to this email.</div>` : ""}
-          </div>
-        `;
+        // Without an attachment the QR code is the only copy of the ticket, so it goes in the body
+        const qrBlock = attachments.length ? "" : `
+                <tr><td align="center" style="padding: 8px 0 24px 0;">
+                  <div style="display: inline-block; padding: 12px; background: #ffffff; border: 1px solid #E4E1D8;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(ticket.id)}" alt="Entry QR code" width="200" height="200" style="display: block;" />
+                  </div>
+                </td></tr>`;
 
-        const emailHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"/></head>
-          <body style="font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0F1012; color: #F2EFE8; padding: 30px 15px; margin: 0;">
-            <div style="max-width: 500px; margin: 0 auto; background: #0F1012; border: 1px solid #2A2D31; border-radius: 20px; padding: 28px; box-shadow: 0 15px 30px rgba(0,0,0,0.5);">
-              <div style="text-align: center; margin-bottom: 20px;">
-                <h1 style="color: #F2EFE8; font-size: 24px; margin: 0 0 6px 0; letter-spacing: -0.5px;">${displayEvent}</h1>
-                <p style="color: #9C9B94; font-size: 14px; margin: 0;">Your Official Entry Pass is Ready</p>
-              </div>
-              ${passContentHtml}
-              <div style="background: #1B1D21; border-radius: 12px; padding: 14px; font-size: 13px; color: #C9C7BF; line-height: 1.6; border: 1px solid #2A2D31;">
-                • Present this QR code at the entrance gate on your phone.<br/>
-                • Single-entry verification. Do not share or duplicate this pass.<br/>
-                • Gate staff will scan this QR directly from your screen.
-              </div>
-              <div style="text-align: center; margin-top: 24px; font-size: 11px; color: #8F8E87;">
-                Secured by stub
-              </div>
-            </div>
-          </body>
-          </html>
-        `;
+        const emailHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="color-scheme" content="light"/></head>
+<body style="margin: 0; padding: 0; background: #F4F2EC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #17191C;">
+  <div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">Your ticket for ${displayEvent} is attached.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #F4F2EC;">
+    <tr><td align="center" style="padding: 32px 14px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px; background: #ffffff; border: 1px solid #E4E1D8;">
+        <tr><td style="height: 6px; background: #D4F36B; font-size: 0; line-height: 0;">&nbsp;</td></tr>
+        <tr><td style="padding: 36px 36px 8px 36px;">
+          <div style="font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #6B6A63;">Your ticket</div>
+          <h1 style="margin: 10px 0 0 0; font-size: 28px; line-height: 1.2; font-weight: 800; letter-spacing: -0.5px; color: #17191C;">${displayEvent}</h1>
+        </td></tr>
+        <tr><td style="padding: 18px 36px 8px 36px; font-size: 16px; line-height: 1.6; color: #34363A;">
+          Hi ${firstName}, here is your ticket for <strong>${displayEvent}</strong>. ${attachments.length ? `It is attached to this email as a ${attachedKind}.` : "Show the code below at the gate."}
+        </td></tr>
+        <tr><td style="padding: 18px 36px 8px 36px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #FAF9F5; border: 1px solid #E4E1D8;">
+            <tr>
+              <td style="padding: 16px 18px;">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #8A897F;">Ticket ID</div>
+                <div style="margin-top: 4px; font-family: 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 18px; font-weight: 700; letter-spacing: 2px; color: #17191C;">${safeTicketId}</div>
+              </td>
+              <td align="right" style="padding: 16px 18px;">
+                <span style="display: inline-block; padding: 6px 12px; background: ${tierStyle.bg}; color: ${tierStyle.fg}; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">${tierStyle.label}</span>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+        ${qrBlock}
+        <tr><td style="padding: 20px 36px 32px 36px; font-size: 14px; line-height: 1.6; color: #5A5B55;">
+          Show the QR code on your phone at the entrance. Each ticket works for one person, so please don't share it.
+        </td></tr>
+        <tr><td style="padding: 16px 36px; border-top: 1px solid #E4E1D8; font-size: 12px; color: #8A897F;">
+          Sent with stub
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 
         const resendKey = env.RESEND_API_KEY;
         if (!resendKey) {
@@ -1270,7 +1524,7 @@ export default {
           body: JSON.stringify({
             from: env.EMAIL_FROM || "Tickets <onboarding@resend.dev>",
             to: [recipient],
-            subject: `🎟️ Your ${ticketTier} Pass for ${(eventName || ticket.event_title || "your event").slice(0, 120)}`,
+            subject: `Your ticket for ${plainEvent}`,
             html: emailHtml,
             ...(attachments.length ? { attachments } : {})
           })
@@ -1278,9 +1532,11 @@ export default {
 
         if (!resendRes.ok) {
           const errText = await resendRes.text();
-          return json({ error: "Failed to dispatch email", details: errText }, 502, origin);
+          // 429 passes through so bulk senders know to back off and retry
+          return json({ error: "Failed to dispatch email", details: errText }, resendRes.status === 429 ? 429 : 502, origin);
         }
 
+        await env.DB.prepare("UPDATE tickets SET email_sent_at = CURRENT_TIMESTAMP WHERE id = ?").bind(ticket.id).run();
         return json({ success: true, message: "Email dispatched successfully" }, 200, origin);
       }
 

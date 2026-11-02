@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "npx wrangler dev --cwd worker",
     "dev:remote": "npx wrangler dev --cwd worker --remote",
+    "db:migrate:local": "npx wrangler d1 execute ticket-scanner-db --local --file=schema.sql --cwd worker",
+    "db:seed:local": "npx wrangler d1 execute ticket-scanner-db --local --file=seed.sql --cwd worker",
     "deploy": "npx wrangler deploy --cwd worker"
   },
   "keywords": [

@@ -834,20 +834,20 @@
     </div>
     <div class="header-actions">
       <a href="/" class="badge-btn" title="Back to Product Walkthrough">
-        <span style="color: var(--volt);">⚡</span> <span>Walkthrough</span>
+        <span>Walkthrough</span>
       </a>
       <a href="admin.html" class="badge-btn" title="Open Organizer Admin & Ticket Studio">
-        <span>🛠️</span> <span>Admin</span>
+        <span>Admin</span>
       </a>
       <button id="day-badge-btn" class="badge-btn" onclick="openDayPickerModal()" title="Switch Active Event Day">
-        <span>📅</span> <span id="header-day-label">Day 1</span>
+        <span id="header-day-label">Day 1</span>
       </button>
       <div id="scan-count-badge" class="scan-counter" style="display:none;">0 Scanned</div>
       <div id="scanner-name-tag" class="badge-btn" style="display:none;" onclick="changeName()">
-        <span>👤</span> <span id="operator-label">Gate</span>
+        <span id="operator-label">Gate</span>
       </div>
       <button id="sound-btn" class="badge-btn" onclick="toggleMute()" title="Toggle Audio Chimes">
-        <span id="sound-icon">🔔</span>
+        <span id="sound-icon">Sound on</span>
       </button>
     </div>
   </header>
@@ -857,7 +857,13 @@
     <div class="gate-card">
       <div class="gate-icon"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#D4F36B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.4" fill="#D4F36B"/></svg></div>
       <h2>Staff Authentication</h2>
-      <p>Enter the gate passkey to unlock the camera scanner for this session.</p>
+      <p id="auth-hint-text">Enter the gate passkey to unlock the camera scanner for this session.</p>
+      
+      <div id="event-id-group" style="display: none; width: 100%; text-align: left; margin-bottom: 4px;">
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: block;">Event ID (from Gate Link):</label>
+        <input id="event-id-input" class="gate-input" type="text" placeholder="e.g. evt_sunburn2026" maxlength="64" autocomplete="off" style="letter-spacing: normal;" />
+      </div>
+
       <input id="key-input" class="gate-input" type="password" placeholder="••••••••••" maxlength="30" autocomplete="off"
         onkeydown="if(event.key==='Enter') verifyKey()" />
       <p id="key-error" style="color: #FF7A6B; font-size: 13px; display: none;">Invalid passkey. Please check and retry.</p>
@@ -882,7 +888,7 @@
           onkeydown="if(event.key==='Enter') startScanning()" />
       </div>
 
-      <div style="text-align: left; width: 100%;">
+      <div id="login-day-wrap" style="text-align: left; width: 100%;">
         <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: block;">Active Event Day (1 to 10):</label>
         <select id="login-day-select" class="gate-input" style="cursor: pointer; padding: 12px 14px;">
           <option value="1">Day 1 (Opening Day)</option>
@@ -910,6 +916,17 @@
     <!-- Camera Viewport Card -->
     <div class="camera-card">
       <div id="reader"></div>
+
+      <!-- No Camera Fallback Overlay -->
+      <div id="no-camera-overlay" style="display: none; position: absolute; inset: 0; background: #17191C; z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center;">
+        <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(255,184,112,0.15); display: flex; align-items: center; justify-content: center; color: #FFB870; font-size: 24px;">📷</div>
+        <div style="font-weight: 700; font-size: 16px; color: #F2EFE8;">Camera Unavailable</div>
+        <p id="no-camera-reason" style="font-size: 13px; color: #9C9B94; margin: 0; max-width: 290px; line-height: 1.5;">No accessible webcam was detected, or camera permission was blocked by the browser.</p>
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button class="btn-primary" style="width: auto; padding: 10px 18px; font-size: 13px;" onclick="initCamera()">Retry Camera</button>
+          <button class="tool-btn" style="border-radius: 999px; padding: 10px 16px; font-size: 13px;" onclick="document.querySelector('.manual-card').open = true; document.getElementById('manual-input').focus();">Manual Entry</button>
+        </div>
+      </div>
       
       <!-- Reticle & Laser Effect -->
       <div class="scan-reticle">
@@ -925,10 +942,10 @@
       <!-- Quick Action Controls -->
       <div class="camera-controls">
         <button id="torch-btn" class="tool-btn" onclick="toggleTorch()">
-          <span>🔦</span> <span id="torch-label">Flash</span>
+          <span id="torch-label">Flash</span>
         </button>
         <button id="camera-flip-btn" class="tool-btn" onclick="switchCamera()">
-          <span>🔄</span> <span>Flip</span>
+          <span>Flip</span>
         </button>
       </div>
     </div>
@@ -954,7 +971,7 @@
     <!-- Manual Code Fallback -->
     <details class="manual-card">
       <summary>
-        <span>⌨️ Manual Code Lookup</span>
+        <span>Manual Code Lookup</span>
         <span style="font-size: 11px; opacity: 0.7;">Click to expand</span>
       </summary>
       <div class="manual-form">
@@ -982,7 +999,7 @@
 
       <!-- Tier Badge (VIP, General, Guestlist) -->
       <div id="res-tier-chip" class="tier-chip vip">
-        <span id="res-tier-icon">👑</span>
+        <span id="res-tier-icon" aria-hidden="true">●</span>
         <span id="res-tier-text">VIP ACCESS</span>
       </div>
 
@@ -1019,12 +1036,11 @@
 
       <!-- Re-entry Authorization Button (Shown on duplicates / re-entries) -->
       <button id="res-reentry-btn" class="btn-reentry" style="display:none;" onclick="triggerReEntryScan()">
-        <span>🔄 Authorize Re-Entry for Today</span>
+        <span>Authorize Re-Entry for Today</span>
       </button>
 
       <!-- PRIMARY 'SCAN NEXT' ACTION BUTTON -->
       <button id="scan-next-btn" class="btn-scan-next" onclick="scanNextTicket()">
-        <span>📷</span>
         <span>Scan Next Ticket</span>
       </button>
 
@@ -1047,7 +1063,7 @@
   </div>
 
   <script>
-    // 🌐 Cloudflare Workers API Endpoint Configuration
+    // Cloudflare Workers API Endpoint Configuration
     // The Worker serves pages and API from one origin; a file:// copy talks to the default `wrangler dev` port
     const API_URL = window.location.protocol === "file:" ? "http://localhost:8787" : window.location.origin;
 
@@ -1067,12 +1083,15 @@
 
     // Active Event Day Tracking (1 to 10)
     let currentEventDay = parseInt(localStorage.getItem("scanner_event_day"), 10) || 1;
+    let serverDayLocked = false;
 
     function updateEventDayUI() {
       const headerLabel = document.getElementById("header-day-label");
       if (headerLabel) headerLabel.textContent = `Day ${currentEventDay}`;
       const loginSelect = document.getElementById("login-day-select");
       if (loginSelect) loginSelect.value = String(currentEventDay);
+      const dayWrap = document.getElementById("login-day-wrap");
+      if (dayWrap) dayWrap.style.display = serverDayLocked ? "none" : "";
       renderDayPicker();
     }
 
@@ -1084,6 +1103,7 @@
     }
 
     function openDayPickerModal() {
+      if (serverDayLocked) return;
       renderDayPicker();
       document.getElementById("day-picker-modal").style.display = "flex";
     }
@@ -1154,7 +1174,7 @@
 
     function toggleMute() {
       isMuted = !isMuted;
-      document.getElementById("sound-icon").textContent = isMuted ? "🔇" : "🔔";
+      document.getElementById("sound-icon").textContent = isMuted ? "Muted" : "Sound on";
     }
 
     // Step 1: Authentication verification via server API (Gate PIN or Master Key)
@@ -1167,7 +1187,14 @@
 
       try {
         const params = new URLSearchParams(window.location.search);
-        const eventId = params.get("event") || "";
+        let eventId = params.get("event") || localStorage.getItem("scanner_last_event") || "";
+        if (!eventId) {
+          const evInput = document.getElementById("event-id-input");
+          if (evInput && evInput.value.trim()) {
+            eventId = evInput.value.trim();
+            localStorage.setItem("scanner_last_event", eventId);
+          }
+        }
 
         // Saved organizer sessions ("st." tokens) skip the PIN check; PINs try gate auth first
         const isSession = enteredKey.startsWith("st.");
@@ -1191,6 +1218,7 @@
 
         if (res.ok) {
           const authData = await res.json();
+          if (usedPin && authData.today) { serverDayLocked = true; if (!authData.today.before && !authData.today.after) setEventDay(authData.today.day); }
           authToken = authData.token || enteredKey;
           // Keep the gate PIN so the scanner can re-open; never keep the owner master key
           localStorage.setItem("scanner_key", usedPin ? enteredKey : authToken);
@@ -1247,11 +1275,18 @@
       document.getElementById("name-screen").style.display = "flex";
     }
 
-    // Step 3: Camera & QR Engine
-    function initCamera() {
+    // Step 3: Camera & QR Engine with Cascading Fallback
+    async function initCamera() {
       if (qrStarted) return;
       
-      html5QrCode = new Html5Qrcode("reader");
+      const noCamEl = document.getElementById("no-camera-overlay");
+      const noCamReason = document.getElementById("no-camera-reason");
+      if (noCamEl) noCamEl.style.display = "none";
+
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+      }
+
       const config = {
         fps: 20,
         qrbox: (viewfinderWidth, viewfinderHeight) => {
@@ -1261,29 +1296,82 @@
         aspectRatio: 1.0
       };
 
-      html5QrCode.start(
-        { facingMode: currentFacingMode },
-        config,
-        (decodedText) => {
-          handleDetectedCode(decodedText);
-        },
-        () => {}
-      ).then(() => {
+      const startWithConstraint = (constraint) => {
+        return html5QrCode.start(
+          constraint,
+          config,
+          (decodedText) => handleDetectedCode(decodedText),
+          () => {}
+        );
+      };
+
+      try {
+        // Attempt 1: Requested facing mode (environment for mobile rear camera)
+        await startWithConstraint({ facingMode: currentFacingMode });
         qrStarted = true;
         document.getElementById("scanning-status").textContent = `Camera active (Day ${currentEventDay}). Ready for QR codes...`;
-      }).catch((err) => {
-        console.error("Camera start error:", err);
-        document.getElementById("scanning-status").textContent = "Camera error: " + err;
-      });
+      } catch (err1) {
+        console.warn(`Camera failed with facingMode "${currentFacingMode}", trying alternate...`, err1);
+        try {
+          // Attempt 2: Opposite facing mode (front/user camera on laptop/desktop)
+          const fallbackFacing = currentFacingMode === "environment" ? "user" : "environment";
+          await startWithConstraint({ facingMode: fallbackFacing });
+          currentFacingMode = fallbackFacing;
+          qrStarted = true;
+          document.getElementById("scanning-status").textContent = `Camera active (${fallbackFacing} camera, Day ${currentEventDay}). Ready...`;
+        } catch (err2) {
+          console.warn("Alternate facingMode failed, checking available devices...", err2);
+          try {
+            // Attempt 3: Enumerate camera devices and use first available deviceId
+            const devices = await Html5Qrcode.getCameras();
+            if (devices && devices.length > 0) {
+              await startWithConstraint({ deviceId: { exact: devices[0].id } });
+              qrStarted = true;
+              document.getElementById("scanning-status").textContent = `Camera active (${devices[0].label || "Camera"}). Ready...`;
+              return;
+            }
+            throw new Error("No video input devices found on this system.");
+          } catch (err3) {
+            console.error("All camera start attempts failed:", err3);
+            qrStarted = false;
+            document.getElementById("scanning-status").innerHTML = `<span style="color: #FFB870;">⚠️ Camera unavailable. Use manual code lookup below.</span>`;
+            
+            if (noCamEl) {
+              noCamEl.style.display = "flex";
+              if (noCamReason) {
+                noCamReason.textContent = err3.name === "NotAllowedError" || String(err3).includes("NotAllowedError")
+                  ? "Camera permission was denied. Please allow camera access in your browser address bar."
+                  : "No webcam detected on this device. You can test immediately using Manual Entry below.";
+              }
+            }
+
+            // Auto-open manual code entry so gate operator is never stuck
+            const manualCard = document.querySelector(".manual-card");
+            if (manualCard) manualCard.open = true;
+            const manualInput = document.getElementById("manual-input");
+            if (manualInput) {
+              manualInput.placeholder = "Type or paste ticket ID (e.g. VIP-78102)";
+              manualInput.focus();
+            }
+          }
+        }
+      }
     }
 
     function switchCamera() {
-      if (!html5QrCode || !qrStarted) return;
       currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-      html5QrCode.stop().then(() => {
+      if (html5QrCode && qrStarted) {
+        html5QrCode.stop().then(() => {
+          qrStarted = false;
+          initCamera();
+        }).catch(() => {
+          qrStarted = false;
+          initCamera();
+        });
+      } else {
         qrStarted = false;
         initCamera();
-      });
+      }
     }
 
     async function toggleTorch() {
@@ -1344,6 +1432,7 @@
         }
 
         const data = await res.json();
+        if (data.eventDay && data.eventDay !== currentEventDay && data.eventDay >= 1 && data.eventDay <= 10) setEventDay(data.eventDay);
         showScanResult(data, code);
 
       } catch (err) {
@@ -1381,10 +1470,10 @@
         document.getElementById("scan-count-badge").textContent = `${sessionScannedCount} Scanned`;
       } else if (result === "duplicate") {
         document.getElementById("res-status-text").textContent = `ALREADY SCANNED TODAY (Day ${currentEventDay})`;
-        document.getElementById("res-status-icon").textContent = "⚠️";
+        document.getElementById("res-status-icon").textContent = "!";
       } else if (result === "wrong_day") {
         document.getElementById("res-status-text").textContent = "WRONG EVENT DAY";
-        document.getElementById("res-status-icon").textContent = "⛔";
+        document.getElementById("res-status-icon").textContent = "!";
       } else if (result === "notfound") {
         document.getElementById("res-status-text").textContent = "NOT FOUND IN SYSTEM";
         document.getElementById("res-status-icon").textContent = "✕";
@@ -1396,13 +1485,13 @@
       // Configure Tier
       if (tier === "VIP") {
         document.getElementById("res-tier-text").textContent = "VIP PASS";
-        document.getElementById("res-tier-icon").textContent = "👑";
+        
       } else if (tier === "Guestlist") {
         document.getElementById("res-tier-text").textContent = "GUESTLIST PASS";
-        document.getElementById("res-tier-icon").textContent = "⭐";
+        
       } else {
         document.getElementById("res-tier-text").textContent = "GENERAL ADMISSION";
-        document.getElementById("res-tier-icon").textContent = "🎟️";
+        
       }
 
       // Configure Multi-Day Pass Strip & Timeline
@@ -1493,7 +1582,7 @@
       const reEntryBtn = document.getElementById("res-reentry-btn");
       if (result === "duplicate") {
         reEntryBtn.style.display = "flex";
-        reEntryBtn.innerHTML = `<span>🔄</span> <span>Authorize Re-Entry for Day ${currentEventDay}</span>`;
+        reEntryBtn.innerHTML = `<span>Authorize Re-Entry for Day ${currentEventDay}</span>`;
       } else {
         reEntryBtn.style.display = "none";
       }
@@ -1573,6 +1662,13 @@
     window.addEventListener("DOMContentLoaded", () => {
       updateEventDayUI();
       const params = new URLSearchParams(window.location.search);
+      const urlEvent = params.get("event") || localStorage.getItem("scanner_last_event");
+      const evGroup = document.getElementById("event-id-group");
+      if (!urlEvent && evGroup) {
+        evGroup.style.display = "block";
+      } else if (urlEvent) {
+        localStorage.setItem("scanner_last_event", urlEvent);
+      }
       const urlPin = params.get("pin");
       const urlDay = params.get("day");
       if (urlDay) setEventDay(parseInt(urlDay, 10));
