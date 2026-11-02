@@ -68,6 +68,10 @@ export async function handle(ctx) {
   if (url.pathname === "/api/billing/verify-order" && request.method === "POST") {
     const { order_id, razorpay_payment_id, razorpay_signature } = await request.json();
 
+    if (!order_id || (razorpayEnabled && (!razorpay_payment_id || !razorpay_signature))) {
+      return json({ ok: false, error: "Missing payment details." }, 400, origin);
+    }
+
     const order = await env.DB.prepare("SELECT * FROM credit_orders WHERE order_id = ? AND organizer_id = ?")
       .bind(order_id || "", organizerId).first();
     if (!order) return json({ ok: false, error: "Order not found" }, 404, origin);
