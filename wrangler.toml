@@ -1,4 +1,4 @@
-name = "ticket-scanner-api"
+name = "tixdesk"
 main = "worker/src/index.js"
 compatibility_date = "2026-05-29"
 
@@ -13,4 +13,4 @@ binding = "ASSETS"   # lets src/index.js route /, /scan and /admin
 [[d1_databases]]
 binding = "DB"
 database_name = "ticket-scanner-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "5bf577bf-e2f7-47b2-a1dd-ae690ab21015"
