@@ -1053,7 +1053,7 @@
           <span class="chip-plus" aria-hidden="true">+</span>
         </button>
 
-        <button class="btn btn-ghost" onclick="loadAllTickets(currentPage)" title="Reload tickets">↻</button>
+        <button id="refresh-btn" class="btn btn-ghost" onclick="refreshHome()" title="Refresh stats from the database (once a minute)">↻</button>
         <a id="open-scanner-btn" href="scanner.html" target="_blank" class="btn btn-blue">Open scanner </a>
         <button id="account-btn" class="btn btn-ghost" onclick="switchTab('tab-settings')" title="Account, data export and maintenance">Account</button>
       </div>
@@ -1152,6 +1152,7 @@
             <div id="directory-actions" class="toolbar-actions">
               <button class="btn btn-ghost" onclick="exportCSV()" title="Download the ticket list as a spreadsheet">Export CSV</button>
               <button id="bulk-mail-btn" class="btn btn-ghost" onclick="bulkDispatchPasses()">Email unsent</button>
+              <button id="queue-mail-btn" class="btn btn-ghost" onclick="queuePassEmails()" title="Send in the background; you can close this tab">Send in background</button>
             </div>
             <button class="btn btn-ghost" onclick="switchTab('tab-assign')">Assign names</button>
             <button id="gen-open-btn" type="button" class="btn btn-volt btn-generate" onclick="openGenModal()">
@@ -2148,11 +2149,9 @@
       await loadAllTickets(1);
       initStudioCustomizer();
       applyTierMode();
-      pollStats();
-      // 15s edge-cached background poll; skipped while the tab is hidden (saves Worker and D1 requests),
-      // with one catch-up poll the moment the organizer comes back
-      setInterval(() => { if (!document.hidden) pollStats(); }, 15000);
-      document.addEventListener("visibilitychange", () => { if (!document.hidden) pollStats(); });
+      // No background polling: stats reload only when the organizer asks (↻), at most once a minute.
+      // Edits made here update the counters locally in between
+      syncHome(true);
 
       // First sign-in to an account on this device: show the guided tour once. Keyed per account, so a
       // new account opens the tour even in a browser where an older account already finished it
@@ -2393,10 +2392,11 @@
       ["#gate-pin-badge", "Gate PIN", "Volunteers type this PIN on the scanner to check tickets for this event only. Copy link gives them a scanner link to open on their phone."],
       ["#credits-chip", "Credits", "One credit makes one ticket. Names, emails and scanning are free. Click to buy more: ₹10, ₹8 or ₹5 a ticket depending on pack size."],
       ["#open-scanner-btn", "Open scanner", "Opens the door scanner in a new tab. Every scan is checked live, so a ticket can't get two people in."],
-      ["#kpi-grid", "Live stats", "Check-ins for the selected event, refreshed every 15 seconds while this page is open."],
+      ["#kpi-grid", "Live stats", "Check-ins for the selected event. Press the refresh button (↻) to reload from the database, at most once a minute."],
       ["#search-box", "Search", "Find any guest by name, email or ticket ID, across every page of the list."],
       ["#filter-btn", "Filter", "Narrow the list by tier, checked in or not, or tickets whose email hasn't been sent yet."],
       ["#bulk-mail-btn", "Email unsent", "Emails every ticket that has an address but hasn't been sent, across all pages. Each guest gets their ticket as a PDF in your studio design."],
+      ["#queue-mail-btn", "Send in background", "Queues the same emails on the server so you can close this tab. Guests get their QR code in the email body instead of the designed PDF."],
       ["#gen-open-btn", "Generate tickets", "Makes blank tickets with QR codes but no names yet. Each uses one credit. Add names after, in the list or on Assign tickets."],
       ["#tickets-table-card", "Ticket list", "Every ticket in this event. Click a name or email to edit it; it saves by itself. The mail button sends one ticket."],
       ["#studio-artwork", "Artwork", "Upload any image as the ticket background, then drag the QR code and name on the preview."],
@@ -2809,8 +2809,7 @@
 
         updatePaginationUI();
         renderTable();
-        pollStats();
-        refreshUnsentCount();
+        syncHome();
         fillStudioGuestPick();
       } catch (err) {
         console.error("Error loading tickets:", err);
@@ -2844,6 +2843,61 @@
     // =========================================================================
     // STEP 3: EDGE STATS POLLING (HTTP 304 ETag Caching)
     // =========================================================================
+    const HOME_SYNC_MIN_MS = 60000;
+    const homeSync = { at: 0, eventId: null };
+    let unsentCount = null;
+    let homeStats = null;
+
+    // Reloads Home counters (stats + unsent) from the database at most once a minute.
+    // Switching events always loads, since those counters belong to another event.
+    // Returns true when it hit the server
+    function syncHome(force = false) {
+      const now = Date.now();
+      const sameEvent = homeSync.eventId === currentEventId;
+      if (!force && sameEvent && now - homeSync.at < HOME_SYNC_MIN_MS) return false;
+      homeSync.at = now;
+      homeSync.eventId = currentEventId;
+      statsETag = "";
+      pollStats();
+      refreshUnsentCount();
+      return true;
+    }
+
+    // The ↻ button: reload the table every time (cheap, one page), Home counters only once a minute
+    async function refreshHome() {
+      const wait = HOME_SYNC_MIN_MS - (Date.now() - homeSync.at);
+      const btn = document.getElementById("refresh-btn");
+      if (homeSync.eventId === currentEventId && wait > 0) {
+        if (btn) btn.title = `Counters were refreshed recently. Try again in ${Math.ceil(wait / 1000)}s`;
+        renderTable();
+        return;
+      }
+      if (btn) btn.title = "Refresh stats from the database (once a minute)";
+      syncHome(true);
+      loadAllTickets(currentPage);
+    }
+
+    function isPendingEmail(t) { return !!t.email && !t.email_sent; }
+
+    function setUnsentCount(n) {
+      unsentCount = Math.max(0, n);
+      const btn = document.getElementById("bulk-mail-btn");
+      if (!btn || btn.dataset.busy) return;
+      btn.disabled = unsentCount === 0;
+      btn.textContent = unsentCount === 0 ? "All tickets emailed" : `Email ${unsentCount} waiting ticket${unsentCount === 1 ? "" : "s"}`;
+      btn.title = "Guests who have an email address but haven't been sent their ticket yet";
+    }
+
+    // Local edits move the Home counters without a database read
+    function bumpUnsent(delta) {
+      if (unsentCount !== null && delta) setUnsentCount(unsentCount + delta);
+    }
+
+    function bumpTotals(delta) {
+      if (!homeStats || !delta) return;
+      applyStatsToKPIs({ ...homeStats, total: (homeStats.total || 0) + delta, valid: (homeStats.valid || 0) + delta });
+    }
+
     async function pollStats() {
       try {
         const headers = { "Authorization": `Bearer ${authToken}` };
@@ -2868,6 +2922,7 @@
     }
 
     function applyStatsToKPIs(stats) {
+      homeStats = stats;
       const total = stats.total || 0;
       const scanned = stats.scanned || 0;
       const valid = stats.valid || 0;
@@ -3143,7 +3198,11 @@
 
     async function saveAttendeeField(ticketId, field, value) {
       const ticket = allTickets.find(t => t.id === ticketId);
-      if (ticket) ticket[field] = value;
+      if (ticket) {
+        const wasPending = isPendingEmail(ticket);
+        ticket[field] = value;
+        bumpUnsent(Number(isPendingEmail(ticket)) - Number(wasPending));
+      }
 
       try {
         await fetch(`${API_URL}/api/save-attendee`, {
@@ -4502,6 +4561,7 @@
           currentCreditsBalance = data.remaining_credits;
           document.getElementById("header-credits-count").textContent = currentCreditsBalance;
           closeGenModal();
+          bumpTotals(data.count || 0);
           statusEl.textContent = `Made ${data.count} ${free ? "free sample" : "blank"} ticket${data.count === 1 ? "" : "s"}. Fill them in below.`;
           await loadAllTickets(1);
           tourNotify("gen-created");
@@ -4633,6 +4693,7 @@
           btn.disabled = false;
           return data;
         }
+        bumpUnsent(rows.filter(r => r.email).length);
         await loadAllTickets(1);
         statusEl.textContent = `Assigned ${data.assigned} ticket${data.assigned === 1 ? "" : "s"}. Send them with Email unsent on Home.`;
         btn.disabled = false;
@@ -4848,6 +4909,7 @@
         if (res.ok) {
           alert(data.message || "Reset completed!");
           closeResetModal();
+          syncHome(true);
           loadAllTickets();
         } else {
           alert("Error: " + data.error);
@@ -4889,6 +4951,7 @@
         });
 
         if (res.ok) {
+          bumpUnsent(isPendingEmail(ticket) ? -1 : 0);
           ticket.email_sent = true;
           renderTable();
           alert("Ticket email sent successfully!");
@@ -4909,10 +4972,7 @@
       try {
         const res = await fetch(`${API_URL}/api/tickets?event_id=${encodeURIComponent(currentEventId)}&unsent=1&limit=1&page=1`, { headers: { "Authorization": `Bearer ${authToken}` } });
         const data = await res.json();
-        const n = res.ok ? (data.total || 0) : 0;
-        btn.disabled = n === 0;
-        btn.textContent = n === 0 ? "All tickets emailed" : `Email ${n} waiting ticket${n === 1 ? "" : "s"}`;
-        btn.title = "Guests who have an email address but haven't been sent their ticket yet";
+        setUnsentCount(res.ok ? (data.total || 0) : 0);
       } catch (_) {}
     }
 
@@ -4978,7 +5038,39 @@
         statusEl.hidden = false;
         statusEl.textContent = `Sent ${sent}.${failed ? ` ${failed} failed, click the button again to retry.` : ""}`;
       }
+      bumpUnsent(-sent);
       loadAllTickets(currentPage);
+    }
+
+    // Hands every unsent ticket of this event to the server's email queue (/api/send-email/queue).
+    // The tab can close; queued emails carry the QR code in the body instead of the studio PDF.
+    async function queuePassEmails() {
+      const btn = document.getElementById("queue-mail-btn");
+      const statusEl = document.getElementById("bulk-mail-status");
+      if (!btn) return;
+      if (!confirm("Send every unsent ticket in the background?\n\nYou can close this tab. Guests get an email with their QR code in it, not the designed PDF. Use Email unsent instead if you want the studio design attached.")) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_URL}/api/send-email/queue`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+          body: JSON.stringify({ event_id: currentEventId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        if (statusEl) {
+          statusEl.hidden = false;
+          statusEl.textContent = data.queued === 0
+            ? "Nothing to send: every ticket with an email address has been sent."
+            : `Queued ${data.queued} email${data.queued === 1 ? "" : "s"}. They go out over the next few minutes.${data.more ? " More are waiting: queue again in 10 minutes." : ""}`;
+        }
+      } catch (err) {
+        if (statusEl) {
+          statusEl.hidden = false;
+          statusEl.textContent = "Couldn't queue emails: " + err.message;
+        }
+      }
+      btn.disabled = false;
     }
 
     function exportCSV() {

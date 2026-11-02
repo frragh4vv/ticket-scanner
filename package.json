@@ -7,7 +7,12 @@
     "dev:remote": "npx wrangler dev --cwd worker --remote",
     "db:migrate:local": "npx wrangler d1 execute ticket-scanner-db --local --file=schema.sql --cwd worker",
     "db:seed:local": "npx wrangler d1 execute ticket-scanner-db --local --file=seed.sql --cwd worker",
-    "deploy": "npx wrangler deploy --cwd worker"
+    "deploy": "npx wrangler deploy --cwd worker",
+    "deploy:prod": "npx wrangler deploy --cwd worker",
+    "deploy:staging": "npx wrangler deploy --cwd worker --env staging",
+    "db:migrate:staging": "npx wrangler d1 execute ticket-scanner-db-staging --remote --file=schema.sql --cwd worker --env staging",
+    "check:staging": "npx wrangler deploy --dry-run --cwd worker --env staging",
+    "check:prod": "npx wrangler deploy --dry-run --cwd worker"
   },
   "keywords": [
     "ticket-scanner",

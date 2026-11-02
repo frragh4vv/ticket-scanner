@@ -14,3 +14,69 @@ binding = "ASSETS"   # lets src/index.js route /, /scan and /admin
 binding = "DB"
 database_name = "ticket-scanner-db"
 database_id = "5bf577bf-e2f7-47b2-a1dd-ae690ab21015"
+
+# Rate limiting (src/index.js overRateLimit). period must be 10 or 60 seconds.
+# Approximate, per Cloudflare location; the strict lockouts stay in D1 (src/lib/limits.js).
+[[ratelimits]]
+name = "AUTH_LIMITER"      # sign-in, sign-up, reset, gate PIN, master key: per IP + path
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }
+
+[[ratelimits]]
+name = "API_LIMITER"       # every other /api/ call: per session token (or IP when signed out)
+namespace_id = "1002"
+simple = { limit = 300, period = 60 }
+
+# Background pass emails (src/routes/email.js produces, src/queue/email-consumer.js consumes).
+# Create once before deploying: npx wrangler queues create tixdesk-email
+[[queues.producers]]
+binding = "EMAIL_QUEUE"
+queue = "tixdesk-email"
+
+[[queues.consumers]]
+queue = "tixdesk-email"
+max_batch_size = 10        # emails handled per consumer run
+max_batch_timeout = 5      # seconds to wait for a fuller batch
+max_retries = 3
+
+# =============================================================================
+# STAGING environment: separate Worker, D1 database and queue, so nothing here
+# can touch prod data. Bindings are NOT inherited from the top level, so every
+# one is repeated. Deploy with: npm run deploy:staging
+# One-time setup:
+#   npx wrangler d1 create ticket-scanner-db-staging   (paste its id below)
+#   npx wrangler queues create tixdesk-email-staging
+#   npx wrangler d1 execute ticket-scanner-db-staging --remote --file=schema.sql --cwd worker
+#   npx wrangler secret put SESSION_SECRET --env staging   (use a different value from prod)
+# =============================================================================
+[env.staging]
+name = "tixdesk-staging"
+
+[env.staging.assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "ticket-scanner-db-staging"
+database_id = "REPLACE_WITH_STAGING_D1_ID"
+
+[[env.staging.ratelimits]]
+name = "AUTH_LIMITER"
+namespace_id = "2001"
+simple = { limit = 20, period = 60 }
+
+[[env.staging.ratelimits]]
+name = "API_LIMITER"
+namespace_id = "2002"
+simple = { limit = 300, period = 60 }
+
+[[env.staging.queues.producers]]
+binding = "EMAIL_QUEUE"
+queue = "tixdesk-email-staging"
+
+[[env.staging.queues.consumers]]
+queue = "tixdesk-email-staging"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
