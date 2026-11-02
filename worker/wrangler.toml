@@ -59,7 +59,7 @@ binding = "ASSETS"
 [[env.staging.d1_databases]]
 binding = "DB"
 database_name = "ticket-scanner-db-staging"
-database_id = "REPLACE_WITH_STAGING_D1_ID"
+database_id = "99a3b40e-4bc1-4826-853b-b462e09f6c7a"
 
 [[env.staging.ratelimits]]
 name = "AUTH_LIMITER"
@@ -80,3 +80,6 @@ queue = "tixdesk-email-staging"
 max_batch_size = 10
 max_batch_timeout = 5
 max_retries = 3
+
+[env.staging.vars]
+DEMO_BILLING = "true"   # fake top-ups on staging only; no Razorpay keys set here
