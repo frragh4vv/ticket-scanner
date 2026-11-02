@@ -9,6 +9,7 @@ import { json, getCorsHeaders, setAllowedOrigins, SECURITY_HEADERS } from "./lib
 import { getSessionSecret, verifySession, adminSessionIsCurrent } from "./lib/session.js";
 import { consumeEmailBatch } from "./queue/email-consumer.js";
 import * as publicAuth from "./routes/public-auth.js";
+import * as hooks from "./routes/hooks.js";
 import * as scan from "./routes/scan.js";
 import * as account from "./routes/account.js";
 import * as events from "./routes/events.js";
@@ -16,9 +17,10 @@ import * as billing from "./routes/billing.js";
 import * as stats from "./routes/stats.js";
 import * as tickets from "./routes/tickets.js";
 import * as email from "./routes/email.js";
+import * as designs from "./routes/designs.js";
 
 // Organizer-only modules, tried in this order after the session and role checks
-const ORGANIZER_ROUTES = [account, events, billing, stats, tickets, email];
+const ORGANIZER_ROUTES = [account, events, billing, stats, tickets, email, designs];
 
 // Unauthenticated endpoints that check a secret (password, PIN, master key, reset token)
 const AUTH_PATHS = new Set([
@@ -114,6 +116,10 @@ export default {
 
       const session = await verifySession(env, bearer);
       const ctx = { request, env, url, origin, bearer, session, clientIp };
+
+      // Provider webhooks (signature-verified inside, no session)
+      const hookRes = await hooks.handle(ctx);
+      if (hookRes) return hookRes;
 
       // Public endpoints (sign up, login, reset, gate PIN, master key)
       const publicRes = await publicAuth.handle(ctx);

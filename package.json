@@ -12,7 +12,8 @@
     "deploy:staging": "npx wrangler deploy --cwd worker --env staging",
     "db:migrate:staging": "npx wrangler d1 execute ticket-scanner-db-staging --remote --file=schema.sql --cwd worker --env staging",
     "check:staging": "npx wrangler deploy --dry-run --cwd worker --env staging",
-    "check:prod": "npx wrangler deploy --dry-run --cwd worker"
+    "check:prod": "npx wrangler deploy --dry-run --cwd worker",
+    "test": "node --test \"worker/test/*.test.js\""
   },
   "keywords": [
     "ticket-scanner",

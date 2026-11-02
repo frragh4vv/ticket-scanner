@@ -2679,6 +2679,7 @@
       statsETag = ""; // reset ETag for fresh event
       loadAllTickets(1);
       syncTierModeFromEvent();
+      syncDesignFromServer().then(() => renderStudioCanvas());
     }
 
     function copyGateLink() {
@@ -3353,6 +3354,7 @@
     async function initStudioCustomizer() {
       loadSavedStudioLayout();
       await loadSavedTemplate();
+      await syncDesignFromServer();
       initCanvasDragListeners();
       selectStudioElement('qr');
       renderStudioCanvas();
@@ -3612,7 +3614,12 @@
           try {
             localStorage.setItem(TEMPLATE_KEY, dataUrl);
           } catch (_) {
-            alert("This artwork is too large to remember. It works now, but you'll need to upload it again after reloading the page.");
+            // Too big for this browser's storage; the server copy below still keeps it
+          }
+          if (designReady()) {
+            designApi("PUT", `/api/designs/artwork?event_id=${encodeURIComponent(currentEventId)}`, { image: dataUrl })
+              .then(r => { if (!r) alert("Couldn't save this artwork to your account. It works now, but upload it again after reloading."); })
+              .catch(() => {});
           }
 
           const stored = new Image();
@@ -4060,24 +4067,90 @@
 
 
 
-    // Save and load customized layout in localStorage
-    function saveStudioLayout() {
-      const config = {
+    // The design (layout + artwork) is saved per event on the server so it follows the organizer to any browser.
+    // localStorage stays as a fast local copy and as the source for the first upload from an older browser.
+    let designPushTimer = null;
+    function designReady() {
+      return currentEventId && currentEventId !== "ALL" && currentEventsList.some(e => e.id === currentEventId);
+    }
+    async function designApi(method, path, body) {
+      const res = await fetch(`${API_URL}${path}`, {
+        method,
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      return res.ok ? res.json() : null;
+    }
+
+    function studioLayoutConfig() {
+      return {
         qrX, qrY, qrSize, showQrBg, showCode,
         nameX, nameY, nameFontSize, nameColor, nameFontWeight, showAttendeeName,
         tierX, tierY, tierBadgeWidth, tierBadgeHeight, tierFontSize, tierAutoColor, tierCustomBgColor, tierTextColor, showTierBadge,
         headerX, headerY, headerFontSize, headerColor, subFontSize, subColor, showHeader,
         layoutW, layoutH
       };
+    }
+
+    function saveStudioLayout() {
+      const config = studioLayoutConfig();
       try { localStorage.setItem("studio_layout_v3", JSON.stringify(config)); } catch (_) {}
+      if (!designReady()) return;
+      // Dragging fires this constantly: send the latest layout once the organizer pauses, to the event it was made for
+      const eventId = currentEventId;
+      clearTimeout(designPushTimer);
+      designPushTimer = setTimeout(() => {
+        designApi("PUT", `/api/designs?event_id=${encodeURIComponent(eventId)}`, { layout: config }).catch(() => {});
+      }, 800);
+    }
+
+    // Pulls the selected event's saved design. An event with nothing saved yet adopts this browser's copy
+    async function syncDesignFromServer() {
+      if (!designReady()) return;
+      const eventId = currentEventId;
+      try {
+        const d = await designApi("GET", `/api/designs?event_id=${encodeURIComponent(eventId)}`);
+        if (!d || eventId !== currentEventId) return;
+        if (d.layout) {
+          applyStudioLayout(d.layout);
+          try { localStorage.setItem("studio_layout_v3", JSON.stringify(d.layout)); } catch (_) {}
+        } else {
+          saveStudioLayout();
+        }
+        if (d.has_artwork) {
+          const a = await designApi("GET", `/api/designs/artwork?event_id=${encodeURIComponent(eventId)}`);
+          if (a && a.image && eventId === currentEventId) {
+            await new Promise(resolve => {
+              const img = new Image();
+              img.onload = () => { customTemplateImg = img; resolve(); };
+              img.onerror = resolve;
+              img.src = a.image;
+            });
+            try { localStorage.setItem(TEMPLATE_KEY, a.image); } catch (_) {}
+          }
+        } else if (d.layout) {
+          customTemplateImg = null;
+          try { localStorage.removeItem(TEMPLATE_KEY); } catch (_) {}
+        } else {
+          let local = null;
+          try { local = localStorage.getItem(TEMPLATE_KEY); } catch (_) {}
+          if (local) designApi("PUT", `/api/designs/artwork?event_id=${encodeURIComponent(eventId)}`, { image: local }).catch(() => {});
+        }
+      } catch (e) {
+        console.warn("Design sync failed:", e);
+      }
     }
 
     function loadSavedStudioLayout() {
       try {
         // Older v2 layouts stored pixel positions from unknown artwork sizes, so they are ignored
         const raw = localStorage.getItem("studio_layout_v3");
-        if (!raw) return;
-        const c = JSON.parse(raw);
+        if (raw) applyStudioLayout(JSON.parse(raw));
+      } catch (_) {}
+    }
+
+    function applyStudioLayout(c) {
+      try {
         const isV3 = c.layoutW !== undefined;
         const num = (k, set) => { if (typeof c[k] === "number" && isFinite(c[k])) set(c[k]); };
         const str = (k, set) => { if (typeof c[k] === "string") set(c[k]); };
@@ -4107,6 +4180,7 @@
     function clearStudioTemplate() {
       customTemplateImg = null;
       try { localStorage.removeItem(TEMPLATE_KEY); } catch (_) {}
+      if (designReady()) designApi("DELETE", `/api/designs/artwork?event_id=${encodeURIComponent(currentEventId)}`).catch(() => {});
       const input = document.getElementById("template-upload");
       if (input) input.value = "";
       renderStudioCanvas();

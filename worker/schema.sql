@@ -87,3 +87,21 @@ CREATE INDEX IF NOT EXISTS idx_tickets_tier ON tickets(tier);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_scan_logs_ticket ON scan_logs(ticket_id);
 CREATE INDEX IF NOT EXISTS idx_scan_logs_event ON scan_logs(event_id);
+
+-- 8. WEBHOOK EVENTS (provider event ids already handled; audit trail for Razorpay retries)
+CREATE TABLE IF NOT EXISTS webhook_events (
+    source TEXT NOT NULL,
+    event_id TEXT NOT NULL,
+    received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (source, event_id)
+);
+
+-- 9. EVENT DESIGNS (Ticket studio layout + background artwork per event; replaces browser localStorage)
+CREATE TABLE IF NOT EXISTS event_designs (
+    event_id TEXT PRIMARY KEY,
+    organizer_id TEXT NOT NULL,
+    layout_json TEXT,                          -- positions, sizes, colours, layer toggles
+    artwork TEXT,                              -- downscaled JPEG data URL (move to R2 later)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);

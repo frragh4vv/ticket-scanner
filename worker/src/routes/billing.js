@@ -5,6 +5,7 @@ import { CREDIT_PACKS } from "../config.js";
 import { json } from "../lib/http.js";
 import { generateRandomCode } from "../lib/util.js";
 import { bytesToHex, hmac, timingSafeEqual } from "../lib/crypto.js";
+import { settleCreditOrder } from "../lib/credits.js";
 
 export async function handle(ctx) {
   const { request, env, url, origin, organizerId } = ctx;
@@ -81,19 +82,16 @@ export async function handle(ctx) {
       return json({ ok: false, error: "Payments are not configured on this server." }, 503, origin);
     }
 
-    // Credit (amount comes from the stored order, never the client) and mark paid in one transaction.
-    // The EXISTS guard makes replays of the same order a no-op.
-    const [credit] = await env.DB.batch([
-      env.DB.prepare(`
-        UPDATE organizers SET ticket_credits = ticket_credits + ?
-        WHERE id = ? AND EXISTS (SELECT 1 FROM credit_orders WHERE order_id = ? AND status = 'created')
-      `).bind(order.credits_purchased, organizerId, order.order_id),
-      env.DB.prepare("UPDATE credit_orders SET status = 'paid', payment_id = ? WHERE order_id = ? AND status = 'created'")
-        .bind(razorpay_payment_id || "demo", order.order_id)
-    ]);
+    // Credit (amount comes from the stored order, never the client). Replays are a no-op.
+    const credited = await settleCreditOrder(env, order, razorpay_payment_id);
 
     const updatedOrg = await env.DB.prepare("SELECT ticket_credits FROM organizers WHERE id = ?").bind(organizerId).first();
-    if (!credit.meta || credit.meta.changes === 0) {
+    if (!credited) {
+      // The webhook may have credited this order a moment before the browser callback arrived
+      const settled = await env.DB.prepare("SELECT status FROM credit_orders WHERE order_id = ?").bind(order.order_id).first();
+      if (settled?.status === "paid") {
+        return json({ ok: true, success: true, message: "Credits were already added.", new_balance: updatedOrg?.ticket_credits ?? 0 }, 200, origin);
+      }
       return json({ ok: false, error: "This order was already processed.", new_balance: updatedOrg?.ticket_credits ?? 0 }, 409, origin);
     }
 
