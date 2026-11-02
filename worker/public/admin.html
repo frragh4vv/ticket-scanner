@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>stub • Event Admin & Ticket Studio</title>
+  <title>TixDesk • Event Admin & Ticket Studio</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -968,7 +968,7 @@
   <!-- STEP 1: AUTHENTICATION GATE -->
   <div id="key-screen">
     <div class="key-icon"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#D4F36B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.4" fill="#D4F36B"/></svg></div>
-    <h2 id="auth-title">Sign in to stub</h2>
+    <h2 id="auth-title">Sign in to TixDesk</h2>
     <p id="auth-sub" style="color: var(--text-muted); font-size: 15.5px; line-height: 1.5;">Manage your events, tickets and gate check-ins.</p>
 
     <div class="auth-tabs" role="tablist" id="auth-tabs">
@@ -1012,7 +1012,7 @@
       <div class="brand">
         <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="15" y="1" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="1" y="15" width="10" height="10" rx="2" fill="none" stroke="#D4F36B" stroke-width="2"/><rect x="16" y="16" width="4" height="4" fill="#D4F36B"/><rect x="21" y="21" width="4" height="4" fill="#D4F36B"/></svg>
         <div>
-          <span>stub</span>
+          <span>TixDesk</span>
           <div style="font-size: 12.5px; color: var(--text-muted); font-weight: 400;">Event Command & Ticketing Studio</div>
         </div>
       </div>
@@ -1222,7 +1222,7 @@
                 <span>Event artwork (optional, PNG or JPG)</span>
               </label>
               <input id="template-upload" type="file" accept="image/*" class="control-input" onchange="handleTemplateUpload(event)" />
-              <button type="button" class="link-btn" onclick="clearStudioTemplate()">Use the plain stub design instead</button>
+              <button type="button" class="link-btn" onclick="clearStudioTemplate()">Use the plain TixDesk design instead</button>
             </div>
 
             <!-- Event Details -->
@@ -2047,7 +2047,7 @@
       authMode = mode;
       const show = (id, on) => { document.getElementById(id).hidden = !on; };
       const copy = {
-        signin: ["Sign in to stub", "Manage your events, tickets and gate check-ins.", "Sign in"],
+        signin: ["Sign in to TixDesk", "Manage your events, tickets and gate check-ins.", "Sign in"],
         signup: ["Create your organizer account", "50 free tickets to start, plus free sample tickets in the tour. No card needed.", "Create account"],
         forgot: ["Reset your password", "We'll email you a link that works once for 30 minutes.", "Send reset link"],
         master: ["Owner sign-in", "For the platform owner only. Uses the SCANNER_ACCESS_KEY secret.", "Sign in with master key"],
@@ -2521,7 +2521,7 @@
     async function exportAccount() {
       const res = await fetch(`${API_URL}/api/auth/export`, { headers: { "Authorization": `Bearer ${authToken}` } });
       if (!res.ok) return alert("Export failed. Try again.");
-      saveAs(await res.blob(), `stub-account-export-${new Date().toISOString().slice(0, 10)}.json`);
+      saveAs(await res.blob(), `tixdesk-account-export-${new Date().toISOString().slice(0, 10)}.json`);
     }
 
     function openDeleteModal() {
@@ -2946,7 +2946,7 @@
           order_id: order.order_id,
           amount: order.amount_inr * 100,
           currency: order.currency,
-          name: "stub",
+          name: "TixDesk",
           description: `${order.credits.toLocaleString()} ticket credits`,
           handler: (resp) => resolve({
             razorpay_payment_id: resp.razorpay_payment_id,
@@ -3818,7 +3818,7 @@
         ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
         ctx.font = "700 11px 'JetBrains Mono', monospace";
         ctx.textAlign = "left";
-        ctx.fillText("STUB // VERIFIED SECURE ADMISSION PASS", padX + 24, padY + 34);
+        ctx.fillText("TIXDESK // VERIFIED SECURE ADMISSION PASS", padX + 24, padY + 34);
         ctx.textAlign = "right";
         ctx.fillText("CF EDGE D1 • 5MS", padX + cardW - 24, padY + 34);
 

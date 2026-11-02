@@ -479,12 +479,12 @@ export default {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.RESEND_API_KEY}` },
           body: JSON.stringify({
-            from: env.EMAIL_FROM || "stub <onboarding@resend.dev>",
+            from: env.EMAIL_FROM || "TixDesk <onboarding@resend.dev>",
             to: [org.email],
-            subject: "Reset your stub password",
+            subject: "Reset your TixDesk password",
             html: `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#111214">
               <h2 style="margin:0 0 12px">Reset your password</h2>
-              <p style="line-height:1.5">Someone asked to reset the password for your stub organizer account. The link works once and expires in 30 minutes.</p>
+              <p style="line-height:1.5">Someone asked to reset the password for your TixDesk organizer account. The link works once and expires in 30 minutes.</p>
               <p><a href="${escapeHtml(link)}" style="display:inline-block;background:#D4F36B;color:#111214;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700">Choose a new password</a></p>
               <p style="line-height:1.5;color:#5B5C56;font-size:13px">If you didn't ask for this, ignore this email. Your password stays the same.</p>
             </div>`
@@ -745,7 +745,7 @@ export default {
           tickets: tickets.results || [],
           scan_logs: scans.results || [],
           credit_orders: orders.results || [],
-        }, 200, origin, { "Content-Disposition": 'attachment; filename="stub-account-export.json"' });
+        }, 200, origin, { "Content-Disposition": 'attachment; filename="tixdesk-account-export.json"' });
       }
 
       // POST /api/auth/password -> Change password (signs out every other device)
@@ -1497,7 +1497,7 @@ export default {
           Show the QR code on your phone at the entrance. Each ticket works for one person, so please don't share it.
         </td></tr>
         <tr><td style="padding: 16px 36px; border-top: 1px solid #E4E1D8; font-size: 12px; color: #8A897F;">
-          Sent with stub
+          Sent with TixDesk
         </td></tr>
       </table>
     </td></tr>

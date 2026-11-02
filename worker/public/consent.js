@@ -1,4 +1,4 @@
-// Storage notice for stub's public pages. stub sets no advertising or analytics cookies; the only
+// Storage notice for TixDesk's public pages. TixDesk sets no advertising or analytics cookies; the only
 // browser storage it uses is strictly necessary (sign-in sessions, scanner settings), so this is a
 // notice rather than a consent gate. Dismissal is remembered in localStorage.
 (function () {
