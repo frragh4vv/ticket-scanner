@@ -15,7 +15,7 @@
   .sub { color:var(--muted); font-size:14px; margin:0 0 20px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; }
   label { display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
-  input, select { width:100%; padding:10px 11px; border-radius:9px; border:1px solid var(--line); background:#0F1012; color:var(--text); font-size:15px; }
+  input, select, textarea { width:100%; padding:10px 11px; border-radius:9px; border:1px solid var(--line); background:#0F1012; color:var(--text); font-size:15px; }
   .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
   button { padding:10px 16px; border:0; border-radius:9px; background:var(--primary); color:#111; font-weight:700; cursor:pointer; margin-top:12px; }
   button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
@@ -28,6 +28,8 @@
   button.mini { padding:3px 9px; margin:0 0 0 4px; font-size:12px; font-weight:500; }
   .warn { border:1px solid var(--err); border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.45; margin-bottom:6px; }
   details { margin-top:14px; } summary { cursor:pointer; color:var(--muted); font-size:14px; }
+  textarea { min-height:110px; resize:vertical; font-family:inherit; line-height:1.45; }
+  #coverPrev { display:block; width:100%; max-height:220px; object-fit:cover; border-radius:10px; margin-top:10px; }
   .hide { display:none; }
 </style>
 </head>
@@ -99,7 +101,36 @@
   </div>
 
   <div class="card">
-    <h2>3. Booking link</h2>
+    <h2>3. Event page</h2>
+    <p class="hint">What buyers read before they pay. Fill in what you can; empty fields are hidden.</p>
+    <label for="coverFile">Cover image (wide works best, about 1600 × 840)</label>
+    <input type="file" id="coverFile" accept="image/*">
+    <img id="coverPrev" class="hide" alt="Cover preview">
+    <button class="ghost hide" id="coverDel">Remove cover</button>
+    <div class="row">
+      <div><label for="iStart">Starts at</label><input id="iStart" type="time"></div>
+      <div><label for="iEnd">Ends at</label><input id="iEnd" type="time"></div>
+    </div>
+    <label for="iVenue">Venue</label>
+    <input id="iVenue" maxlength="120" placeholder="Hard Rock Cafe, Andheri">
+    <label for="iAddress">Address</label>
+    <input id="iAddress" maxlength="240" placeholder="Laxmi Industrial Estate, Andheri West, Mumbai 400053">
+    <label for="iMap">Map link (optional)</label>
+    <input id="iMap" maxlength="500" placeholder="https://maps.app.goo.gl/...">
+    <label for="iAbout">About the event</label>
+    <textarea id="iAbout" maxlength="3000" placeholder="Line-up, what's included, age limit, dress code, entry rules..."></textarea>
+    <div class="row">
+      <div><label for="iHost">Hosted by</label><input id="iHost" maxlength="80" placeholder="Your name or brand"></div>
+      <div><label for="iEmail">Contact email</label><input id="iEmail" type="email" maxlength="254"></div>
+      <div><label for="iPhone">Contact phone</label><input id="iPhone" type="tel" maxlength="20"></div>
+    </div>
+    <p class="hint">The contact details are shown publicly so buyers can reach you about refunds and entry.</p>
+    <button id="saveInfo">Save event page</button>
+    <div class="msg" id="infoMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>4. Booking link</h2>
     <p class="hint">Pick a short name. Buyers open this link to choose tickets and pay. Share it anywhere: Instagram bio, WhatsApp, your website.</p>
     <label for="slug">Link name</label>
     <input id="slug" placeholder="my-event">
@@ -121,6 +152,7 @@ const token = () => { try { return localStorage.getItem("admin_key") || ""; } ca
 const rupees = p => "₹" + (p / 100).toLocaleString("en-IN");
 const STATUS = { pending: "Waiting for payment", issued: "Paid, tickets sent", expired: "Not paid", needs_review: "Refund needed" };
 const slugify = t => (t || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+const INFO_INPUTS = { start_time: "iStart", end_time: "iEnd", venue: "iVenue", address: "iAddress", map_url: "iMap", about: "iAbout", host_name: "iHost", contact_email: "iEmail", contact_phone: "iPhone" };
 let eventTitles = {};
 let eventId = "", totalDays = 1, editId = "", typesById = {};
 
@@ -219,6 +251,9 @@ async function loadEvent() {
     l.append(c, "Day " + i); $("tdays").append(l);
   }
   $("daysBox").classList.toggle("hide", totalDays < 2);
+  for (const [f, id] of Object.entries(INFO_INPUTS)) $(id).value = (d.info && d.info[f]) || "";
+  showCover("");
+  if (d.info && d.info.has_cover) api("GET", "/api/event-info/cover?event_id=" + encodeURIComponent(eventId)).then(c => showCover(c.image)).catch(() => {});
   $("slug").value = d.page ? d.page.slug : slugify(eventTitles[eventId]);
   $("saveSlug").textContent = d.page ? "Update link" : "Publish link";
   $("linkOut").innerHTML = "";
@@ -274,6 +309,45 @@ $("cancelEdit").onclick = resetTypeForm;
 $("saveSlug").onclick = async () => {
   try { await api("PUT", "/api/event-page", { event_id: eventId, slug: $("slug").value }); say("slugMsg", "Published.", true); loadEvent(); }
   catch (e) { say("slugMsg", e.message); }
+};
+$("saveInfo").onclick = async () => {
+  const body = { event_id: eventId };
+  for (const [f, id] of Object.entries(INFO_INPUTS)) body[f] = $(id).value;
+  try { await api("PUT", "/api/event-info", body); say("infoMsg", "Saved.", true); }
+  catch (e) { say("infoMsg", e.message); }
+};
+function showCover(src) {
+  $("coverPrev").classList.toggle("hide", !src); $("coverDel").classList.toggle("hide", !src);
+  if (src) $("coverPrev").src = src; else $("coverPrev").removeAttribute("src");
+}
+// Downscale in the browser: at most 1600 px wide, JPEG, stepping quality down until it fits the server limit
+function toJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1600 / img.width);
+      const c = document.createElement("canvas"); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      for (const q of [0.85, 0.75, 0.65, 0.5]) { const d = c.toDataURL("image/jpeg", q); if (d.length < 780000) return resolve(d); }
+      reject(new Error("That image is too detailed to fit. Try a smaller one."));
+    };
+    img.onerror = () => reject(new Error("Couldn't read that image."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+$("coverFile").onchange = async () => {
+  const f = $("coverFile").files[0]; if (!f) return;
+  try {
+    const image = await toJpeg(f);
+    await api("PUT", "/api/event-info/cover", { event_id: eventId, image });
+    showCover(image); say("infoMsg", "Cover saved.", true);
+  } catch (e) { say("infoMsg", e.message); }
+  $("coverFile").value = "";
+};
+$("coverDel").onclick = async () => {
+  try { await api("DELETE", "/api/event-info/cover?event_id=" + encodeURIComponent(eventId)); showCover(""); say("infoMsg", "Cover removed.", true); }
+  catch (e) { say("infoMsg", e.message); }
 };
 $("reload").onclick = loadEvent;
 $("event").onchange = () => { eventId = $("event").value; try { localStorage.setItem("current_event_id", eventId); } catch (_) {} loadEvent(); };

@@ -1,11 +1,16 @@
 // Organizer side of selling: ticket types per event, the public booking page slug, and the orders list.
 
-import { VALID_TIERS } from "../config.js";
+import { VALID_TIERS, EMAIL_RE } from "../config.js";
 import { json } from "../lib/http.js";
 import { generateRandomCode, parseDays } from "../lib/util.js";
 import { releaseExpired } from "../lib/orders.js";
+import { INFO_FIELDS } from "../lib/eventinfo.js";
 
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{2,39}$/;
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const JPEG_PREFIX = "data:image/jpeg;base64,";
+const MAX_COVER_CHARS = 800_000;   // ~600 KB of JPEG; the page asks the browser to downscale first
+const INFO_MAX = { start_time: 5, end_time: 5, venue: 120, address: 240, map_url: 500, about: 3000, host_name: 80, contact_email: 254, contact_phone: 20 };
 
 async function ownedEvent(env, eventId, organizerId) {
   return env.DB.prepare("SELECT id, total_days FROM events WHERE id = ? AND organizer_id = ?").bind(eventId || "", organizerId).first();
@@ -31,7 +36,55 @@ export async function handle(ctx) {
       "SELECT id, name, description, tier, price_paise, quantity, held, sold, allowed_days, sales_start, sales_end, active FROM ticket_types WHERE event_id = ? ORDER BY created_at"
     ).bind(event.id).all();
     const page = await env.DB.prepare("SELECT slug, enabled FROM event_pages WHERE event_id = ?").bind(event.id).first();
-    return json({ ok: true, types: list.results, page: page || null, total_days: event.total_days }, 200, origin);
+    const info = await env.DB.prepare(
+      `SELECT ${INFO_FIELDS.join(", ")}, cover IS NOT NULL AS has_cover FROM event_info WHERE event_id = ?`
+    ).bind(event.id).first();
+    return json({ ok: true, types: list.results, page: page || null, info: info || null, total_days: event.total_days }, 200, origin);
+  }
+
+  // PUT /api/event-info { event_id, venue, about, ... } -> booking page details (text only; cover has its own route)
+  if (path === "/api/event-info" && request.method === "PUT") {
+    const b = await request.json();
+    const event = await ownedEvent(env, b.event_id, organizerId);
+    if (!event) return json({ error: "Event not found" }, 404, origin);
+    const v = {};
+    for (const f of INFO_FIELDS) v[f] = String(b[f] ?? "").trim().slice(0, INFO_MAX[f]);
+    for (const f of ["start_time", "end_time"]) {
+      if (v[f] && !TIME_RE.test(v[f])) return json({ error: "Times must look like 18:30." }, 400, origin);
+    }
+    if (v.map_url && !/^https:\/\/\S+$/.test(v.map_url)) return json({ error: "Map link must start with https://" }, 400, origin);
+    if (v.contact_email && !EMAIL_RE.test(v.contact_email)) return json({ error: "Contact email doesn't look right." }, 400, origin);
+    await env.DB.prepare(`
+      INSERT INTO event_info (event_id, organizer_id, ${INFO_FIELDS.join(", ")}, updated_at)
+      VALUES (?, ?, ${INFO_FIELDS.map(() => "?").join(", ")}, CURRENT_TIMESTAMP)
+      ON CONFLICT(event_id) DO UPDATE SET ${INFO_FIELDS.map(f => `${f} = excluded.${f}`).join(", ")}, updated_at = CURRENT_TIMESTAMP
+    `).bind(event.id, organizerId, ...INFO_FIELDS.map(f => v[f])).run();
+    return json({ ok: true }, 200, origin);
+  }
+
+  // GET ?event_id= -> { image } | PUT { event_id, image } -> save downscaled JPEG banner | DELETE ?event_id= -> remove
+  if (path === "/api/event-info/cover" && ["GET", "PUT", "DELETE"].includes(request.method)) {
+    const b = request.method === "PUT" ? await request.json() : { event_id: url.searchParams.get("event_id") };
+    const event = await ownedEvent(env, b.event_id, organizerId);
+    if (!event) return json({ error: "Event not found" }, 404, origin);
+    if (request.method === "GET") {
+      const row = await env.DB.prepare("SELECT cover FROM event_info WHERE event_id = ?").bind(event.id).first();
+      if (!row || !row.cover) return json({ error: "No cover" }, 404, origin);
+      return json({ ok: true, image: row.cover }, 200, origin);
+    }
+    if (request.method === "DELETE") {
+      await env.DB.prepare("UPDATE event_info SET cover = NULL, updated_at = CURRENT_TIMESTAMP WHERE event_id = ?").bind(event.id).run();
+      return json({ ok: true }, 200, origin);
+    }
+    const image = b.image;
+    if (typeof image !== "string" || !image.startsWith(JPEG_PREFIX) || image.length > MAX_COVER_CHARS) {
+      return json({ error: "Cover must be a JPEG under about 600 KB." }, 400, origin);
+    }
+    await env.DB.prepare(`
+      INSERT INTO event_info (event_id, organizer_id, cover, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(event_id) DO UPDATE SET cover = excluded.cover, updated_at = CURRENT_TIMESTAMP
+    `).bind(event.id, organizerId, image).run();
+    return json({ ok: true }, 200, origin);
   }
 
   // PUT /api/ticket-types -> create or update one type

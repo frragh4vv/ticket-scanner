@@ -127,6 +127,24 @@ CREATE TABLE IF NOT EXISTS event_pages (
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
 );
 
+-- 11b. EVENT INFO (what buyers read on the booking page; its own table so schema.sql re-runs add it)
+CREATE TABLE IF NOT EXISTS event_info (
+    event_id TEXT PRIMARY KEY,
+    organizer_id TEXT NOT NULL,
+    start_time TEXT DEFAULT '',                -- 'HH:MM', local to the event timezone
+    end_time TEXT DEFAULT '',
+    venue TEXT DEFAULT '',                     -- e.g. 'Hard Rock Cafe, Andheri'
+    address TEXT DEFAULT '',
+    map_url TEXT DEFAULT '',                   -- https only
+    about TEXT DEFAULT '',                     -- plain text, line breaks kept
+    host_name TEXT DEFAULT '',                 -- shown as 'Hosted by'
+    contact_email TEXT DEFAULT '',
+    contact_phone TEXT DEFAULT '',
+    cover TEXT,                                -- downscaled JPEG data URL (move to R2 later)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);
+
 -- 12. TICKET TYPES (what a buyer can purchase; held = in unpaid orders, sold = issued)
 CREATE TABLE IF NOT EXISTS ticket_types (
     id TEXT PRIMARY KEY,

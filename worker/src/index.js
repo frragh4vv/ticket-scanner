@@ -22,6 +22,7 @@ import * as designs from "./routes/designs.js";
 import * as integrations from "./routes/integrations.js";
 import * as sales from "./routes/sales.js";
 import * as publicSales from "./routes/public-sales.js";
+import { publicPage, withShareTags } from "./lib/eventinfo.js";
 
 // Organizer-only modules, tried in this order after the session and role checks
 const ORGANIZER_ROUTES = [account, events, billing, stats, tickets, email, designs, integrations, sales];
@@ -97,7 +98,13 @@ export default {
           }
           // 3b. '/e/<slug>' -> public booking page (the slug is read from the URL by the page itself)
           if (/^\/e\/[a-z0-9-]+$/.test(url.pathname)) {
-            return serve("/book");
+            const res = await serve("/book");
+            // Put this event's title, description and image in the HTML so link previews show the event
+            try {
+              const page = env.DB && await publicPage(env, url.pathname.slice(3));
+              if (page) return withShareTags(res, page, url.origin);
+            } catch (err) { console.error("share tags", err); }
+            return res;
           }
           // 3c. '/sell' -> organizer page for Razorpay connection, ticket types and the booking link
           if (url.pathname === "/sell") {

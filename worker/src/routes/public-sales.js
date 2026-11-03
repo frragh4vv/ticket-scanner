@@ -9,6 +9,7 @@ import { generateRandomCode } from "../lib/util.js";
 import { loadIntegration, razorpayFetch } from "../lib/razorpay.js";
 import { HOLD_SECONDS, reserve, unreserve, releaseExpired, fulfillOrder } from "../lib/orders.js";
 import { reconcileOrder } from "../lib/reconcile.js";
+import { publicPage, publicInfo } from "../lib/eventinfo.js";
 
 const MAX_QTY_PER_ORDER = 10;
 
@@ -32,10 +33,21 @@ export async function handle(ctx) {
   const path = url.pathname;
   if (!path.startsWith("/api/public/")) return null;
 
+  // GET /api/public/events/<slug>/cover -> the banner JPEG (the ?v= in its URL changes on every edit)
+  const coverMatch = path.match(/^\/api\/public\/events\/([^/]+)\/cover$/);
+  if (coverMatch && request.method === "GET") {
+    const row = await env.DB.prepare(`
+      SELECT i.cover FROM event_pages p JOIN event_info i ON i.event_id = p.event_id WHERE p.slug = ? AND p.enabled = 1
+    `).bind(coverMatch[1].toLowerCase()).first();
+    if (!row || !row.cover) return json({ error: "No cover" }, 404, origin);
+    const bytes = Uint8Array.from(atob(row.cover.slice(row.cover.indexOf(",") + 1)), c => c.charCodeAt(0));
+    return new Response(bytes, { headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff" } });
+  }
+
   // GET /api/public/events/<slug> -> what the booking page shows
   const eventMatch = path.match(/^\/api\/public\/events\/([^/]+)$/);
   if (eventMatch && request.method === "GET") {
-    const page = await pageBySlug(env, eventMatch[1]);
+    const page = await publicPage(env, eventMatch[1]);
     if (!page) return json({ error: "This booking page doesn't exist or is closed." }, 404, origin);
     const { results: all } = await env.DB.prepare("SELECT id FROM ticket_types WHERE event_id = ?").bind(page.event_id).all();
     for (const t of all) await releaseExpired(env, t.id);
@@ -46,7 +58,7 @@ export async function handle(ctx) {
     const integration = await env.DB.prepare("SELECT 1 AS ok FROM integrations WHERE organizer_id = ?").bind(page.organizer_id).first();
     return json({
       ok: true,
-      event: { title: page.title, start_date: page.start_date, total_days: page.total_days },
+      event: { title: page.title, start_date: page.start_date, total_days: page.total_days, ...publicInfo(page) },
       selling: !!integration,
       types: results.filter(t => onSale(t, now)).map(t => ({
         id: t.id, name: t.name, description: t.description || "", tier: t.tier, price_paise: t.price_paise, allowed_days: t.allowed_days,

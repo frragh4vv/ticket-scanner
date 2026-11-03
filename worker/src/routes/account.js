@@ -73,6 +73,8 @@ export async function handle(ctx) {
       env.DB.prepare("DELETE FROM orders WHERE organizer_id = ?").bind(organizerId),
       // The organizer row is kept (anonymised), so its stored Razorpay keys would not cascade away
       env.DB.prepare("DELETE FROM integrations WHERE organizer_id = ?").bind(organizerId),
+      // Booking page details carry the organizer's contact email and phone; don't rely on the cascade
+      env.DB.prepare("DELETE FROM event_info WHERE organizer_id = ?").bind(organizerId),
       env.DB.prepare("DELETE FROM events WHERE organizer_id = ?").bind(organizerId),
       env.DB.prepare(`
         UPDATE organizers SET email = 'deleted+' || id || '@deleted.invalid', company_name = 'Deleted account',
