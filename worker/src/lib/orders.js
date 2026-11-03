@@ -42,6 +42,14 @@ export async function releaseExpired(env, typeId) {
   }
 }
 
+// Money was captured but not for what we priced: park the order for the organizer to refund instead of
+// dropping it. A pending order still holds stock and credits, so those go back since no tickets are issued.
+export async function parkForReview(env, order, paymentId) {
+  const parked = await env.DB.prepare("UPDATE orders SET status = 'needs_review', rzp_payment_id = ? WHERE id = ? AND status IN ('pending', 'expired')")
+    .bind(paymentId, order.id).run();
+  if (parked.meta?.changes && order.status === "pending") await unreserve(env, order.ticket_type_id, order.organizer_id, order.qty);
+}
+
 // Issue the tickets for a paid order. Returns { status: 'issued' | 'already' | 'needs_review', ticketIds? }.
 // The caller has already verified the payment (signature or webhook) and that the amount matches.
 export async function fulfillOrder(env, order, paymentId) {

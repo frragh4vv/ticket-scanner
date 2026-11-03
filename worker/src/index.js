@@ -8,6 +8,7 @@
 import { json, getCorsHeaders, setAllowedOrigins, SECURITY_HEADERS } from "./lib/http.js";
 import { getSessionSecret, verifySession, adminSessionIsCurrent } from "./lib/session.js";
 import { consumeEmailBatch } from "./queue/email-consumer.js";
+import { sweepPendingOrders } from "./lib/reconcile.js";
 import * as publicAuth from "./routes/public-auth.js";
 import * as hooks from "./routes/hooks.js";
 import * as scan from "./routes/scan.js";
@@ -172,6 +173,11 @@ export default {
       console.error(err);
       return json({ error: "Internal Server Error" }, 500, origin);
     }
+  },
+
+  // Every 5 minutes (wrangler.toml [triggers]): find buyer payments the browser never reported
+  async scheduled(event, env, ctx) {
+    if (env.DB && env.INTEGRATIONS_KEY) ctx.waitUntil(sweepPendingOrders(env));
   },
 
   // Background jobs from Cloudflare Queues (wrangler.toml [[queues.consumers]])

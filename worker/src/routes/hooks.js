@@ -4,7 +4,7 @@
 import { json } from "../lib/http.js";
 import { bytesToHex, hmac, timingSafeEqual } from "../lib/crypto.js";
 import { settleCreditOrder } from "../lib/credits.js";
-import { fulfillOrder, unreserve } from "../lib/orders.js";
+import { fulfillOrder, parkForReview } from "../lib/orders.js";
 import { loadIntegration } from "../lib/razorpay.js";
 
 export async function handle(ctx) {
@@ -77,12 +77,8 @@ export async function handle(ctx) {
       .bind(payment.order_id, integration.organizerId).first();
     if (!order) return json({ ok: true, ignored: "unknown order" }, 200, origin);
     if (order.amount_paise !== payment.amount) {
-      // Money was captured but not for what we priced: park it for the organizer instead of dropping it
       console.error("Order amount mismatch", order.id, order.amount_paise, payment.amount);
-      const parked = await env.DB.prepare("UPDATE orders SET status = 'needs_review', rzp_payment_id = ? WHERE id = ? AND status IN ('pending', 'expired')")
-        .bind(payment.id, order.id).run();
-      // A pending order still holds stock and credits; give them back since no tickets will be issued
-      if (parked.meta?.changes && order.status === "pending") await unreserve(env, order.ticket_type_id, order.organizer_id, order.qty);
+      await parkForReview(env, order, payment.id);
       return json({ ok: true, ignored: "amount mismatch" }, 200, origin);
     }
 

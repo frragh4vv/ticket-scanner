@@ -181,3 +181,82 @@ test("organizer can edit a type's price and description, but not drop quantity b
   assert.equal(type(DB).description, "Entry + drink");
   assert.equal((await put({ price_inr: 750, quantity: 2 })).status, 409);
 });
+
+// Fake Razorpay for the server-side payment check: `payments` is what GET /orders/<id>/payments returns
+function fakeRazorpay(payments) {
+  const calls = [];
+  globalThis.fetch = async (url, init = {}) => {
+    calls.push(`${init.method || "GET"} ${new URL(url).pathname}`);
+    if (url.includes("/capture")) return new Response(JSON.stringify({ ...payments[0], status: "captured" }), { status: 200 });
+    return new Response(JSON.stringify({ items: payments }), { status: 200 });
+  };
+  return calls;
+}
+
+test("server check issues a paid order the browser never reported, and captures authorized payments", async () => {
+  const realFetch = globalThis.fetch;
+  try {
+    const { reconcileOrder } = await import("../src/lib/reconcile.js");
+    const { loadIntegration } = await import("../src/lib/razorpay.js");
+    const { DB, env } = await setup();
+    const integration = await loadIntegration(env, "organizer_id", "org1");
+    await reserve(env, type(DB), 2); addOrder(DB);
+
+    fakeRazorpay([{ id: "pay_x", status: "failed", amount: 100000 }]);
+    assert.equal(await reconcileOrder(env, orderRow(DB, "ord_1"), integration), "unpaid");
+    assert.equal(orderRow(DB, "ord_1").status, "pending");
+
+    const calls = fakeRazorpay([{ id: "pay_a", status: "authorized", amount: 100000, currency: "INR" }]);
+    assert.equal(await reconcileOrder(env, orderRow(DB, "ord_1"), integration), "issued");
+    assert.ok(calls.some(c => c === "POST /v1/payments/pay_a/capture"));
+    assert.equal(orderRow(DB, "ord_1").rzp_payment_id, "pay_a");
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test("server check parks a wrong amount for review", async () => {
+  const realFetch = globalThis.fetch;
+  try {
+    const { reconcileOrder } = await import("../src/lib/reconcile.js");
+    const { loadIntegration } = await import("../src/lib/razorpay.js");
+    const { DB, env } = await setup();
+    await reserve(env, type(DB), 2); addOrder(DB);
+    fakeRazorpay([{ id: "pay_c", status: "captured", amount: 100 }]);
+    assert.equal(await reconcileOrder(env, orderRow(DB, "ord_1"), await loadIntegration(env, "organizer_id", "org1")), "needs_review");
+    assert.equal(type(DB).held, 0);
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test("cron sweep issues paid orders and releases unpaid holds past due", async () => {
+  const realFetch = globalThis.fetch;
+  try {
+    const { sweepPendingOrders } = await import("../src/lib/reconcile.js");
+    const { DB, env } = await setup();
+    const now = Math.floor(Date.now() / 1000);
+    await reserve(env, type(DB), 4);
+    addOrder(DB, "ord_paid");                                  // in its hold, paid
+    addOrder(DB, "ord_gone", { expires: now - 60 });           // hold over, never paid
+    addOrder(DB, "ord_ancient", { status: "expired", expires: now - 3600 }); // too old to check
+    globalThis.fetch = async (url) => new Response(JSON.stringify({
+      items: url.includes("order_ord_paid") ? [{ id: "pay_p", status: "captured", amount: 100000 }] : []
+    }), { status: 200 });
+    assert.equal(await sweepPendingOrders(env), 2);
+    assert.equal(orderRow(DB, "ord_paid").status, "issued");
+    assert.equal(orderRow(DB, "ord_gone").status, "expired");
+    assert.equal(type(DB).held, 0);
+    assert.equal(credits(DB), 48);                             // 2 issued, the other 2 given back
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test("booking page status poll finds a payment through the server check", async () => {
+  const realFetch = globalThis.fetch;
+  try {
+    const { DB, env } = await setup();
+    await reserve(env, type(DB), 2); addOrder(DB, "ordS");        // Razorpay ids have no underscore after "order_"
+    fakeRazorpay([{ id: "pay_s", status: "captured", amount: 100000 }]);
+    const request = new Request("https://x/api/public/orders/order_ordS");
+    const res = await publicSales({ request, env, url: new URL(request.url), origin: null, clientIp: "3.3.3.3" });
+    const body = await res.json();
+    assert.equal(body.status, "issued");
+    assert.equal(body.ticket_ids.length, 2);
+  } finally { globalThis.fetch = realFetch; }
+});

@@ -1,6 +1,7 @@
 // Connect the organizer's own Razorpay account. The key secret is stored AES-GCM encrypted and is never
-// sent back to the browser. The webhook secret is generated here and shown once, for pasting into
-// Razorpay's dashboard.
+// sent back to the browser. The webhook is optional (off by default): payments the browser misses are
+// found by the server-side check in lib/reconcile.js. A webhook secret is stored from the start so the
+// webhook URL works the moment an organizer opts in, but it is only shown via /webhook-secret.
 
 import { json } from "../lib/http.js";
 import { generateRandomCode } from "../lib/util.js";
@@ -45,11 +46,10 @@ export async function handle(ctx) {
     }
 
     const secretEnc = await encryptSecret(env, keySecret);
-    let webhookSecret = null;
     if (row) {
       await env.DB.prepare("UPDATE integrations SET key_id = ?, key_secret_enc = ? WHERE organizer_id = ?").bind(keyId, secretEnc, organizerId).run();
     } else {
-      webhookSecret = generateRandomCode(32);
+      const webhookSecret = generateRandomCode(32);
       await env.DB.prepare(
         "INSERT INTO integrations (organizer_id, public_id, key_id, key_secret_enc, webhook_secret_enc) VALUES (?, ?, ?, ?, ?)"
       ).bind(organizerId, generateRandomCode(16).toLowerCase(), keyId, secretEnc, await encryptSecret(env, webhookSecret)).run();
@@ -58,12 +58,11 @@ export async function handle(ctx) {
     return json({
       ok: true, connected: true, key_id: keyId,
       mode: keyId.startsWith("rzp_live_") ? "live" : "test",
-      webhook_url: webhookUrl(url, saved.public_id),
-      webhook_secret: webhookSecret   // only on first connect; use "regenerate" to see a new one
+      webhook_url: webhookUrl(url, saved.public_id)
     }, 200, origin);
   }
 
-  // POST /api/integrations/webhook-secret -> new webhook secret, shown once
+  // POST /api/integrations/webhook-secret -> opt in to the webhook: new secret, shown once
   if (url.pathname === "/api/integrations/webhook-secret" && request.method === "POST") {
     if (!row) return json({ error: "Connect Razorpay first." }, 409, origin);
     const webhookSecret = generateRandomCode(32);

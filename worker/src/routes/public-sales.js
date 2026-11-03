@@ -8,6 +8,7 @@ import { consumeQuota } from "../lib/limits.js";
 import { generateRandomCode } from "../lib/util.js";
 import { loadIntegration, razorpayFetch } from "../lib/razorpay.js";
 import { HOLD_SECONDS, reserve, unreserve, releaseExpired, fulfillOrder } from "../lib/orders.js";
+import { reconcileOrder } from "../lib/reconcile.js";
 
 const MAX_QTY_PER_ORDER = 10;
 
@@ -124,11 +125,23 @@ export async function handle(ctx) {
     return json(await outcome(env, order, b.payment_id), 200, origin);
   }
 
-  // GET /api/public/orders/<rzp_order_id> -> status poll (the webhook may finish an order before the browser does)
+  // GET /api/public/orders/<rzp_order_id> -> status poll; checks Razorpay itself when the order isn't settled
   const statusMatch = path.match(/^\/api\/public\/orders\/(order_[A-Za-z0-9]+)$/);
   if (statusMatch && request.method === "GET") {
-    const order = await env.DB.prepare("SELECT * FROM orders WHERE rzp_order_id = ?").bind(statusMatch[1]).first();
+    let order = await env.DB.prepare("SELECT * FROM orders WHERE rzp_order_id = ?").bind(statusMatch[1]).first();
     if (!order) return json({ error: "Order not found" }, 404, origin);
+    // Not settled yet: ask Razorpay directly, so a buyer whose browser missed the payment callback
+    // still gets their tickets without the organizer setting up a webhook
+    if ((order.status === "pending" || order.status === "expired") && !order.rzp_payment_id) {
+      const integration = await loadIntegration(env, "organizer_id", order.organizer_id);
+      if (integration) {
+        try {
+          if (await reconcileOrder(env, order, integration) !== "unpaid") {
+            order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(order.id).first();
+          }
+        } catch (err) { console.error("order status check failed", order.id, err); }
+      }
+    }
     return json(await outcome(env, order, null), 200, origin);
   }
 

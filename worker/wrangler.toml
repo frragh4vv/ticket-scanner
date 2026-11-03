@@ -39,6 +39,10 @@ max_batch_size = 10        # emails handled per consumer run
 max_batch_timeout = 5      # seconds to wait for a fuller batch
 max_retries = 3
 
+# Every 5 minutes: ask organizers' Razorpay accounts about unpaid buyer orders (src/lib/reconcile.js)
+[triggers]
+crons = ["*/5 * * * *"]
+
 # =============================================================================
 # STAGING environment: separate Worker, D1 database and queue, so nothing here
 # can touch prod data. Bindings are NOT inherited from the top level, so every
@@ -82,6 +86,9 @@ queue = "tixdesk-email-staging"
 max_batch_size = 10
 max_batch_timeout = 5
 max_retries = 3
+
+[env.staging.triggers]
+crons = ["*/5 * * * *"]
 
 [env.staging.vars]
 DEMO_BILLING = "true"   # fake top-ups on staging only; no Razorpay keys set here

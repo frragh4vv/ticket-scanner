@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sell tickets · TixDesk</title>
+<meta name="robots" content="noindex,nofollow">
 <style>
   :root { --bg:#0F1012; --card:#17191C; --line:rgba(255,255,255,.12); --text:#F2EFE8; --muted:#9C9B94; --primary:#D4F36B; --err:#ff8a80; --ok:#9be37a; }
   * { box-sizing: border-box; }
@@ -25,6 +26,8 @@
   .hint { color:var(--muted); font-size:13px; margin:8px 0 0; line-height:1.45; }
   .secret ol { margin:8px 0 0; padding-left:18px; } .secret li { margin:6px 0; }
   button.mini { padding:3px 9px; margin:0 0 0 4px; font-size:12px; font-weight:500; }
+  .warn { border:1px solid var(--err); border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.45; margin-bottom:6px; }
+  details { margin-top:14px; } summary { cursor:pointer; color:var(--muted); font-size:14px; }
   .hide { display:none; }
 </style>
 </head>
@@ -42,16 +45,27 @@
   <div class="card" id="connect">
     <h2>1. Connect your Razorpay</h2>
     <div id="connState" class="sub"></div>
-    <p class="hint">In Razorpay open <b>Account &amp; Settings → API Keys</b> and generate a key. Paste both halves here. Start with a <b>Test mode</b> key to try a booking without real money, then switch to a Live key.</p>
-    <div class="row">
-      <div><label for="kid">Key ID</label><input id="kid" placeholder="rzp_test_…" autocomplete="off"></div>
-      <div><label for="ksec">Key Secret</label><input id="ksec" type="password" autocomplete="new-password"></div>
+    <button class="ghost hide" id="changeKeys">Change keys</button>
+    <div id="keyForm">
+      <div class="warn hide" id="changeWarn">
+        <b>Before you change keys:</b> buyers who are paying right now were sent to your current Razorpay account, so finish or wait out those payments first (about 15 minutes after the last checkout).
+        Switching from Test to Live is fine. Switching to a <b>different Razorpay account</b> means new payments go there, and any webhook you set up must be added again in that account.
+      </div>
+      <p class="hint">In Razorpay open <b>Account &amp; Settings → API Keys</b> and generate a key. Paste both halves here. Start with a <b>Test mode</b> key to try a booking without real money, then switch to a Live key.</p>
+      <div class="row">
+        <div><label for="kid">Key ID</label><input id="kid" placeholder="rzp_test_…" autocomplete="off"></div>
+        <div><label for="ksec">Key Secret</label><input id="ksec" type="password" autocomplete="new-password"></div>
+      </div>
+      <button id="saveKeys">Save &amp; check keys</button>
+      <button class="ghost hide" id="cancelKeys">Cancel</button>
     </div>
-    <button id="saveKeys">Save &amp; check keys</button>
-    <button class="ghost" id="regen">New webhook secret</button>
     <div class="msg" id="connMsg"></div>
+    <p class="hint hide" id="autoCheck">That's all the setup needed. If a buyer pays but closes the page before coming back, we check with Razorpay and still send their tickets, usually within 5 minutes.</p>
+    <details class="hide" id="advanced">
+      <summary>Advanced: instant confirmation (optional)</summary>
+      <p class="hint">Add a webhook in Razorpay to confirm those late payments in seconds instead of minutes. Skip this unless you're comfortable in the Razorpay dashboard: sales work fine without it.</p>
+      <button class="ghost" id="regen">Show webhook setup</button>
     <div class="secret hide" id="hookBox">
-      <b>Recommended: add a webhook.</b> Sales work without it, but if a buyer closes the page right after paying, the webhook is how we still issue their tickets.
       <ol>
         <li>In Razorpay (same Test/Live mode as your key) open <b>Account &amp; Settings → Webhooks → Add new webhook</b>.</li>
         <li>Webhook URL: <code id="hookUrl"></code> <button class="ghost mini" data-copy="hookUrl">Copy</button></li>
@@ -59,6 +73,7 @@
         <li>Tick <b>payment.captured</b> and <b>order.paid</b>, then save.</li>
       </ol>
     </div>
+    </details>
   </div>
 
   <div class="card">
@@ -147,11 +162,21 @@ function copyText(text, btn) {
 document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => copyText($(b.dataset.copy).textContent, b));
 
 function showHook(d) {
-  if (!d.webhook_url) return;
   $("hookUrl").textContent = d.webhook_url;
-  $("hookSecret").textContent = d.webhook_secret || "(hidden after first view. Click “New webhook secret” if you need it again)";
-  $("copySecret").classList.toggle("hide", !d.webhook_secret);
+  $("hookSecret").textContent = d.webhook_secret;
   $("hookBox").classList.remove("hide");
+}
+
+// Connected: hide the key form behind "Change keys" so keys aren't swapped by accident
+function showConnected(d) {
+  $("connState").textContent = connText(d);
+  const on = !!d.connected;
+  $("keyForm").classList.toggle("hide", on);
+  $("changeKeys").classList.toggle("hide", !on);
+  $("autoCheck").classList.toggle("hide", !on);
+  $("advanced").classList.toggle("hide", !on);
+  $("changeWarn").classList.add("hide");
+  $("cancelKeys").classList.add("hide");
 }
 
 const connText = d => !d.connected ? "Not connected yet."
@@ -161,8 +186,7 @@ const connText = d => !d.connected ? "Not connected yet."
 async function loadConnection() {
   const d = await api("GET", "/api/integrations").catch(e => { $("connState").textContent = e.message; return null; });
   if (!d) return;
-  $("connState").textContent = connText(d);
-  if (d.connected) showHook(d);
+  showConnected(d);
 }
 
 async function loadEvent() {
@@ -221,15 +245,21 @@ $("saveKeys").onclick = async () => {
     const d = await api("PUT", "/api/integrations", { key_id: $("kid").value, key_secret: $("ksec").value });
     $("ksec").value = "";
     say("connMsg", "Keys accepted by Razorpay.", true);
-    $("connState").textContent = connText(d);
-    showHook(d);
+    showConnected(d);
   } catch (e) { say("connMsg", e.message); }
 };
 $("regen").onclick = async () => {
-  if (!confirm("Make a new webhook secret? The old one stops working, so paste the new one into Razorpay.")) return;
-  try { showHook(await api("POST", "/api/integrations/webhook-secret")); say("connMsg", "New secret created. Update it in Razorpay too.", true); }
+  if (!confirm("This creates a new webhook secret. If you already added a TixDesk webhook in Razorpay, its old secret stops working, so paste the new one there too. Continue?")) return;
+  try { showHook(await api("POST", "/api/integrations/webhook-secret")); }
   catch (e) { say("connMsg", e.message); }
 };
+$("changeKeys").onclick = () => {
+  $("keyForm").classList.remove("hide");
+  $("changeWarn").classList.remove("hide");
+  $("cancelKeys").classList.remove("hide");
+  $("changeKeys").classList.add("hide");
+};
+$("cancelKeys").onclick = () => { $("kid").value = ""; $("ksec").value = ""; loadConnection(); };
 $("saveType").onclick = async () => {
   try {
     const picked = [...$("tdays").querySelectorAll("input:checked")].map(c => c.value);
