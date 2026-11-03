@@ -27,7 +27,7 @@
 <main class="doc">
   <p class="eyebrow">Legal</p>
   <h1>Privacy Policy</h1>
-  <p class="meta">Last updated 27 October 2026</p>
+  <p class="meta">Last updated 3 November 2026</p>
   <nav class="toc" aria-label="On this page"><ol><li><a href="#who">Who we are</a></li><li><a href="#roles">Our role for each kind of data</a></li><li><a href="#collect">What we collect</a></li><li><a href="#basis">Why we're allowed to use it</a></li><li><a href="#share">Who we share it with</a></li><li><a href="#transfer">Where your data is stored</a></li><li><a href="#retention">How long we keep it</a></li><li><a href="#rights">Your rights</a></li><li><a href="#security">How we protect it</a></li><li><a href="#storage">Cookies and browser storage</a></li><li><a href="#children">Children</a></li><li><a href="#changes">Changes to this policy</a></li><li><a href="#contact">Grievance Officer and contact</a></li></ol></nav><h2 id="who">Who we are</h2>
 <p>TixDesk is a service for event organizers to design QR passes, send them to attendees and scan them at the door. TixDesk is operated by <span class="fill">[LEGAL ENTITY NAME]</span>, <span class="fill">[REGISTERED ADDRESS]</span> (“we”, “us”).</p>
 <p>This policy explains what personal data we handle, why, and the choices you have. It is written for India's Digital Personal Data Protection Act, 2023 (“DPDP Act”) and the Information Technology Act, 2000 and its rules.</p><h2 id="roles">Our role for each kind of data</h2>
@@ -40,6 +40,8 @@
 <tbody>
 <tr><td>Organizers</td><td>Email, organization name, password (stored only as a salted PBKDF2 hash), credit balance</td><td>Create and secure your account, provide the service</td></tr>
 <tr><td>Organizers who buy credits</td><td>Order ID, payment ID, amount, status. Card, UPI and bank details go directly to Razorpay; we never see or store them.</td><td>Process payments, keep tax records, handle refunds</td></tr>
+<tr><td>Ticket buyers (on an organizer's booking page)</td><td>Name, email, phone, tickets chosen, order and Razorpay payment IDs. Card, UPI and bank details go directly to Razorpay under the organizer's account; we never see or store them.</td><td>Issue and email the passes the buyer paid for. The organizer is the data fiduciary for this data.</td></tr>
+<tr><td>Organizers who sell online</td><td>Razorpay API key and webhook secret (stored encrypted)</td><td>Create orders and confirm payments on the organizer's own Razorpay account</td></tr>
 <tr><td>Attendees (via organizers)</td><td>Name, email, phone, ticket tier, allowed event days, pass ID</td><td>Issue and email passes</td></tr>
 <tr><td>Attendees at the door</td><td>Scan time, event day, gate name typed by staff</td><td>Stop a pass being used twice and show the organizer who checked in</td></tr>
 <tr><td>Gate staff</td><td>The gate or operator name they type, event PIN attempts</td><td>Label scans and block PIN guessing</td></tr>
@@ -58,7 +60,7 @@
 <tbody>
 <tr><td>Cloudflare, Inc.</td><td>Hosting, database (D1), network security</td><td>All data stored by TixDesk, request logs</td></tr>
 <tr><td>Resend</td><td>Sending pass and password-reset emails</td><td>Recipient email, email content (name, tier, pass ID)</td></tr>
-<tr><td>Razorpay Software Pvt. Ltd.</td><td>Payment processing for credit packs</td><td>Order amount, your payment details (entered on Razorpay's form)</td></tr>
+<tr><td>Razorpay Software Pvt. Ltd.</td><td>Payment processing for credit packs, and for ticket sales on organizers' own Razorpay accounts</td><td>Order amount, buyer name, email and phone, payment details (entered on Razorpay's form)</td></tr>
 <tr><td>Google Fonts</td><td>Delivering the website's fonts</td><td>Your IP address and browser details when pages load</td></tr>
 <tr><td>goqr.me (api.qrserver.com)</td><td>Drawing the QR image inside pass emails</td><td>The pass ID, when an attendee opens the email</td></tr>
 </tbody></table></div>
