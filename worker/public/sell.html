@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sell tickets · TixDesk</title>
+<style>
+  :root { --bg:#0F1012; --card:#17191C; --line:rgba(255,255,255,.12); --text:#F2EFE8; --muted:#9C9B94; --primary:#D4F36B; --err:#ff8a80; --ok:#9be37a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 60px; }
+  a { color:var(--primary); }
+  h1 { font-size:24px; margin:0 0 4px; } h2 { font-size:17px; margin:0 0 10px; }
+  .sub { color:var(--muted); font-size:14px; margin:0 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; }
+  label { display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
+  input, select { width:100%; padding:10px 11px; border-radius:9px; border:1px solid var(--line); background:#0F1012; color:var(--text); font-size:15px; }
+  .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
+  button { padding:10px 16px; border:0; border-radius:9px; background:var(--primary); color:#111; font-weight:700; cursor:pointer; margin-top:12px; }
+  button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+  .msg { font-size:13px; margin-top:8px; min-height:16px; } .msg.err { color:var(--err); } .msg.ok { color:var(--ok); }
+  table { width:100%; border-collapse:collapse; font-size:14px; } td, th { text-align:left; padding:8px 6px; border-top:1px solid var(--line); } th { color:var(--muted); font-weight:500; border:0; }
+  code { background:#0F1012; padding:2px 6px; border-radius:5px; word-break:break-all; }
+  .secret { border:1px solid var(--primary); border-radius:10px; padding:12px; margin-top:12px; font-size:13px; }
+  .hint { color:var(--muted); font-size:13px; margin:8px 0 0; line-height:1.45; }
+  .secret ol { margin:8px 0 0; padding-left:18px; } .secret li { margin:6px 0; }
+  button.mini { padding:3px 9px; margin:0 0 0 4px; font-size:12px; font-weight:500; }
+  .hide { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <p><a href="/admin">← Dashboard</a></p>
+  <h1>Sell tickets online</h1>
+  <p class="sub">Buyers pay on your public booking page. The money goes straight to your own Razorpay account.</p>
+
+  <div class="card">
+    <label for="event">Event</label>
+    <select id="event"></select>
+  </div>
+
+  <div class="card" id="connect">
+    <h2>1. Connect your Razorpay</h2>
+    <div id="connState" class="sub"></div>
+    <p class="hint">In Razorpay open <b>Account &amp; Settings → API Keys</b> and generate a key. Paste both halves here. Start with a <b>Test mode</b> key to try a booking without real money, then switch to a Live key.</p>
+    <div class="row">
+      <div><label for="kid">Key ID</label><input id="kid" placeholder="rzp_test_…" autocomplete="off"></div>
+      <div><label for="ksec">Key Secret</label><input id="ksec" type="password" autocomplete="new-password"></div>
+    </div>
+    <button id="saveKeys">Save &amp; check keys</button>
+    <button class="ghost" id="regen">New webhook secret</button>
+    <div class="msg" id="connMsg"></div>
+    <div class="secret hide" id="hookBox">
+      <b>Recommended: add a webhook.</b> Sales work without it, but if a buyer closes the page right after paying, the webhook is how we still issue their tickets.
+      <ol>
+        <li>In Razorpay (same Test/Live mode as your key) open <b>Account &amp; Settings → Webhooks → Add new webhook</b>.</li>
+        <li>Webhook URL: <code id="hookUrl"></code> <button class="ghost mini" data-copy="hookUrl">Copy</button></li>
+        <li>Secret: <code id="hookSecret"></code> <button class="ghost mini" data-copy="hookSecret" id="copySecret">Copy</button></li>
+        <li>Tick <b>payment.captured</b> and <b>order.paid</b>, then save.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Ticket types</h2>
+    <table><thead><tr><th>Name</th><th>Tier</th><th>Days</th><th>Price</th><th>Sold</th><th></th></tr></thead><tbody id="typeRows"></tbody></table>
+    <div class="row">
+      <div><label for="tname">Name</label><input id="tname" placeholder="Early bird"></div>
+      <div><label for="ttier">Tier</label><select id="ttier"><option>General</option><option>VIP</option><option>Guestlist</option></select></div>
+      <div><label for="tprice">Price (₹)</label><input id="tprice" type="number" min="1"></div>
+      <div><label for="tqty">Quantity</label><input id="tqty" type="number" min="0"></div>
+    </div>
+    <p class="hint">Tier is how the gate scanner labels the pass (VIP, General or Guestlist). Name and price are what buyers see.</p>
+    <label for="tdesc">Short description (optional, shown to buyers)</label>
+    <input id="tdesc" maxlength="300" placeholder="Entry + 2 drinks, gates open 6 PM">
+    <label style="display:flex;gap:8px;align-items:center;color:var(--text);font-size:14px"><input type="checkbox" id="tactive" checked style="width:auto"> On sale</label>
+    <div id="daysBox" class="hide">
+      <label>Valid on (days come from your event)</label>
+      <div id="tdays" style="display:flex;gap:14px;flex-wrap:wrap"></div>
+    </div>
+    <button id="saveType">Add ticket type</button>
+    <button class="ghost hide" id="cancelEdit">Cancel edit</button>
+    <div class="msg" id="typeMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>3. Booking link</h2>
+    <p class="hint">Pick a short name. Buyers open this link to choose tickets and pay. Share it anywhere: Instagram bio, WhatsApp, your website.</p>
+    <label for="slug">Link name</label>
+    <input id="slug" placeholder="my-event">
+    <button id="saveSlug">Publish link</button>
+    <div class="msg" id="slugMsg"></div>
+    <div id="linkOut" class="sub"></div>
+  </div>
+
+  <div class="card">
+    <h2>Orders</h2>
+    <table><thead><tr><th>Buyer</th><th>Ticket</th><th>Qty</th><th>Amount</th><th>Status</th></tr></thead><tbody id="orderRows"></tbody></table>
+    <p class="hint">Paid orders become normal tickets in your dashboard, and each buyer gets their pass by email. "Refund needed" means the buyer paid but no tickets were issued: refund them from Razorpay.</p>
+    <button class="ghost" id="reload">Refresh</button>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const token = () => { try { return localStorage.getItem("admin_key") || ""; } catch (_) { return ""; } };
+const rupees = p => "₹" + (p / 100).toLocaleString("en-IN");
+const STATUS = { pending: "Waiting for payment", issued: "Paid, tickets sent", expired: "Not paid", needs_review: "Refund needed" };
+const slugify = t => (t || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+let eventTitles = {};
+let eventId = "", totalDays = 1, editId = "", typesById = {};
+
+function resetTypeForm() {
+  editId = "";
+  ["tname", "tprice", "tqty", "tdesc"].forEach(i => $(i).value = "");
+  $("tactive").checked = true;
+  $("tdays").querySelectorAll("input").forEach(c => c.checked = true);
+  $("saveType").textContent = "Add ticket type";
+  $("cancelEdit").classList.add("hide");
+}
+
+// Load a type into the form. Price changes only apply to new orders; quantity can't drop below sold + held.
+function startEdit(id) {
+  const t = typesById[id]; if (!t) return;
+  editId = id;
+  $("tname").value = t.name; $("ttier").value = t.tier; $("tprice").value = t.price_paise / 100;
+  $("tqty").value = t.quantity; $("tdesc").value = t.description || ""; $("tactive").checked = !!t.active;
+  const on = t.allowed_days === "ALL" ? null : t.allowed_days.split(",");
+  $("tdays").querySelectorAll("input").forEach(c => c.checked = !on || on.includes(c.value));
+  $("saveType").textContent = "Save changes";
+  $("cancelEdit").classList.remove("hide");
+  $("tname").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function api(method, path, body) {
+  const res = await fetch(path, { method, headers: { "Content-Type": "application/json", Authorization: "Bearer " + token() }, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { location.href = "/admin"; throw new Error("Signed out"); }
+  if (!res.ok) throw new Error(data.error || "Something went wrong.");
+  return data;
+}
+const say = (id, text, ok) => { $(id).textContent = text; $(id).className = "msg " + (ok ? "ok" : "err"); };
+const cell = (tr, text) => { const td = document.createElement("td"); td.textContent = text; tr.append(td); return td; };
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => { const was = btn.textContent; btn.textContent = "Copied"; setTimeout(() => btn.textContent = was, 1500); });
+}
+document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => copyText($(b.dataset.copy).textContent, b));
+
+function showHook(d) {
+  if (!d.webhook_url) return;
+  $("hookUrl").textContent = d.webhook_url;
+  $("hookSecret").textContent = d.webhook_secret || "(hidden after first view. Click “New webhook secret” if you need it again)";
+  $("copySecret").classList.toggle("hide", !d.webhook_secret);
+  $("hookBox").classList.remove("hide");
+}
+
+const connText = d => !d.connected ? "Not connected yet."
+  : d.mode === "test" ? `Connected in Test mode (${d.key_id}). Payments are pretend; switch to a Live key before sharing the link.`
+  : `Connected and live (${d.key_id}). Buyer payments go to your Razorpay account.`;
+
+async function loadConnection() {
+  const d = await api("GET", "/api/integrations").catch(e => { $("connState").textContent = e.message; return null; });
+  if (!d) return;
+  $("connState").textContent = connText(d);
+  if (d.connected) showHook(d);
+}
+
+async function loadEvent() {
+  if (!eventId) return;
+  const d = await api("GET", "/api/ticket-types?event_id=" + encodeURIComponent(eventId));
+  const body = $("typeRows"); body.innerHTML = ""; typesById = {};
+  d.types.forEach(t => {
+    const tr = document.createElement("tr");
+    cell(tr, t.name + (t.active ? "" : " (off)")); cell(tr, t.tier);
+    cell(tr, t.allowed_days === "ALL" ? (d.total_days > 1 ? "All days" : "Day 1") : "Day " + t.allowed_days.split(",").join(", "));
+    cell(tr, rupees(t.price_paise));
+    cell(tr, `${t.sold} of ${t.quantity}` + (t.held ? ` (${t.held} paying now)` : ""));
+    typesById[t.id] = t;
+    const edit = document.createElement("button"); edit.className = "ghost"; edit.textContent = "Edit"; edit.style.margin = "0 6px 0 0";
+    edit.onclick = () => startEdit(t.id);
+    const del = document.createElement("button"); del.className = "ghost"; del.textContent = "Remove"; del.style.margin = "0";
+    del.onclick = async () => {
+      if (!confirm(`Remove "${t.name}"? If anyone has ordered it, it is only taken off sale.`)) return;
+      try { await api("DELETE", "/api/ticket-types?id=" + t.id); loadEvent(); } catch (e) { say("typeMsg", e.message); }
+    };
+    cell(tr, "").append(edit, del);
+    body.append(tr);
+  });
+  // One checkbox per day of the event; a single-day event needs no choice
+  totalDays = d.total_days;
+  $("tdays").innerHTML = "";
+  for (let i = 1; i <= totalDays; i++) {
+    const l = document.createElement("label"); l.style.cssText = "display:flex;gap:6px;align-items:center;margin:0;color:var(--text);font-size:14px";
+    const c = document.createElement("input"); c.type = "checkbox"; c.value = i; c.checked = true; c.style.width = "auto";
+    l.append(c, "Day " + i); $("tdays").append(l);
+  }
+  $("daysBox").classList.toggle("hide", totalDays < 2);
+  $("slug").value = d.page ? d.page.slug : slugify(eventTitles[eventId]);
+  $("saveSlug").textContent = d.page ? "Update link" : "Publish link";
+  $("linkOut").innerHTML = "";
+  if (d.page) {
+    const link = location.origin + "/e/" + d.page.slug;
+    const a = document.createElement("a"); a.href = link; a.textContent = link; a.target = "_blank";
+    const copy = document.createElement("button"); copy.className = "ghost mini"; copy.textContent = "Copy";
+    copy.onclick = () => copyText(link, copy);
+    $("linkOut").append("Your booking page: ", a, copy);
+    if (!d.types.length) $("linkOut").append(" Add a ticket type above so buyers have something to pick.");
+  }
+  const o = await api("GET", "/api/orders?event_id=" + encodeURIComponent(eventId));
+  const ob = $("orderRows"); ob.innerHTML = "";
+  if (!o.orders.length) { const tr = document.createElement("tr"); cell(tr, "No orders yet.").colSpan = 5; ob.append(tr); }
+  o.orders.forEach(r => {
+    const tr = document.createElement("tr");
+    cell(tr, `${r.buyer_name} · ${r.buyer_email}`); cell(tr, r.type_name); cell(tr, r.qty); cell(tr, rupees(r.amount_paise)); cell(tr, STATUS[r.status] || r.status);
+    ob.append(tr);
+  });
+}
+
+$("saveKeys").onclick = async () => {
+  try {
+    const d = await api("PUT", "/api/integrations", { key_id: $("kid").value, key_secret: $("ksec").value });
+    $("ksec").value = "";
+    say("connMsg", "Keys accepted by Razorpay.", true);
+    $("connState").textContent = connText(d);
+    showHook(d);
+  } catch (e) { say("connMsg", e.message); }
+};
+$("regen").onclick = async () => {
+  if (!confirm("Make a new webhook secret? The old one stops working, so paste the new one into Razorpay.")) return;
+  try { showHook(await api("POST", "/api/integrations/webhook-secret")); say("connMsg", "New secret created. Update it in Razorpay too.", true); }
+  catch (e) { say("connMsg", e.message); }
+};
+$("saveType").onclick = async () => {
+  try {
+    const picked = [...$("tdays").querySelectorAll("input:checked")].map(c => c.value);
+    if (totalDays > 1 && !picked.length) { say("typeMsg", "Tick at least one day."); return; }
+    const days = picked.length === totalDays || totalDays < 2 ? "ALL" : picked.join(",");
+    await api("PUT", "/api/ticket-types", { event_id: eventId, name: $("tname").value, tier: $("ttier").value, price_inr: $("tprice").value, quantity: $("tqty").value, allowed_days: days,
+      description: $("tdesc").value, active: $("tactive").checked, id: editId || undefined });
+    say("typeMsg", editId ? "Saved." : "Added.", true); resetTypeForm(); loadEvent();
+  } catch (e) { say("typeMsg", e.message); }
+};
+$("cancelEdit").onclick = resetTypeForm;
+$("saveSlug").onclick = async () => {
+  try { await api("PUT", "/api/event-page", { event_id: eventId, slug: $("slug").value }); say("slugMsg", "Published.", true); loadEvent(); }
+  catch (e) { say("slugMsg", e.message); }
+};
+$("reload").onclick = loadEvent;
+$("event").onchange = () => { eventId = $("event").value; try { localStorage.setItem("current_event_id", eventId); } catch (_) {} loadEvent(); };
+
+(async () => {
+  if (!token()) { location.href = "/admin"; return; }
+  const d = await api("GET", "/api/events");
+  let saved = ""; try { saved = localStorage.getItem("current_event_id") || ""; } catch (_) {}
+  if (!d.events.length) {
+    document.querySelectorAll(".card").forEach((c, i) => { if (i) c.classList.add("hide"); });
+    $("event").replaceWith(Object.assign(document.createElement("p"), { className: "hint", textContent: "Create an event in the dashboard first, then come back here to sell tickets for it." }));
+    return;
+  }
+  d.events.forEach(ev => { eventTitles[ev.id] = ev.title; const o = document.createElement("option"); o.value = ev.id; o.textContent = ev.title; $("event").append(o); });
+  if (d.events.some(e => e.id === saved)) $("event").value = saved;
+  eventId = $("event").value;
+  loadConnection(); loadEvent();
+})();
+</script>
+</body>
+</html>

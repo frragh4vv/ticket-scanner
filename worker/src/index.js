@@ -18,9 +18,12 @@ import * as stats from "./routes/stats.js";
 import * as tickets from "./routes/tickets.js";
 import * as email from "./routes/email.js";
 import * as designs from "./routes/designs.js";
+import * as integrations from "./routes/integrations.js";
+import * as sales from "./routes/sales.js";
+import * as publicSales from "./routes/public-sales.js";
 
 // Organizer-only modules, tried in this order after the session and role checks
-const ORGANIZER_ROUTES = [account, events, billing, stats, tickets, email, designs];
+const ORGANIZER_ROUTES = [account, events, billing, stats, tickets, email, designs, integrations, sales];
 
 // Unauthenticated endpoints that check a secret (password, PIN, master key, reset token)
 const AUTH_PATHS = new Set([
@@ -91,6 +94,14 @@ export default {
             const mode = url.pathname === "/signup" ? "?mode=signup" : url.search;
             return serve(`/admin${mode}`);
           }
+          // 3b. '/e/<slug>' -> public booking page (the slug is read from the URL by the page itself)
+          if (/^\/e\/[a-z0-9-]+$/.test(url.pathname)) {
+            return serve("/book");
+          }
+          // 3c. '/sell' -> organizer page for Razorpay connection, ticket types and the booking link
+          if (url.pathname === "/sell") {
+            return serve("/sell");
+          }
           // 4. '/reset' -> password reset page (token travels in the URL fragment)
           if (url.pathname === "/reset") {
             return serve("/reset");
@@ -124,6 +135,10 @@ export default {
       // Public endpoints (sign up, login, reset, gate PIN, master key)
       const publicRes = await publicAuth.handle(ctx);
       if (publicRes) return publicRes;
+
+      // Buyer booking pages and orders (no login)
+      const salesRes = await publicSales.handle(ctx);
+      if (salesRes) return salesRes;
 
       // =========================================================================
       // EVERYTHING BELOW REQUIRES A VALID SESSION

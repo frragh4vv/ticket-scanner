@@ -105,3 +105,73 @@ CREATE TABLE IF NOT EXISTS event_designs (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
 );
+
+-- 10. INTEGRATIONS (organizer's own Razorpay account; secrets are AES-GCM encrypted with INTEGRATIONS_KEY)
+CREATE TABLE IF NOT EXISTS integrations (
+    organizer_id TEXT PRIMARY KEY,
+    public_id TEXT UNIQUE NOT NULL,            -- appears in the webhook URL the organizer pastes into Razorpay
+    key_id TEXT NOT NULL,                      -- rzp_test_... / rzp_live_... (public half, safe to show)
+    key_secret_enc TEXT NOT NULL,
+    webhook_secret_enc TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (organizer_id) REFERENCES organizers(id) ON DELETE CASCADE
+);
+
+-- 11. EVENT PAGES (public booking page per event at /e/<slug>)
+CREATE TABLE IF NOT EXISTS event_pages (
+    event_id TEXT PRIMARY KEY,
+    organizer_id TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    enabled INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);
+
+-- 12. TICKET TYPES (what a buyer can purchase; held = in unpaid orders, sold = issued)
+CREATE TABLE IF NOT EXISTS ticket_types (
+    id TEXT PRIMARY KEY,
+    event_id TEXT NOT NULL,
+    organizer_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',               -- short blurb shown on the booking page
+    tier TEXT NOT NULL CHECK(tier IN ('VIP', 'General', 'Guestlist')),
+    price_paise INTEGER NOT NULL CHECK(price_paise >= 100),
+    quantity INTEGER NOT NULL CHECK(quantity >= 0),
+    held INTEGER NOT NULL DEFAULT 0,
+    sold INTEGER NOT NULL DEFAULT 0,
+    allowed_days TEXT DEFAULT 'ALL',
+    sales_start TEXT,                          -- ISO timestamp, NULL = open now
+    sales_end TEXT,                            -- ISO timestamp, NULL = until the event
+    active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);
+
+-- 13. ORDERS (one buyer purchase of N tickets of one type)
+CREATE TABLE IF NOT EXISTS orders (
+    id TEXT PRIMARY KEY,
+    organizer_id TEXT NOT NULL,
+    event_id TEXT NOT NULL,
+    ticket_type_id TEXT NOT NULL,
+    qty INTEGER NOT NULL,
+    buyer_name TEXT NOT NULL,
+    buyer_email TEXT NOT NULL,
+    buyer_phone TEXT,
+    amount_paise INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'issued', 'expired', 'needs_review')),
+    rzp_order_id TEXT UNIQUE,
+    rzp_payment_id TEXT,
+    expires_at INTEGER NOT NULL,               -- unix seconds; stock and credits are held until then
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    issued_at DATETIME,
+    FOREIGN KEY (ticket_type_id) REFERENCES ticket_types(id)
+);
+CREATE INDEX IF NOT EXISTS idx_orders_org ON orders(organizer_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_pending ON orders(status, expires_at);
+
+-- 14. ORDER TICKETS (which tickets an order produced)
+CREATE TABLE IF NOT EXISTS order_tickets (
+    order_id TEXT NOT NULL,
+    ticket_id TEXT NOT NULL,
+    PRIMARY KEY (order_id, ticket_id)
+);

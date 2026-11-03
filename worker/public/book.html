@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book tickets</title>
+<style>
+  :root { --bg:#0F1012; --card:#17191C; --line:rgba(255,255,255,.12); --text:#F2EFE8; --muted:#9C9B94; --primary:#D4F36B; --err:#ff8a80; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  main { max-width:520px; margin:0 auto; padding:28px 16px 60px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 22px; font-size:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .type { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer; }
+  .type.sel { border-color:var(--primary); }
+  .type input { accent-color:var(--primary); }
+  .type .n { flex:1; } .type .p { font-weight:600; } .type .r { color:var(--muted); font-size:12px; }
+  .type.out { opacity:.45; cursor:not-allowed; }
+  label { display:block; font-size:12px; color:var(--muted); margin:12px 0 4px; }
+  input[type=text], input[type=email], input[type=tel], input[type=number] { width:100%; padding:11px 12px; border-radius:9px; border:1px solid var(--line); background:#0F1012; color:var(--text); font-size:16px; }
+  button { width:100%; margin-top:16px; padding:13px; border:0; border-radius:10px; background:var(--primary); color:#111; font-weight:700; font-size:16px; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:wait; }
+  .err { color:var(--err); font-size:14px; margin-top:10px; min-height:18px; }
+  .tk { display:flex; gap:14px; align-items:center; padding:10px 0; border-top:1px solid var(--line); }
+  .tk .qr { width:112px; height:112px; padding:8px; background:#fff; border-radius:8px; flex:none; }
+  .tk .qr img, .tk .qr canvas { width:96px !important; height:96px !important; }
+  .tk code { font-size:15px; }
+  .hide { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Loading…</h1>
+  <p class="sub" id="sub"></p>
+
+  <div id="buy" class="hide">
+    <div class="card"><div id="types"></div></div>
+    <div class="card">
+      <label for="qty">How many tickets (max 10)</label>
+      <input type="number" id="qty" min="1" max="10" value="1">
+      <label for="name">Your name</label>
+      <input type="text" id="name" autocomplete="name">
+      <label for="email">Email (your pass is sent here)</label>
+      <input type="email" id="email" autocomplete="email">
+      <label for="phone">Phone (optional)</label>
+      <input type="tel" id="phone" autocomplete="tel">
+      <button id="pay">Continue to payment</button>
+      <div class="err" id="err"></div>
+    </div>
+  </div>
+
+  <div id="done" class="card hide">
+    <h2 style="margin-top:0" id="doneTitle">You're in.</h2>
+    <p class="sub" id="doneText"></p>
+    <div id="tickets"></div>
+  </div>
+  <div id="msg" class="card hide"></div>
+</main>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const slug = location.pathname.split("/").pop();
+const $ = id => document.getElementById(id);
+const rupees = p => "₹" + (p / 100).toLocaleString("en-IN");
+let types = [], selected = null, busy = false, totalDays = 1;
+
+async function api(path, body) {
+  const res = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.error || "Something went wrong."), { data });
+  return data;
+}
+
+function updateTotal() {
+  if (!selected) return;
+  const max = Math.min(10, selected.remaining);
+  $("qty").max = max;
+  let q = parseInt($("qty").value, 10);
+  if (q > max) { q = max; $("qty").value = max; }
+  $("pay").textContent = q >= 1 ? `Pay ${rupees(selected.price_paise * q)}` : "Continue to payment";
+}
+$("qty").addEventListener("input", updateTotal);
+
+function showMsg(text) { $("buy").classList.add("hide"); $("msg").classList.remove("hide"); $("msg").textContent = text; }
+
+async function load() {
+  try {
+    const d = await api(`/api/public/events/${encodeURIComponent(slug)}`);
+    document.title = d.event.title + " · Tickets";
+    $("title").textContent = d.event.title;
+    $("sub").textContent = d.event.start_date + (d.event.total_days > 1 ? ` · ${d.event.total_days} days` : "");
+    types = d.types; totalDays = d.event.total_days;
+    if (!d.selling) return showMsg("Ticket sales aren't open for this event yet.");
+    if (!types.length) return showMsg("No tickets are on sale right now.");
+    $("buy").classList.remove("hide");
+    $("types").innerHTML = "";
+    types.forEach((t, i) => {
+      const row = document.createElement("label");
+      row.className = "type" + (t.remaining < 1 ? " out" : "");
+      row.innerHTML = `<input type="radio" name="t" ${t.remaining < 1 ? "disabled" : ""}><span class="n"></span><span class="p"></span>`;
+      row.querySelector(".n").innerHTML = ""; // filled with text nodes below to avoid HTML injection
+      const n = row.querySelector(".n");
+      n.append(document.createTextNode(t.name));
+      const r = document.createElement("div"); r.className = "r";
+      const dayText = totalDays < 2 ? "" : (t.allowed_days === "ALL" ? `All ${totalDays} days` : "Day " + t.allowed_days.split(",").join(", "));
+      r.textContent = t.remaining < 1 ? "Sold out" : [t.tier, dayText, t.remaining <= 10 ? `Only ${t.remaining} left` : ""].filter(Boolean).join(" · ");
+      n.append(r);
+      if (t.description) { const dd = document.createElement("div"); dd.className = "r"; dd.style.marginTop = "2px"; dd.textContent = t.description; n.append(dd); }
+      row.querySelector(".p").textContent = rupees(t.price_paise);
+      row.querySelector("input").addEventListener("change", () => { selected = t; document.querySelectorAll(".type").forEach(e => e.classList.remove("sel")); row.classList.add("sel"); updateTotal(); });
+      $("types").append(row);
+      if (!selected && t.remaining > 0) { row.querySelector("input").click(); }
+    });
+  } catch (e) { $("title").textContent = "Booking unavailable"; showMsg(e.message); }
+}
+
+function showTickets(d) {
+  $("buy").classList.add("hide");
+  $("done").classList.remove("hide");
+  if (d.status !== "issued") {
+    $("doneTitle").textContent = "Payment received";
+    $("doneText").textContent = d.message || "We're finishing your order. Refresh this page in a minute; your tickets will appear here and in your email.";
+    return;
+  }
+  $("doneText").textContent = `We're also emailing ${d.ticket_ids.length > 1 ? "them" : "it"} to ${d.email}. Your ticket${d.ticket_ids.length > 1 ? "s are" : " is"} below. Keep ${d.ticket_ids.length > 1 ? "them" : "it"} safe: the QR is scanned at the gate.`;
+  $("tickets").innerHTML = "";
+  d.ticket_ids.forEach(id => {
+    const row = document.createElement("div"); row.className = "tk";
+    const qr = document.createElement("div"); qr.className = "qr"; qr.title = "Entry QR for " + id;
+    new QRCode(qr, { text: id, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+    const code = document.createElement("code"); code.textContent = id;
+    row.append(qr, code);
+    $("tickets").append(row);
+  });
+}
+
+// Poll in case the organizer's webhook finished the order before (or instead of) the browser verify
+async function pollUntilIssued(rzpOrderId) {
+  for (let i = 0; i < 10; i++) {
+    const d = await api(`/api/public/orders/${encodeURIComponent(rzpOrderId)}`);
+    if (d.status === "issued" || d.status === "needs_review") return d;
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  return { status: "pending" };
+}
+
+$("pay").addEventListener("click", async () => {
+  if (busy) return;
+  $("err").textContent = "";
+  if (!selected) { $("err").textContent = "Choose a ticket type."; return; }
+  busy = true; $("pay").disabled = true;
+  try {
+    const order = await api("/api/public/orders", {
+      slug, type_id: selected.id, qty: parseInt($("qty").value, 10),
+      name: $("name").value, email: $("email").value, phone: $("phone").value
+    });
+    const rzp = new Razorpay({
+      key: order.key_id, order_id: order.rzp_order_id, amount: order.amount, currency: order.currency,
+      name: order.event_title, description: order.type_name,
+      prefill: { name: $("name").value, email: $("email").value, contact: $("phone").value },
+      theme: { color: "#D4F36B" },
+      handler: async (resp) => {
+        history.replaceState(null, "", "?order=" + encodeURIComponent(order.rzp_order_id));
+        try {
+          showTickets(await api("/api/public/orders/verify", {
+            rzp_order_id: resp.razorpay_order_id, payment_id: resp.razorpay_payment_id, signature: resp.razorpay_signature
+          }));
+        } catch (e) {
+          showTickets(await pollUntilIssued(order.rzp_order_id));
+        }
+      },
+      modal: { ondismiss: () => { busy = false; $("pay").disabled = false; } }
+    });
+    rzp.on("payment.failed", r => { $("err").textContent = (r.error && r.error.description) || "Payment failed. You can try again."; busy = false; $("pay").disabled = false; });
+    rzp.open();
+  } catch (e) {
+    $("err").textContent = e.message;
+    busy = false; $("pay").disabled = false;
+    if (e.data && e.data.code === "SOLD_OUT") load();
+  }
+});
+// Back on the page after paying (refresh, or the tab was reopened): show that order's tickets
+const returning = new URLSearchParams(location.search).get("order");
+if (returning) {
+  $("title").textContent = "Your tickets";
+  pollUntilIssued(returning).then(showTickets).catch(() => load());
+} else {
+  load();
+}
+</script>
+</body>
+</html>

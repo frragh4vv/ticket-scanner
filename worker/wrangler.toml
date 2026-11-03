@@ -48,6 +48,8 @@ max_retries = 3
 #   npx wrangler queues create tixdesk-email-staging
 #   npx wrangler d1 execute ticket-scanner-db-staging --remote --file=schema.sql --cwd worker
 #   npx wrangler secret put SESSION_SECRET --env staging   (use a different value from prod)
+#   npx wrangler secret put INTEGRATIONS_KEY --env staging (encrypts organizers' Razorpay keys; never change it
+#                                                           once set, or stored keys can't be decrypted)
 # =============================================================================
 [env.staging]
 name = "tixdesk-staging"

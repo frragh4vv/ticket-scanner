@@ -68,6 +68,11 @@ export async function handle(ctx) {
     await env.DB.batch([
       env.DB.prepare(`DELETE FROM scan_logs WHERE ${scope.sql}`).bind(...scope.params),
       env.DB.prepare(`DELETE FROM tickets WHERE ${scope.sql}`).bind(...scope.params),
+      // Buyer orders hold buyer names and emails, and orders -> ticket_types has no cascade, so they go first
+      env.DB.prepare("DELETE FROM order_tickets WHERE order_id IN (SELECT id FROM orders WHERE organizer_id = ?)").bind(organizerId),
+      env.DB.prepare("DELETE FROM orders WHERE organizer_id = ?").bind(organizerId),
+      // The organizer row is kept (anonymised), so its stored Razorpay keys would not cascade away
+      env.DB.prepare("DELETE FROM integrations WHERE organizer_id = ?").bind(organizerId),
       env.DB.prepare("DELETE FROM events WHERE organizer_id = ?").bind(organizerId),
       env.DB.prepare(`
         UPDATE organizers SET email = 'deleted+' || id || '@deleted.invalid', company_name = 'Deleted account',
