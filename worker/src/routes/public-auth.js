@@ -8,6 +8,7 @@ import { timingSafeEqual, hashPassword, verifyPassword } from "../lib/crypto.js"
 import { signSession, verifySession, passwordFingerprint, adminSession, adminSessionIsCurrent } from "../lib/session.js";
 import { isLockedOut, recordFailure, clearFailures, consumeQuota } from "../lib/limits.js";
 import { eventDayNow } from "../lib/eventday.js";
+import { mailConfigured, sendMail } from "../lib/mailer.js";
 
 export async function handle(ctx) {
   const { request, env, url, origin, bearer, session, clientIp } = ctx;
@@ -134,16 +135,13 @@ export async function handle(ctx) {
     }
 
     const org = await env.DB.prepare("SELECT id, email, password_hash FROM organizers WHERE LOWER(email) = ?").bind(cleanEmail).first();
-    if (!org || !org.password_hash || !env.RESEND_API_KEY) return generic;
+    if (!org || !org.password_hash || !mailConfigured(env)) return generic;
 
     const token = await signSession(env, { role: "reset", sub: org.id, pv: await passwordFingerprint(org.password_hash) }, 30 * 60);
     const link = `${env.APP_URL || url.origin}/reset#token=${encodeURIComponent(token)}`;
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.RESEND_API_KEY}` },
-      body: JSON.stringify({
-        from: env.EMAIL_FROM || "TixDesk <onboarding@resend.dev>",
-        to: [org.email],
+    await sendMail(env, {
+        fromName: "TixDesk",
+        to: org.email,
         subject: "Reset your TixDesk password",
         html: `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#111214">
           <h2 style="margin:0 0 12px">Reset your password</h2>
@@ -151,7 +149,6 @@ export async function handle(ctx) {
           <p><a href="${escapeHtml(link)}" style="display:inline-block;background:#D4F36B;color:#111214;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700">Choose a new password</a></p>
           <p style="line-height:1.5;color:#5B5C56;font-size:13px">If you didn't ask for this, ignore this email. Your password stays the same.</p>
         </div>`
-      })
     });
     return generic;
   }

@@ -9,10 +9,10 @@ export async function consumeEmailBatch(batch, env) {
     try {
       const result = await sendPassEmail(env, organizerId, { ticketId, onlyIfUnsent: true });
       if (result.status === 429 && !/Daily email limit/.test(result.body.error || "")) {
-        // Resend is throttling: try this message again in a minute
+        // The mail provider is throttling: try this message again in a minute
         message.retry({ delaySeconds: 60 });
       } else if (result.status === 502) {
-        // Resend errored; 500 means RESEND_API_KEY is missing, which retrying won't fix
+        // Provider errored; 500 means mail isn't configured, which retrying won't fix
         message.retry({ delaySeconds: 30 });
       } else {
         // Sent, skipped, or a permanent problem (bad email, ticket gone, daily cap). Retrying won't help;

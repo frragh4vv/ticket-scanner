@@ -1,7 +1,12 @@
 # Copy to worker/.dev.vars (gitignored) and fill in. Use `wrangler secret put` in production.
 SESSION_SECRET=
 SCANNER_ACCESS_KEY=
+# Mail: set APPS_SCRIPT_URL + APPS_SCRIPT_SECRET (docs/apps-script-mailer.gs) or RESEND_API_KEY
 RESEND_API_KEY=
+APPS_SCRIPT_URL=
+APPS_SCRIPT_SECRET=
+# appscript | resend. Unset = appscript when APPS_SCRIPT_URL is set, else resend
+MAIL_PROVIDER=
 RAZORPAY_KEY_ID=
 RAZORPAY_KEY_SECRET=
 # Optional

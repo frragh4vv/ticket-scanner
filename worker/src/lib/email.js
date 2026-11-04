@@ -1,8 +1,9 @@
-// Builds and sends one pass email through Resend. Used by POST /api/send-email and the email queue consumer.
+// Builds and sends one pass email through the configured mail provider (see mailer.js). Used by POST /api/send-email and the email queue consumer.
 // Returns { status, body } so callers decide how to respond.
 
 import { escapeHtml } from "./util.js";
 import { consumeQuota } from "./limits.js";
+import { mailConfigured, sendMail } from "./mailer.js";
 
 // onlyIfUnsent: the queue consumer sets it so a ticket queued twice is only emailed once.
 export async function sendPassEmail(env, organizerId, { ticketId, email, eventName, passImageData, passPdfData, onlyIfUnsent = false } = {}) {
@@ -96,9 +97,8 @@ export async function sendPassEmail(env, organizerId, { ticketId, email, eventNa
 </body>
 </html>`;
 
-  const resendKey = env.RESEND_API_KEY;
-  if (!resendKey) {
-    return { status: 500, body: { error: "RESEND_API_KEY is not configured", details: "Set RESEND_API_KEY in Cloudflare Worker secrets" } };
+  if (!mailConfigured(env)) {
+    return { status: 500, body: { error: "Email is not configured", details: "Set APPS_SCRIPT_URL + APPS_SCRIPT_SECRET, or RESEND_API_KEY, in Worker secrets" } };
   }
   // Keeps a free account from turning the mail sender into a spam relay
   const dailyCap = parseInt(env.EMAIL_DAILY_CAP, 10) || 1000;
@@ -106,25 +106,16 @@ export async function sendPassEmail(env, organizerId, { ticketId, email, eventNa
     return { status: 429, body: { error: `Daily email limit reached (${dailyCap}). Try again tomorrow or contact support.` } };
   }
 
-  const resendRes = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${resendKey}`
-    },
-    body: JSON.stringify({
-      from: env.EMAIL_FROM || "Tickets <onboarding@resend.dev>",
-      to: [recipient],
-      subject: `Your ticket for ${plainEvent}`,
-      html: emailHtml,
-      ...(attachments.length ? { attachments } : {})
-    })
+  const sent = await sendMail(env, {
+    to: recipient,
+    subject: `Your ticket for ${plainEvent}`,
+    html: emailHtml,
+    attachments
   });
 
-  if (!resendRes.ok) {
-    const errText = await resendRes.text();
+  if (!sent.ok) {
     // 429 passes through so bulk senders know to back off and retry
-    return { status: resendRes.status === 429 ? 429 : 502, body: { error: "Failed to dispatch email", details: errText } };
+    return { status: sent.status === 429 ? 429 : 502, body: { error: "Failed to dispatch email", details: sent.text } };
   }
 
   await env.DB.prepare("UPDATE tickets SET email_sent_at = CURRENT_TIMESTAMP WHERE id = ?").bind(ticket.id).run();
