@@ -549,28 +549,6 @@
       border-color: #7FE3C4 !important;
     }
 
-    .btn-reentry {
-      width: 100%;
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid #FFB870;
-      background: rgba(255, 184, 112, 0.15);
-      color: #fdba74;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .btn-reentry:hover {
-      background: rgba(255, 184, 112, 0.25);
-      color: #fff;
-    }
-
     /* Event Day Picker Modal */
     .day-modal-overlay {
       position: fixed;
@@ -1033,11 +1011,6 @@
           <strong id="res-meta-notes" style="color: #FFB870;">—</strong>
         </div>
       </div>
-
-      <!-- Re-entry Authorization Button (Shown on duplicates / re-entries) -->
-      <button id="res-reentry-btn" class="btn-reentry" style="display:none;" onclick="triggerReEntryScan()">
-        <span>Authorize Re-Entry for Today</span>
-      </button>
 
       <!-- PRIMARY 'SCAN NEXT' ACTION BUTTON -->
       <button id="scan-next-btn" class="btn-scan-next" onclick="scanNextTicket()">
@@ -1578,15 +1551,6 @@
         noteRow.style.display = "none";
       }
 
-      // Re-entry Action button
-      const reEntryBtn = document.getElementById("res-reentry-btn");
-      if (result === "duplicate") {
-        reEntryBtn.style.display = "flex";
-        reEntryBtn.innerHTML = `<span>Authorize Re-Entry for Day ${currentEventDay}</span>`;
-      } else {
-        reEntryBtn.style.display = "none";
-      }
-
       // Audio & Vibration Feedback
       playSoundForTier(tier, result);
       if (navigator.vibrate) {
@@ -1604,12 +1568,6 @@
           scanNextTicket();
         }, 2800);
       }
-    }
-
-    function triggerReEntryScan() {
-      if (!lastScannedId) return;
-      isProcessing = false;
-      handleDetectedCode(lastScannedId, true);
     }
 
     // THE SCAN NEXT HANDLER (Closes modal and resets camera)
